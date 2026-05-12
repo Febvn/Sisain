@@ -4,7 +4,8 @@ import {
     X, Star, Clock, Trash2, BarChart3, Package, 
     Leaf, ShieldCheck, TrendingUp, History, Info, ListFilter,
     Recycle, Wallet, Ticket, CreditCard, Heart, Store, Truck, CheckCircle2, RotateCcw,
-    Award, Medal, Crown, Zap, Droplets, LogOut, ChevronRight, Settings, Phone
+    Award, Medal, Crown, Zap, Droplets, LogOut, ChevronRight, Settings, Phone,
+    Apple, Coffee, Utensils
 } from 'lucide-react';
 import './index.css';
 
@@ -1003,12 +1004,13 @@ export default function App() {
                                     key={cat} 
                                     className={`cat-item ${activeCategory === cat ? 'active' : ''}`}
                                     onClick={() => { setActiveCategory(cat); setIsCategoryOpen(false); }}
+                                    style={cat === "Semua" ? { gridColumn: 'span 2' } : {}}
                                 >
                                     {cat === "Semua" && <Package size={24} />}
                                     {cat === "Sayur" && <Leaf size={24} />}
-                                    {cat === "Buah" && <Star size={24} />}
-                                    {cat === "Roti" && <Clock size={24} />}
-                                    {cat === "Siap Saji" && <History size={24} />}
+                                    {cat === "Buah" && <Apple size={24} />}
+                                    {cat === "Roti" && <Coffee size={24} />}
+                                    {cat === "Siap Saji" && <Utensils size={24} />}
                                     <span style={{fontWeight: 700, fontSize: '0.9rem'}}>{cat}</span>
                                 </div>
                             ))}

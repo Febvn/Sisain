@@ -3,7 +3,8 @@ import {
     ShoppingCart, MapPin, Search, Plus, Home, User, 
     X, Star, Clock, Trash2, BarChart3, Package, 
     Leaf, ShieldCheck, TrendingUp, History, Info, ListFilter,
-    Recycle
+    Recycle, Wallet, Ticket, CreditCard, Heart, Store, Truck, CheckCircle2, RotateCcw,
+    Award, Medal, Crown, Zap, Droplets, LogOut, ChevronRight, Settings, Phone
 } from 'lucide-react';
 import './index.css';
 
@@ -104,12 +105,20 @@ export default function App() {
     const [cart, setCart] = useState([]);
     const [orderHistory, setOrderHistory] = useState([]);
     const [toasts, setToasts] = useState([]);
+    const [products, setProducts] = useState(INITIAL_PRODUCTS);
+    const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+    const [newProduct, setNewProduct] = useState({
+        name: "", category: "Sayur", currentPrice: "", oldPrice: "", stock: "", description: "", img: ""
+    });
     const [filters, setFilters] = useState({
         priceRange: [0, 100000],
         maxDistance: 5,
         shelfLife: 'all',
         minRating: 0
     });
+    const [isLanguageSelected, setIsLanguageSelected] = useState(false);
+    const [language, setLanguage] = useState("id");
+    const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
 
     // --- UX Handlers ---
     const showToast = (message) => {
@@ -137,18 +146,127 @@ export default function App() {
         showToast("Food Rescued Successfully!");
     };
 
+    const handleAddProduct = (e) => {
+        e.preventDefault();
+        const product = {
+            ...newProduct,
+            id: Date.now(),
+            currentPrice: parseInt(newProduct.currentPrice),
+            oldPrice: parseInt(newProduct.oldPrice),
+            stock: parseInt(newProduct.stock),
+            merchant: "Warung Bu Siti",
+            rating: 5.0,
+            distance: "0.0 km",
+            img: newProduct.img || "https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&q=80&w=600"
+        };
+        setProducts(prev => [product, ...prev]);
+        setIsAddProductOpen(false);
+        setNewProduct({ name: "", category: "Sayur", currentPrice: "", oldPrice: "", stock: "", description: "", img: "" });
+        showToast("Produk Berhasil Diunggah!");
+    };
+
+    const handleDeleteProduct = (productId) => {
+        setProducts(prev => prev.filter(p => p.id !== productId));
+        showToast("Produk Dihapus!");
+    };
+
     // --- Filter Logic ---
-    const filteredProducts = INITIAL_PRODUCTS
+    const filteredProducts = products
         .filter(p => (activeCategory === "Semua" || p.category === activeCategory))
         .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.merchant.toLowerCase().includes(searchQuery.toLowerCase()))
+        .filter(p => p.currentPrice >= filters.priceRange[0] && p.currentPrice <= filters.priceRange[1])
+        .filter(p => p.rating >= filters.minRating)
         .sort((a, b) => {
             if (sortType === "termurah") return a.currentPrice - b.currentPrice;
             if (sortType === "rating") return b.rating - a.rating;
             return 0; // Default: 'terdekat' (using initial order)
         });
 
+    // --- Join Modal Component ---
+    const JoinModal = () => (
+        <div className="join-modal-overlay" onClick={() => setIsJoinModalOpen(false)}>
+            <div className="join-modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="join-modal-header">
+                    <h3>Bergabung dengan Sisain</h3>
+                    <button className="join-modal-close" onClick={() => setIsJoinModalOpen(false)}>
+                        <X size={20} />
+                    </button>
+                </div>
+                <div className="join-modal-body">
+                    <div className="join-option-card">
+                        <div className="join-option-image">
+                            <img src="/img/merchant.JPG" alt="Bergabung sebagai Merchant" />
+                        </div>
+                        <h4>Bergabunglah sebagai Merchant</h4>
+                        <ul className="join-benefits">
+                            <li>· Dapatkan lebih banyak pesanan dan penjualan</li>
+                            <li>· Bangun reputasi bisnis secara online</li>
+                            <li>· Dapatkan dukungan logistik pengiriman</li>
+                        </ul>
+                        <button className="join-btn-primary">Temukan Lebih Banyak</button>
+                    </div>
+                    <div className="join-option-card">
+                        <div className="join-option-image">
+                            <img src="/img/customer.JPG" alt="Bergabung sebagai Pelanggan" />
+                        </div>
+                        <h4>Bergabunglah sebagai Pelanggan</h4>
+                        <ul className="join-benefits">
+                            <li>· Hemat hingga 70% dari harga normal</li>
+                            <li>· Nikmati makanan berkualitas terjamin</li>
+                            <li>· Dukung pengurangan limbah pangan</li>
+                        </ul>
+                        <button className="join-btn-primary">Temukan Lebih Banyak</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
     return (
         <div className="app-container">
+            {/* Language Selection Splash */}
+            {!isLanguageSelected && (
+                <div className="splash-overlay">
+                    <div className="splash-card animate-splash">
+                        <div className="splash-ascii-map" aria-hidden="true">
+{`
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣠⣤⣤⣤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣠⣴⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣶⣦⣤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠻⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⠛⠿⠿⠿⠿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠿⠿⠿⠛⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+`}
+                        </div>
+                        <div className="splash-card-content">
+                            <div className="splash-logo-wrap">
+                                <Recycle size={36} strokeWidth={1.5} color="white" />
+                            </div>
+                            <span className="splash-brand-text">Sisain</span>
+                            <h2 className="splash-title">Pilih bahasa Anda</h2>
+                            <div className="splash-btn-group">
+                                <button className="splash-btn" onClick={() => { setLanguage("id"); setIsLanguageSelected(true); }}>
+                                    🇮🇩 Bahasa Indonesia
+                                </button>
+                                <button className="splash-btn" onClick={() => { setLanguage("en"); setIsLanguageSelected(true); }}>
+                                    🇺🇸 English
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* Success Notification Popup */}
             {toasts.length > 0 && (
                 <div className="toast-overlay-center">
@@ -166,19 +284,15 @@ export default function App() {
                 </div>
             )}
 
+            {/* Join Modal */}
+            {isJoinModalOpen && <JoinModal />}
+
             {/* Header Section */}
             <header className="main-header">
                 <div className="header-top">
                     <div className="logo-container" onClick={() => setActiveTab('home')}>
-                        <div className="logo-icon" style={{position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                            <Recycle size={120} strokeWidth={0.8} color="white" />
-                            <span style={{
-                                position: 'absolute',
-                                fontSize: '10px',
-                                fontWeight: '900',
-                                color: 'white',
-                                marginTop: '3px'
-                            }}>S</span>
+                        <div className="logo-icon">
+                            <Recycle size={22} strokeWidth={2} color="white" />
                         </div>
                         <span className="logo-text">Sisain</span>
                     </div>
@@ -190,6 +304,13 @@ export default function App() {
                         <span onClick={() => setActiveTab('merchant')} className={`nav-pill ${activeTab === 'merchant' ? 'active' : ''}`}>Mitra Merchant</span>
                         <span className="nav-pill">Bantuan</span>
                     </nav>
+
+                    <div className="nav-auth-group">
+                        <button className="location-pill btn-login-pill" aria-label="Join" title="Join" onClick={() => setIsJoinModalOpen(true)}>
+                            <User size={14} />
+                            <span>Join</span>
+                        </button>
+                    </div>
 
                     <div className="location-pill">
                         <MapPin size={14} color="var(--orange)" />
@@ -228,7 +349,7 @@ export default function App() {
                             <>
                             <section className="hero-banner">
                                 <div className="hero-overlay"></div>
-                                <img src="/sisain_hero_image_1778438586294.png" className="hero-bg" alt="Hero" />
+                                <img src="/sisain_hero.png" className="hero-bg" alt="Hero" />
                                 <div className="hero-content-modern">
                                     <h1 className="hero-title-main">SELAMAT DATANG DI <span className="highlight-text">SISAIN.ONLINE</span></h1>
                                     <p className="hero-subtitle-main">
@@ -246,118 +367,158 @@ export default function App() {
                                 </div>
                             </section>
                             <section className="features-section">
-                                <h2 className="section-title-center">Kenapa Memilih Sisain?</h2>
-                                <div className="features-grid">
-                                    <div className="feature-item-modern">
-                                        <div className="feature-icon-wrap-custom">
-                                            <svg viewBox="0 0 100 100" width="90" height="90">
-                                                <defs>
-                                                    <linearGradient id="truckGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                                        <stop offset="0%" stopColor="#ff7337" />
-                                                        <stop offset="100%" stopColor="#ee4d2d" />
-                                                    </linearGradient>
-                                                    <filter id="shadowIcon" x="-20%" y="-20%" width="140%" height="140%">
-                                                        <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-                                                        <feOffset dx="2" dy="2" result="offsetblur" />
-                                                        <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
-                                                        <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-                                                    </filter>
-                                                </defs>
-                                                <g filter="url(#shadowIcon)">
-                                                    <path d="M15 50 Q15 45 20 45 H65 Q70 45 70 50 V70 H15 Z" fill="url(#truckGrad)" />
-                                                    <path d="M70 55 H85 Q90 55 90 60 V70 H70 Z" fill="#ee4d2d" />
-                                                    <rect x="72" y="58" width="12" height="8" rx="2" fill="white" opacity="0.3" />
-                                                    <circle cx="30" cy="75" r="8" fill="#333" />
-                                                    <circle cx="30" cy="75" r="4" fill="#666" />
-                                                    <circle cx="75" cy="75" r="8" fill="#333" />
-                                                    <circle cx="75" cy="75" r="4" fill="#666" />
-                                                    <rect x="35" y="25" width="25" height="25" rx="5" fill="#fff" />
-                                                    <path d="M40 32 L55 32 M40 38 L50 38 M40 44 L53 44" stroke="#ee4d2d" strokeWidth="2" strokeLinecap="round" />
-                                                </g>
-                                            </svg>
+                                <div className="section-header-center">
+                                    <h2 className="section-title-center">Kenapa Memilih Sisain?</h2>
+                                    <p className="section-subtitle">Solusi cerdas untuk kantong hemat dan bumi yang lebih sehat.</p>
+                                </div>
+                                <div className="features-grid-modern">
+                                    <div className="card-neumorph feature-card-icon">
+                                        <div className="feature-icon"><Ticket size={28} /></div>
+                                        <div className="feature-content">
+                                            <h3>Hemat Hingga 70%</h3>
+                                            <p>Nikmati makanan berkualitas dari restoran favorit dengan harga yang jauh lebih terjangkau.</p>
                                         </div>
-                                        <h3>Hemat Hingga 70%</h3>
-                                        <p>Nikmati makanan berkualitas dari restoran favorit dengan harga yang jauh lebih terjangkau.</p>
                                     </div>
-                                    <div className="feature-item-modern">
-                                        <div className="feature-icon-wrap-custom">
-                                            <svg viewBox="0 0 100 100" width="90" height="90">
-                                                <defs>
-                                                    <linearGradient id="ticketGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                                                        <stop offset="0%" stopColor="#ffda6a" />
-                                                        <stop offset="100%" stopColor="#ffc107" />
-                                                    </linearGradient>
-                                                    <linearGradient id="ticketGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-                                                        <stop offset="0%" stopColor="#ff7337" />
-                                                        <stop offset="100%" stopColor="#ee4d2d" />
-                                                    </linearGradient>
-                                                </defs>
-                                                <g filter="url(#shadowIcon)">
-                                                    <rect x="15" y="35" width="60" height="35" rx="6" fill="url(#ticketGrad1)" transform="rotate(-15 45 52)" />
-                                                    <rect x="25" y="38" width="60" height="35" rx="6" fill="url(#ticketGrad2)" />
-                                                    <circle cx="38" cy="55" r="10" fill="none" stroke="white" strokeWidth="4" />
-                                                    <text x="33" y="59" fill="white" fontSize="14" fontWeight="900" style={{fontFamily: 'Arial'}}>%</text>
-                                                    <path d="M70 38 V73" stroke="white" strokeWidth="3" strokeDasharray="5 5" opacity="0.6" />
-                                                    <circle cx="70" cy="45" r="3" fill="#ee4d2d" />
-                                                    <circle cx="70" cy="65" r="3" fill="#ee4d2d" />
-                                                </g>
-                                            </svg>
+
+                                    <div className="card-neumorph feature-card-icon">
+                                        <div className="feature-icon"><Leaf size={28} /></div>
+                                        <div className="feature-content">
+                                            <h3>Selamatkan Bumi</h3>
+                                            <p>Setiap makanan yang Anda beli membantu mengurangi limbah pangan dan emisi karbon.</p>
                                         </div>
-                                        <h3>Selamatkan Bumi</h3>
-                                        <p>Setiap makanan yang Anda beli membantu mengurangi limbah pangan dan emisi karbon.</p>
                                     </div>
-                                    <div className="feature-item-modern">
-                                        <div className="feature-icon-wrap-custom">
-                                            <svg viewBox="0 0 100 100" width="90" height="90">
-                                                <defs>
-                                                    <linearGradient id="menuGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                                        <stop offset="0%" stopColor="#ff7337" />
-                                                        <stop offset="100%" stopColor="#ee4d2d" />
-                                                    </linearGradient>
-                                                </defs>
-                                                <g filter="url(#shadowIcon)">
-                                                    <rect x="25" y="15" width="50" height="70" rx="6" fill="url(#menuGrad)" />
-                                                    <rect x="25" y="15" width="12" height="70" rx="3" fill="#d32f2f" />
-                                                    <path d="M22 25 H33 M22 35 H33 M22 45 H33 M22 55 H33 M22 65 H33 M22 75 H33" stroke="#fff" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
-                                                    <circle cx="53" cy="45" r="18" fill="white" opacity="0.15" />
-                                                    <path d="M50 35 Q50 55 50 55 M53 35 Q53 55 53 55 M56 35 Q56 55 56 55 M53 55 L53 65" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-                                                    <text x="42" y="78" fill="white" fontSize="9" fontWeight="900" style={{fontFamily: 'Arial', letterSpacing: '1px'}}>MENU</text>
-                                                </g>
-                                            </svg>
+
+                                    <div className="card-neumorph feature-card-icon">
+                                        <div className="feature-icon"><ShieldCheck size={28} /></div>
+                                        <div className="feature-content">
+                                            <h3>Kualitas Terjamin</h3>
+                                            <p>Semua mitra kami telah melalui kurasi ketat untuk memastikan kualitas dan keamanan pangan.</p>
                                         </div>
-                                        <h3>Kualitas Terjamin</h3>
-                                        <p>Semua mitra kami telah melalui kurasi ketat untuk memastikan kualitas dan keamanan pangan.</p>
                                     </div>
+
+                                    <div className="card-neumorph feature-card-icon highlight-card">
+                                        <div className="feature-icon"><Store size={28} /></div>
+                                        <div className="feature-content">
+                                            <h3>Pemberdayaan UMKM</h3>
+                                            <p>Mendukung pedagang lokal dan UMKM untuk mengurangi kerugian akibat stok makanan surplus.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section className="how-to-order-section">
+                                <div className="section-header-center">
+                                    <h2 className="section-title-center">Cara Pesan di Sisain</h2>
+                                    <p className="section-subtitle">Pesan makanan surplus dengan mudah di aplikasi Sisain.</p>
+                                </div>
+                                <div className="order-full-width-container">
+                                    <div className="order-flex-container">
+                                        <div className="phone-mockup-placeholder">
+                                            <div className="phone-notch"></div>
+                                            <div className="phone-inner">
+                                            </div>
+                                            <div className="phone-home-bar"></div>
+                                        </div>
+                                        <div className="order-steps-list">
+                                            {[
+                                                "Buka aplikasi Sisain",
+                                                "Pilih Merchant favoritmu",
+                                                "Pilih menu yang kamu mau & tambahkan ke keranjangmu",
+                                                "Pastikan alamat pengirimanmu",
+                                                "Pilih cara pembayaranmu",
+                                                "Pesan dan tunggu makananmu dikirimkan!"
+                                            ].map((step, idx) => (
+                                                <div key={idx} className={`step-item-card ${idx === 5 ? '' : ''}`}>
+                                                    <div className="step-count">{idx + 1}</div>
+                                                    <p className="step-desc">{step}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section className="merchants-section">
+                                <div className="section-header-center">
+                                    <h2 className="section-title-center">Mitra Merchant Pilihan</h2>
+                                    <p className="section-subtitle">Telah bergabung bersama kami untuk mengurangi limbah pangan.</p>
+                                </div>
+                                <div className="merchants-grid-container">
+                                    {[
+                                        { name: 'Starbucks', logo: 'https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg', domain: 'starbucks.com' },
+                                        { name: 'KFC', logo: 'https://upload.wikimedia.org/wikipedia/sco/b/bf/KFC_logo.svg', domain: 'kfc.com' },
+                                        { name: 'McDonald\'s', logo: 'https://upload.wikimedia.org/wikipedia/commons/3/36/McDonald%27s_Golden_Arches.svg', domain: 'mcdonalds.com' },
+                                        { name: 'Pizza Hut', logo: 'https://upload.wikimedia.org/wikipedia/sco/d/d2/Pizza_Hut_logo.svg', domain: 'pizzahut.com' },
+                                        { name: 'Burger King', logo: 'https://upload.wikimedia.org/wikipedia/commons/8/85/Burger_King_logo_%282021%29.svg', domain: 'bk.com' },
+                                        { name: 'Domino\'s', logo: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Domino%27s_pizza_logo.svg', domain: 'dominos.com' },
+                                        { name: 'Dunkin\'', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d2/Dunkin%27_Donuts_logo.svg/1280px-Dunkin%27_Donuts_logo.svg.png', domain: 'dunkindonuts.com' },
+                                        { name: 'Subway', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/5c/Subway_2016_logo.svg', domain: 'subway.com' },
+                                        { name: 'Taco Bell', logo: 'https://upload.wikimedia.org/wikipedia/en/b/b3/Taco_Bell_2016.svg', domain: 'tacobell.com' },
+                                        { name: 'Wendy\'s', logo: 'https://upload.wikimedia.org/wikipedia/en/3/32/Wendy%27s_full_logo_2012.svg', domain: 'wendys.com' },
+                                        { name: 'Baskin-Robbins', logo: 'https://upload.wikimedia.org/wikipedia/commons/d/d8/Baskin-Robbins_logo.svg', domain: 'baskinrobbins.com' },
+                                        { name: '7-Eleven', logo: 'https://upload.wikimedia.org/wikipedia/commons/4/40/7-eleven_logo.svg', domain: '7-eleven.com' },
+                                        { name: 'Krispy Kreme', logo: 'https://upload.wikimedia.org/wikipedia/en/d/d3/Krispy_Kreme_logo.svg', domain: 'krispykreme.com' },
+                                        { name: 'Popeyes', logo: 'https://upload.wikimedia.org/wikipedia/en/f/f6/Popeyes_logo_2020.svg', domain: 'popeyes.com' },
+                                        { name: 'A&W', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/53/A%26W_logo.svg', domain: 'awrestaurants.com' },
+                                        { name: 'Dairy Queen', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/ae/Dairy_Queen_logo.svg', domain: 'dairyqueen.com' },
+                                        { name: 'Carl\'s Jr.', logo: 'https://upload.wikimedia.org/wikipedia/commons/4/4b/Carl%27s_Jr._Logo.svg', domain: 'carlsjr.com' },
+                                        { name: 'Hard Rock Cafe', logo: 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Hard_Rock_Cafe_logo.svg', domain: 'hardrock.com' },
+                                        { name: 'Costa Coffee', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Costa_Coffee_logo.svg', domain: 'costa.co.uk' },
+                                        { name: 'Nando\'s', logo: 'https://upload.wikimedia.org/wikipedia/en/d/d0/Nando%27s_logo.svg', domain: 'nandos.co.uk' },
+                                        { name: 'Chipotle', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/3/3b/Chipotle_Mexican_Grill_logo.svg/1280px-Chipotle_Mexican_Grill_logo.svg.png', domain: 'chipotle.com' }
+                                    ].map((m, i) => (
+                                        <div key={i} className="merchant-logo-card">
+                                            <div className="merchant-logo-box">
+                                                <img 
+                                                    src={m.logo} 
+                                                    alt={m.name} 
+                                                    className="merchant-logo-img" 
+                                                    onError={(e) => {
+                                                        if (!e.target.src.includes('google.com')) {
+                                                            e.target.src = `https://www.google.com/s2/favicons?domain=${m.domain}&sz=128`;
+                                                        } else {
+                                                            e.target.style.display = 'none';
+                                                            e.target.parentNode.classList.add('fallback-active');
+                                                            e.target.parentNode.innerHTML = `<div class="fallback-initial">${m.name[0]}</div>`;
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                            <span className="merchant-name-label">{m.name}</span>
+                                        </div>
+                                    ))}
                                 </div>
                             </section>
                             </>
                         )}
 
 
-                        <section className="product-grid">
-                            {filteredProducts.map(p => (
-                                <div key={p.id} className="card-neumorph" onClick={() => setSelectedProduct(p)}>
-                                    <div className="card-image-wrapper">
-                                        <img src={p.img} alt={p.name} className="card-image" />
+                        {activeTab === 'explore' && (
+                            <section className="product-grid">
+                                {filteredProducts.map(p => (
+                                    <div key={p.id} className="card-neumorph" onClick={() => setSelectedProduct(p)}>
+                                        <div className="card-image-wrapper">
+                                            <img src={p.img} alt={p.name} className="card-image" />
+                                        </div>
+                                        <h3 className="card-title">{p.name}</h3>
+                                        <div className="card-merchant">
+                                            <ShieldCheck size={14} color="var(--orange)" />
+                                            <span>{p.merchant}</span>
+                                        </div>
+                                        <div className="card-price-stack">
+                                            <span className="price-current">{formatIDR(p.currentPrice)}</span>
+                                            <span className="price-old">{formatIDR(p.oldPrice)}</span>
+                                        </div>
+                                        <div style={{marginTop: '15px', display: 'flex', gap: '15px', fontSize: '0.8rem', fontWeight: 700}}>
+                                            <span style={{color: '#ffc107', display: 'flex', alignItems: 'center', gap: '4px'}}>
+                                                <Star size={14} fill="#ffc107" /> {p.rating}
+                                            </span>
+                                            <span style={{color: 'var(--text-muted)'}}>{p.distance}</span>
+                                        </div>
                                     </div>
-                                    <h3 className="card-title">{p.name}</h3>
-                                    <div className="card-merchant">
-                                        <ShieldCheck size={14} color="var(--orange)" />
-                                        <span>{p.merchant}</span>
-                                    </div>
-                                    <div className="card-price-stack">
-                                        <span className="price-current">{formatIDR(p.currentPrice)}</span>
-                                        <span className="price-old">{formatIDR(p.oldPrice)}</span>
-                                    </div>
-                                    <div style={{marginTop: '15px', display: 'flex', gap: '15px', fontSize: '0.8rem', fontWeight: 700}}>
-                                        <span style={{color: '#ffc107', display: 'flex', alignItems: 'center', gap: '4px'}}>
-                                            <Star size={14} fill="#ffc107" /> {p.rating}
-                                        </span>
-                                        <span style={{color: 'var(--text-muted)'}}>{p.distance}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </section>
+                                ))}
+                            </section>
+                        )}
                     </>
                 )}
 
@@ -433,79 +594,314 @@ export default function App() {
                 )}
 
                 {activeTab === 'profile' && (
-                    <div className="view-container" style={{padding: '30px 25px', animation: 'slideUp 0.5s ease'}}>
-                        <div className="card-neumorph" style={{padding: '40px 20px', marginBottom: '30px'}}>
-                            <div style={{position: 'relative', marginBottom: '20px'}}>
-                                <div style={{width: '110px', height: '110px', borderRadius: '50%', background: 'var(--bg-color)', boxShadow: 'var(--shadow-light), var(--shadow-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                                    <User size={54} color="var(--orange)" />
-                                </div>
-                                <div style={{position: 'absolute', bottom: '0', right: '0', width: '32px', height: '32px', background: 'var(--orange)', borderRadius: '50%', border: '4px solid var(--bg-color)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                                    <Star size={14} fill="white" color="white" />
+                    <div className="view-container" style={{padding: '20px 20px 120px', animation: 'slideUp 0.5s ease'}}>
+                        <h2 style={{fontWeight: 900, fontSize: '1.8rem', marginBottom: '25px', color: 'var(--text-main)', textAlign: 'left'}}>Profil Saya</h2>
+
+                        <div className="bento-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '15px', gridAutoRows: 'minmax(100px, auto)'}}>
+                            
+                            {/* === 1. HERO PROFILE CARD (Bento Span 12) === */}
+                            <div className="card-neumorph bento-item" style={{gridColumn: 'span 12', padding: '25px', display: 'flex', flexDirection: 'column', gap: '20px', background: 'linear-gradient(135deg, var(--bg-color) 0%, rgba(238,77,45,0.05) 100%)'}}>
+                                <div style={{display: 'flex', alignItems: 'center', gap: '20px'}}>
+                                    <div style={{position: 'relative', flexShrink: 0}}>
+                                        <div style={{width: '70px', height: '70px', borderRadius: '50%', background: 'var(--bg-color)', boxShadow: 'var(--shadow-light), var(--shadow-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'var(--transition-smooth)'}} className="hover-scale">
+                                            <User size={35} color="var(--orange)" />
+                                        </div>
+                                        <div style={{position: 'absolute', bottom: '0', right: '0', width: '22px', height: '22px', background: 'var(--orange)', borderRadius: '50%', border: '2px solid var(--bg-color)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                            <Crown size={12} fill="white" color="white" />
+                                        </div>
+                                    </div>
+                                    <div style={{flex: 1, textAlign: 'left'}}>
+                                        <h2 style={{fontWeight: 900, fontSize: '1.2rem', marginBottom: '4px'}}>Hero Penyelamat #042</h2>
+                                        <p style={{color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '10px'}}>hero042@sisain.online</p>
+                                        <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
+                                            <span style={{background: 'var(--orange-light)', color: 'var(--orange)', padding: '4px 12px', borderRadius: '50px', fontSize: '0.65rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px'}}>
+                                                <Award size={10} /> Perunggu
+                                            </span>
+                                            <span style={{background: 'var(--orange-light)', color: 'var(--orange)', padding: '4px 12px', borderRadius: '50px', fontSize: '0.65rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px'}}>
+                                                <ShieldCheck size={10} color="var(--orange)" /> Terverifikasi
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div style={{width: '40px', height: '40px', borderRadius: '12px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-light), var(--shadow-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'var(--transition-smooth)'}} className="hover-float">
+                                        <Settings size={20} color="var(--text-muted)" />
+                                    </div>
                                 </div>
                             </div>
-                            <h2 style={{fontWeight: 800, fontSize: '1.6rem'}}>Hero Penyelamat #042</h2>
-                            <p style={{color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '5px'}}>Member sejak Mei 2024</p>
-                            <span style={{background: 'var(--orange-light)', color: 'var(--orange)', padding: '6px 18px', borderRadius: '50px', fontSize: '0.75rem', fontWeight: 800, marginTop: '15px'}}>Penyelamat Perunggu</span>
-                        </div>
 
-                        {/* Impact SVG Dashboard */}
-                        <div className="card-neumorph" style={{marginTop: '30px', padding: '30px', textAlign: 'left'}}>
-                            <h3 style={{fontWeight: 800, marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px'}}>
-                                <TrendingUp size={20} color="var(--orange)" /> Tren Dampak Lingkungan
-                            </h3>
-                            
-                            <div className="chart-container" style={{padding: '20px 10px'}}>
-                                <svg viewBox="0 0 400 150" width="100%" height="150" style={{overflow: 'visible'}}>
-                                    <defs>
-                                        <linearGradient id="profileGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="var(--orange)" stopOpacity="0.4" />
-                                            <stop offset="100%" stopColor="var(--orange)" stopOpacity="0" />
-                                        </linearGradient>
-                                    </defs>
-                                    <path d="M 0 120 C 50 110, 80 140, 120 100 C 160 60, 200 90, 240 40 C 280 -10, 320 50, 400 20 L 400 150 L 0 150 Z" fill="url(#profileGradient)" />
-                                    <path d="M 0 120 C 50 110, 80 140, 120 100 C 160 60, 200 90, 240 40 C 280 -10, 320 50, 400 20" fill="none" stroke="var(--orange)" strokeWidth="4" strokeLinecap="round" />
-                                    <circle cx="240" cy="40" r="5" fill="var(--white)" stroke="var(--orange)" strokeWidth="3" />
-                                </svg>
-                                <div style={{display: 'flex', justifyContent: 'space-between', marginTop: '15px', padding: '0 5px'}}>
-                                    {['Jan', 'Feb', 'Mar', 'Apr', 'Mei'].map(m => (
-                                        <span key={m} style={{fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)'}}>{m}</span>
+                            {/* === 2. SISAIN PAY & KOIN (Bento Span 6 each) === */}
+                            <div className="card-neumorph bento-item hover-float" style={{gridColumn: 'span 6', padding: '20px', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
+                                <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px'}}>
+                                    <div style={{width: '36px', height: '36px', background: 'var(--orange)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(238,77,45,0.3)'}}>
+                                        <Wallet size={18} color="white" />
+                                    </div>
+                                    <span style={{fontSize: '0.8rem', fontWeight: 800}}>SisainPay</span>
+                                </div>
+                                <div>
+                                    <p style={{fontSize: '1.2rem', fontWeight: 900, color: 'var(--orange)'}}>Rp 85.500</p>
+                                    <p style={{fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '4px'}}>Saldo Aktif</p>
+                                </div>
+                            </div>
+
+                            <div className="card-neumorph bento-item hover-float" style={{gridColumn: 'span 6', padding: '20px', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
+                                <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px'}}>
+                                    <div style={{width: '36px', height: '36px', background: 'var(--orange)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(238,77,45,0.3)'}}>
+                                        <Star size={18} color="white" fill="white" />
+                                    </div>
+                                    <span style={{fontSize: '0.8rem', fontWeight: 800}}>Koin Sisain</span>
+                                </div>
+                                <div>
+                                    <p style={{fontSize: '1.2rem', fontWeight: 900, color: 'var(--orange)'}}>420</p>
+                                    <p style={{fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '4px'}}>Bisa Dipakai</p>
+                                </div>
+                            </div>
+
+                            {/* === 3. RIWAYAT PESANAN (Bento Span 12) === */}
+                            <div className="card-neumorph bento-item" style={{gridColumn: 'span 12', padding: '25px 30px', textAlign: 'left'}}>
+                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+                                    <h3 style={{fontWeight: 800, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                        <Package size={18} color="var(--orange)" /> Pesanan Saya
+                                    </h3>
+                                    <span style={{fontSize: '0.75rem', color: 'var(--orange)', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center'}}>Lihat Semua <ChevronRight size={14} /></span>
+                                </div>
+                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
+                                    {[
+                                        { icon: <CreditCard size={30} strokeWidth={1.5} />, label: 'Belum Bayar', count: 1 },
+                                        { icon: <Package size={30} strokeWidth={1.5} />, label: 'Dikemas', count: 0 },
+                                        { icon: <Truck size={30} strokeWidth={1.5} />, label: 'Dikirim', count: 2 },
+                                        { icon: <CheckCircle2 size={30} strokeWidth={1.5} />, label: 'Selesai', count: 8 },
+                                        { icon: <RotateCcw size={30} strokeWidth={1.5} />, label: 'Retur', count: 0 },
+                                    ].map(item => (
+                                        <div key={item.label} className="hover-scale" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', width: '20%', position: 'relative'}}>
+                                            <div style={{color: 'var(--orange)', transition: 'var(--transition-smooth)'}} className="order-icon-wrapper">
+                                                {item.icon}
+                                            </div>
+                                            <span style={{fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-muted)', lineHeight: '1.2', textAlign: 'center'}}>{item.label}</span>
+                                            {item.count > 0 && (
+                                                <div style={{position: 'absolute', top: '-6px', right: '10px', background: 'var(--orange)', color: 'white', fontSize: '0.55rem', fontWeight: 800, minWidth: '16px', height: '16px', borderRadius: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', border: '2px solid var(--bg-color)'}}>
+                                                    {item.count}
+                                                </div>
+                                            )}
+                                        </div>
                                     ))}
                                 </div>
                             </div>
-                            
-                            <div className="cat-grid" style={{marginTop: '30px', marginBottom: '0'}}>
+
+                            {/* === 4. VOUCHER & WISHLIST (Bento Span 6 each) === */}
+                            <div className="card-neumorph bento-item hover-float" style={{gridColumn: 'span 6', padding: '15px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer'}}>
+                                <div style={{width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(238,77,45,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                    <Ticket size={20} color="var(--orange)" />
+                                </div>
+                                <div style={{textAlign: 'left'}}>
+                                    <p style={{fontWeight: 800, fontSize: '0.8rem'}}>Voucher</p>
+                                    <p style={{fontSize: '0.65rem', color: 'var(--text-muted)'}}>3 Aktif</p>
+                                </div>
+                            </div>
+
+                            <div className="card-neumorph bento-item hover-float" style={{gridColumn: 'span 6', padding: '15px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer'}}>
+                                <div style={{width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(238,77,45,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                    <Heart size={20} color="var(--orange)" />
+                                </div>
+                                <div style={{textAlign: 'left'}}>
+                                    <p style={{fontWeight: 800, fontSize: '0.8rem'}}>Wishlist</p>
+                                    <p style={{fontSize: '0.65rem', color: 'var(--text-muted)'}}>12 Produk</p>
+                                </div>
+                            </div>
+
+                            <div className="card-neumorph bento-item hover-float" style={{gridColumn: 'span 6', padding: '15px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer'}}>
+                                <div style={{width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(238,77,45,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                    <Store size={20} color="var(--orange)" />
+                                </div>
+                                <div style={{textAlign: 'left'}}>
+                                    <p style={{fontWeight: 800, fontSize: '0.8rem'}}>Toko Favorit</p>
+                                    <p style={{fontSize: '0.65rem', color: 'var(--text-muted)'}}>5 Toko</p>
+                                </div>
+                            </div>
+
+                            <div className="card-neumorph bento-item hover-float" style={{gridColumn: 'span 6', padding: '15px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer'}}>
+                                <div style={{width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(238,77,45,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                    <Star size={20} color="var(--orange)" />
+                                </div>
+                                <div style={{textAlign: 'left'}}>
+                                    <p style={{fontWeight: 800, fontSize: '0.8rem'}}>Ulasan Saya</p>
+                                    <p style={{fontSize: '0.65rem', color: 'var(--text-muted)'}}>6 Belum</p>
+                                </div>
+                            </div>
+
+                            {/* === 5. DAMPAK LINGKUNGAN (Bento Span 12) === */}
+                            <div className="card-neumorph bento-item" style={{gridColumn: 'span 12', padding: '20px', textAlign: 'left', position: 'relative', overflow: 'hidden'}}>
+                                {/* Decorative background elements */}
+                                <div style={{position: 'absolute', top: '-20px', right: '-20px', opacity: 0.05, transform: 'rotate(15deg)', pointerEvents: 'none'}}>
+                                    <Leaf size={120} />
+                                </div>
+                                
+                                <h3 style={{fontWeight: 800, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem'}}>
+                                    <TrendingUp size={18} color="var(--orange)" /> Dampak Lingkunganku
+                                </h3>
+                                
+                                <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '20px'}}>
+                                    {[
+                                        { icon: <Leaf size={20} color="var(--orange)" />, value: '12.5 kg', label: 'CO₂ Dicegah', bg: 'rgba(238,77,45,0.1)' },
+                                        { icon: <Droplets size={20} color="var(--orange)" />, value: '340 L', label: 'Air Dihemat', bg: 'rgba(238,77,45,0.1)' },
+                                        { icon: <Package size={20} color="var(--orange)" />, value: '38', label: 'Makanan Selamat', bg: 'rgba(238,77,45,0.1)' },
+                                    ].map(stat => (
+                                        <div key={stat.label} className="cat-item hover-scale" style={{padding: '12px 8px', borderRadius: '16px'}}>
+                                            <div style={{width: '32px', height: '32px', borderRadius: '10px', background: stat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px'}}>
+                                                {stat.icon}
+                                            </div>
+                                            <p style={{fontWeight: 900, fontSize: '0.9rem', color: 'var(--text-main)'}}>{stat.value}</p>
+                                            <p style={{fontSize: '0.55rem', color: 'var(--text-muted)', textAlign: 'center'}}>{stat.label}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                                
+                                <div className="chart-container" style={{padding: '15px 10px', marginTop: 0}}>
+                                    <svg viewBox="0 0 400 100" width="100%" height="80" style={{overflow: 'visible'}}>
+                                        <defs>
+                                            <linearGradient id="profileGradient" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stopColor="var(--orange)" stopOpacity="0.4" />
+                                                <stop offset="100%" stopColor="var(--orange)" stopOpacity="0" />
+                                            </linearGradient>
+                                        </defs>
+                                        <path d="M 0 80 C 50 70, 80 90, 120 55 C 160 20, 200 50, 240 15 C 280 -15, 320 25, 400 5 L 400 100 L 0 100 Z" fill="url(#profileGradient)" />
+                                        <path d="M 0 80 C 50 70, 80 90, 120 55 C 160 20, 200 50, 240 15 C 280 -15, 320 25, 400 5" fill="none" stroke="var(--orange)" strokeWidth="3" strokeLinecap="round" />
+                                        <circle cx="240" cy="15" r="5" fill="var(--white)" stroke="var(--orange)" strokeWidth="3" className="pulse-circle" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            {/* === 6. BADGE GAMIFIKASI (Bento Span 12) === */}
+                            <div className="card-neumorph bento-item" style={{gridColumn: 'span 12', padding: '20px', textAlign: 'left'}}>
+                                <h3 style={{fontWeight: 800, marginBottom: '15px', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                    <Medal size={18} color="var(--orange)" /> Koleksi Badge
+                                </h3>
+                                <div className="badge-scroll-container" style={{display: 'flex', gap: '15px', overflowX: 'auto', paddingBottom: '10px', scrollbarWidth: 'none'}}>
+                                    {[
+                                        { icon: <Award size={24} color="var(--orange)" />, label: 'Perunggu', unlocked: true },
+                                        { icon: <Leaf size={24} color="var(--orange)" />, label: 'Eco Hero', unlocked: true },
+                                        { icon: <Zap size={24} color="var(--orange)" />, label: 'Cepat Beli', unlocked: true },
+                                        { icon: <Medal size={24} color="var(--orange)" />, label: 'Perak', unlocked: false },
+                                        { icon: <Crown size={24} color="var(--orange)" />, label: 'Emas', unlocked: false },
+                                        { icon: <Heart size={24} color="var(--orange)" />, label: 'Setia', unlocked: false },
+                                    ].map(badge => (
+                                        <div key={badge.label} className="hover-scale" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', opacity: badge.unlocked ? 1 : 0.4, minWidth: '65px'}}>
+                                            <div style={{width: '50px', height: '50px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: badge.unlocked ? 'var(--shadow-light), var(--shadow-dark)' : 'var(--shadow-inset-light), var(--shadow-inset-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                                {badge.icon}
+                                            </div>
+                                            <p style={{fontSize: '0.55rem', fontWeight: 800, textAlign: 'center', color: badge.unlocked ? 'var(--text-main)' : 'var(--text-muted)'}}>{badge.label}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* === 7. LOGOUT (Bento Span 12) === */}
+                            <div style={{gridColumn: 'span 12', marginTop: '10px'}}>
+                                <button
+                                    className="card-neumorph hover-float"
+                                    style={{width: '100%', padding: '18px', color: '#ef4444', fontWeight: 800, border: 'none', cursor: 'pointer', fontSize: '0.95rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}
+                                    onClick={() => showToast('Berhasil Keluar Akun!')}
+                                >
+                                    <LogOut size={18} /> Keluar Akun
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                )}
+                {activeTab === 'merchant' && (
+                    <div style={{padding: '30px 25px', animation: 'slideUp 0.5s ease'}}>
+                        <div className="card-neumorph" style={{padding: '40px 30px', marginBottom: '30px', textAlign: 'left'}}>
+                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px'}}>
+                                <div>
+                                    <h2 style={{fontWeight: 800, fontSize: '1.8rem'}}>Dashboard Merchant</h2>
+                                    <p style={{color: 'var(--text-muted)', fontSize: '0.9rem'}}>Kelola surplus pangan Anda dengan bijak.</p>
+                                </div>
+                                <div className="logo-icon" style={{width: '60px', height: '60px', borderRadius: '18px'}}>
+                                    <TrendingUp size={30} color="white" />
+                                </div>
+                            </div>
+
+                            <div className="cat-grid" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', marginBottom: '40px'}}>
                                 <div className="cat-item">
-                                    <Leaf size={24} color="green" />
-                                    <h3>12.5kg</h3>
-                                    <p style={{fontSize: '0.65rem'}}>CO2 Dicegah</p>
+                                    <Package size={24} color="var(--orange)" />
+                                    <h3 style={{fontSize: '1.4rem', fontWeight: 800}}>
+                                        {products.filter(p => p.merchant === "Warung Bu Siti").length}
+                                    </h3>
+                                    <p style={{fontSize: '0.7rem'}}>Produk Aktif</p>
                                 </div>
                                 <div className="cat-item">
-                                    <TrendingUp size={24} color="var(--orange)" />
-                                    <h3>4.2jt</h3>
-                                    <p style={{fontSize: '0.65rem'}}>Total Hemat</p>
+                                    <BarChart3 size={24} color="var(--orange)" />
+                                    <h3 style={{fontSize: '1.4rem', fontWeight: 800}}>Rp 2.4jt</h3>
+                                    <p style={{fontSize: '0.7rem'}}>Total Pendapatan</p>
                                 </div>
+                                <div className="cat-item">
+                                    <Recycle size={24} color="var(--orange)" />
+                                    <h3 style={{fontSize: '1.4rem', fontWeight: 800}}>45kg</h3>
+                                    <p style={{fontSize: '0.7rem'}}>Pangan Terselamatkan</p>
+                                </div>
+                            </div>
+
+                            <div style={{display: 'flex', gap: '20px', marginBottom: '30px'}}>
+                                <button 
+                                    className="nav-pill active" 
+                                    style={{flex: 1, padding: '15px', border: 'none', borderRadius: '15px'}}
+                                    onClick={() => setIsAddProductOpen(true)}
+                                >
+                                    Unggah Produk Baru
+                                </button>
+                                <button className="nav-pill" style={{flex: 1, padding: '15px', border: 'none', borderRadius: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-light), var(--shadow-dark)'}}>
+                                    Statistik Lanjutan
+                                </button>
                             </div>
                         </div>
 
-                        {/* Account Actions */}
-                        <div style={{marginTop: '30px', display: 'flex', flexDirection: 'column', gap: '15px'}}>
-                            <div className="card-neumorph" style={{flexDirection: 'row', justifyContent: 'space-between', padding: '20px'}}>
-                                <div style={{display: 'flex', gap: '15px', alignItems: 'center'}}>
-                                    <div className="logo-icon" style={{width: '40px', height: '40px', background: 'var(--orange-light)'}}><MapPin size={20} color="var(--orange)" /></div>
-                                    <span style={{fontWeight: 700}}>Alamat Pengiriman</span>
+                        <h3 style={{fontWeight: 800, marginBottom: '20px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '10px'}}>
+                            <ListFilter size={20} color="var(--orange)" /> Daftar Produk Anda
+                        </h3>
+
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
+                            {products.filter(p => p.merchant === "Warung Bu Siti").length === 0 ? (
+                                <div className="card-neumorph" style={{padding: '50px 20px', textAlign: 'center'}}>
+                                    <Package size={48} color="var(--text-muted)" opacity={0.3} style={{marginBottom: '15px'}} />
+                                    <p style={{color: 'var(--text-muted)', fontSize: '0.9rem'}}>Belum ada produk yang Anda jual.</p>
+                                    <button 
+                                        className="nav-pill active" 
+                                        style={{marginTop: '20px', padding: '10px 25px', fontSize: '0.8rem', border: 'none'}}
+                                        onClick={() => setIsAddProductOpen(true)}
+                                    >
+                                        Mulai Jual Sekarang
+                                    </button>
                                 </div>
-                                <Plus size={20} color="var(--text-muted)" />
-                            </div>
-                            <div className="card-neumorph" style={{flexDirection: 'row', justifyContent: 'space-between', padding: '20px'}}>
-                                <div style={{display: 'flex', gap: '15px', alignItems: 'center'}}>
-                                    <div className="logo-icon" style={{width: '40px', height: '40px', background: 'var(--orange-light)'}}><ShoppingCart size={20} color="var(--orange)" /></div>
-                                    <span style={{fontWeight: 700}}>Metode Pembayaran</span>
-                                </div>
-                                <Plus size={20} color="var(--text-muted)" />
-                            </div>
-                            <button className="card-neumorph" style={{padding: '20px', color: '#ff4d4f', fontWeight: 800, border: 'none', cursor: 'pointer'}}>
-                                Keluar Akun
-                            </button>
+                            ) : (
+                                products.filter(p => p.merchant === "Warung Bu Siti").map(p => (
+                                    <div key={p.id} className="card-neumorph" style={{flexDirection: 'row', justifyContent: 'space-between', textAlign: 'left', padding: '15px', animation: 'fadeIn 0.5s ease'}}>
+                                        <div style={{display: 'flex', gap: '20px', alignItems: 'center'}}>
+                                            <div style={{position: 'relative'}}>
+                                                <img src={p.img} style={{width: '75px', height: '75px', borderRadius: '15px', objectFit: 'cover'}} />
+                                                <div style={{position: 'absolute', top: '-5px', right: '-5px', background: 'var(--orange)', color: 'white', fontSize: '0.6rem', padding: '2px 8px', borderRadius: '50px', fontWeight: 800}}>
+                                                    {p.category}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h4 style={{fontWeight: 800, fontSize: '1rem', marginBottom: '4px'}}>{p.name}</h4>
+                                                <div style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
+                                                    <span style={{fontSize: '0.85rem', color: 'var(--orange)', fontWeight: 800}}>{formatIDR(p.currentPrice)}</span>
+                                                    <div style={{width: '1px', height: '10px', background: 'var(--text-muted)', opacity: 0.3}}></div>
+                                                    <span style={{fontSize: '0.75rem', color: 'var(--text-muted)'}}>Stok: {p.stock}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style={{display: 'flex', gap: '10px'}}>
+                                            <div 
+                                                className="filter-icon-btn" 
+                                                style={{width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255, 77, 79, 0.1)', border: 'none'}}
+                                                onClick={(e) => { e.stopPropagation(); handleDeleteProduct(p.id); }}
+                                            >
+                                                <Trash2 size={18} color="#ff4d4f" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
                 )}
@@ -515,8 +911,11 @@ export default function App() {
             <footer className="main-footer">
                 <div className="footer-content">
                     <div className="footer-section">
-                        <span className="logo-text" style={{fontSize: '2rem'}}>Sisain</span>
-                        <p style={{marginTop: '15px', color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.6'}}>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px'}}>
+                            <div className="logo-icon" style={{width: '40px', height: '40px'}}><Recycle size={24} color="white" /></div>
+                            <span style={{fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-main)', letterSpacing: '-1px'}}>Sisain</span>
+                        </div>
+                        <p style={{fontSize: '0.9rem', lineHeight: '1.7', opacity: 0.8}}>
                             Platform marketplace surplus pangan nomor satu di Indonesia. Menyelamatkan makanan, menyelamatkan bumi.
                         </p>
                     </div>
@@ -539,16 +938,25 @@ export default function App() {
                     </div>
                     <div className="footer-section">
                         <h4>Hubungi Kami</h4>
-                        <ul className="footer-links">
-                            <li>support@sisain.online</li>
-                            <li>+62 812-3456-7890</li>
-                            <li>Bandung, Indonesia</li>
-                        </ul>
+                        <div style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: '20px', marginTop: '10px'}}>
+                            <span style={{display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: 600}}>
+                                <Info size={14} color="var(--orange)" />
+                                support@sisain.online
+                            </span>
+                            <span style={{display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: 600}}>
+                                <Phone size={14} color="var(--orange)" />
+                                +62 812-3456-7890
+                            </span>
+                            <span style={{display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: 600}}>
+                                <MapPin size={14} color="var(--orange)" />
+                                Bandung, Indonesia
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <div className="footer-bottom">
-                    <p>&copy; 2026 Sisain.online. Dibuat dengan cinta untuk Bumi.</p>
-                    <div style={{display: 'flex', gap: '20px'}}>
+                    <p>&copy; 2026 Sisain.online. Dibuat dengan ❤️ untuk Bumi.</p>
+                    <div style={{display: 'flex', gap: '25px', fontSize: '0.8rem', fontWeight: 700}}>
                         <span>Instagram</span>
                         <span>Twitter</span>
                         <span>LinkedIn</span>
@@ -619,17 +1027,34 @@ export default function App() {
                         <div className="filter-section-modal">
                             <h4>Range Harga (Rp)</h4>
                             <div className="filter-input-group">
-                                <input type="number" placeholder="Min" />
+                                <input 
+                                    type="number" 
+                                    placeholder="Min" 
+                                    value={filters.priceRange[0]}
+                                    onChange={e => setFilters({...filters, priceRange: [parseInt(e.target.value) || 0, filters.priceRange[1]]})}
+                                />
                                 <span>-</span>
-                                <input type="number" placeholder="Max" />
+                                <input 
+                                    type="number" 
+                                    placeholder="Max" 
+                                    value={filters.priceRange[1]}
+                                    onChange={e => setFilters({...filters, priceRange: [filters.priceRange[0], parseInt(e.target.value) || 1000000]})}
+                                />
                             </div>
                         </div>
 
                         <div className="filter-section-modal" style={{marginTop: '25px'}}>
                             <h4>Jarak Maksimal (km)</h4>
-                            <input type="range" min="1" max="10" step="1" style={{width: '100%', accentColor: 'var(--orange)'}} />
+                            <input 
+                                type="range" 
+                                min="1" max="10" step="1" 
+                                value={filters.maxDistance}
+                                onChange={e => setFilters({...filters, maxDistance: parseInt(e.target.value)})}
+                                style={{width: '100%', accentColor: 'var(--orange)'}} 
+                            />
                             <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginTop: '5px'}}>
                                 <span>1 km</span>
+                                <span>{filters.maxDistance} km</span>
                                 <span>10 km</span>
                             </div>
                         </div>
@@ -701,6 +1126,88 @@ export default function App() {
                                 Tambahkan Ke Keranjang
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+            {/* Add Product Modal */}
+            {isAddProductOpen && (
+                <div className="modal-backdrop" onClick={() => setIsAddProductOpen(false)}>
+                    <div className="modal-card" onClick={e => e.stopPropagation()}>
+                        <div className="close-btn" onClick={() => setIsAddProductOpen(false)}><X size={20} /></div>
+                        <h2 style={{fontWeight: 800, marginBottom: '25px', textAlign: 'center'}}>Unggah Produk Surplus</h2>
+                        <form onSubmit={handleAddProduct} style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+                            <div className="filter-section-modal">
+                                <h4>Nama Produk</h4>
+                                <input 
+                                    className="search-input" 
+                                    style={{width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px'}}
+                                    placeholder="Contoh: Sayur Bayam Segar" 
+                                    value={newProduct.name}
+                                    onChange={e => setNewProduct({...newProduct, name: e.target.value})}
+                                    required
+                                />
+                            </div>
+                            <div style={{display: 'flex', gap: '15px'}}>
+                                <div className="filter-section-modal" style={{flex: 1}}>
+                                    <h4>Kategori</h4>
+                                    <select 
+                                        style={{width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-light), var(--shadow-dark)', borderRadius: '12px', border: 'none', fontWeight: 700}}
+                                        value={newProduct.category}
+                                        onChange={e => setNewProduct({...newProduct, category: e.target.value})}
+                                    >
+                                        {CATEGORIES.filter(c => c !== "Semua").map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                </div>
+                                <div className="filter-section-modal" style={{flex: 1}}>
+                                    <h4>Stok</h4>
+                                    <input 
+                                        type="number"
+                                        style={{width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none'}}
+                                        placeholder="0" 
+                                        value={newProduct.stock}
+                                        onChange={e => setNewProduct({...newProduct, stock: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div style={{display: 'flex', gap: '15px'}}>
+                                <div className="filter-section-modal" style={{flex: 1}}>
+                                    <h4>Harga Normal</h4>
+                                    <input 
+                                        type="number"
+                                        style={{width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none'}}
+                                        placeholder="Rp" 
+                                        value={newProduct.oldPrice}
+                                        onChange={e => setNewProduct({...newProduct, oldPrice: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                                <div className="filter-section-modal" style={{flex: 1}}>
+                                    <h4>Harga Surplus</h4>
+                                    <input 
+                                        type="number"
+                                        style={{width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none'}}
+                                        placeholder="Rp" 
+                                        value={newProduct.currentPrice}
+                                        onChange={e => setNewProduct({...newProduct, currentPrice: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="filter-section-modal">
+                                <h4>Deskripsi Produk</h4>
+                                <textarea 
+                                    style={{width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none', minHeight: '80px'}}
+                                    placeholder="Ceritakan tentang kondisi makanan ini..." 
+                                    value={newProduct.description}
+                                    onChange={e => setNewProduct({...newProduct, description: e.target.value})}
+                                    required
+                                />
+                            </div>
+                            <button className="nav-pill active" type="submit" style={{width: '100%', padding: '18px', border: 'none', marginTop: '10px'}}>
+                                Publikasikan Produk
+                            </button>
+                        </form>
                     </div>
                 </div>
             )}

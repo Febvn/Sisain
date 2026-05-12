@@ -3,8 +3,9 @@ import { createRoot } from 'react-dom';
 import { 
     ShoppingCart, MapPin, Search, Plus, Home, User, 
     ChevronRight, X, Star, Clock, Trash2, CheckCircle, 
-    ArrowLeft, Camera, Package, BarChart3, Leaf, ShieldCheck, Store, TrendingDown
+    ArrowLeft, Camera, Package, BarChart3
 } from 'lucide-react';
+import './style.css';
 
 // --- Dummy Data ---
 const INITIAL_PRODUCTS = [
@@ -101,122 +102,52 @@ const Navbar = ({ activeTab, setActiveTab, cartCount }) => (
 // --- Pages ---
 
 const FeaturesSection = () => (
-    <section className="features-section">
-        <div className="section-header-center">
-            <h2 className="section-title-center">Kenapa Memilih Sisain?</h2>
-            <p className="section-subtitle">Solusi cerdas untuk kantong hemat dan bumi yang lebih sehat.</p>
-        </div>
-        <div className="features-grid-modern">
-            <div className="card-neumorph feature-card-horizontal">
-                <div className="feature-number">1</div>
-                <div className="feature-content">
-                    <h3>Hemat Hingga 70%</h3>
-                    <p>Nikmati makanan berkualitas dari restoran favorit dengan harga yang jauh lebih terjangkau.</p>
-                </div>
+    <section className="features-grid">
+        <div className="feature-card">
+            <div className="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="6" width="18" height="12" rx="2" stroke="#000000" strokeWidth="2"/>
+                    <path d="M12 9V15M9 12H15" stroke="#FF8C00" strokeWidth="2" strokeLinecap="round"/>
+                    <circle cx="12" cy="12" r="1" fill="#FFFFFF"/>
+                </svg>
             </div>
-
-            <div className="card-neumorph feature-card-horizontal">
-                <div className="feature-number">2</div>
-                <div className="feature-content">
-                    <h3>Selamatkan Bumi</h3>
-                    <p>Setiap makanan yang Anda beli membantu mengurangi limbah pangan dan emisi karbon.</p>
-                </div>
-            </div>
-
-            <div className="card-neumorph feature-card-horizontal">
-                <div className="feature-number">3</div>
-                <div className="feature-content">
-                    <h3>Kualitas Terjamin</h3>
-                    <p>Semua mitra kami telah melalui kurasi ketat untuk memastikan kualitas dan keamanan pangan.</p>
-                </div>
-            </div>
-
-            <div className="card-neumorph feature-card-horizontal highlight-card">
-                <div className="feature-number">4</div>
-                <div className="feature-content">
-                    <h3>Pemberdayaan UMKM</h3>
-                    <p>Mendukung pedagang lokal dan UMKM untuk mengurangi kerugian akibat stok makanan surplus.</p>
-                </div>
-            </div>
+            <h3>Hemat Hingga 70%</h3>
+            <p>Nikmati makanan berkualitas dari restoran favorit dengan harga yang jauh lebih terjangkau.</p>
         </div>
-    </section>
-);
-
-const HowToOrderSection = () => (
-    <section className="how-to-order-section">
-        <div className="section-header-center">
-            <h2 className="section-title-center">Cara Pesan di Sisain</h2>
-            <p className="section-subtitle">Pesan makanan surplus dengan mudah di aplikasi Sisain.</p>
-        </div>
-        <div className="order-full-width-container">
-            <div className="order-steps-list">
-                {[
-                    "Buka aplikasi Sisain",
-                    "Pilih Merchant favoritmu",
-                    "Pilih menu yang kamu mau & tambahkan ke keranjangmu",
-                    "Pastikan alamat pengirimanmu",
-                    "Pilih cara pembayaranmu",
-                    "Pesan dan tunggu makananmu dikirimkan!"
-                ].map((step, idx) => (
-                    <div key={idx} className={`step-item-card ${idx === 5 ? 'highlight' : ''}`}>
-                        <div className="step-count">{idx + 1}</div>
-                        <p className="step-desc">{step}</p>
-                    </div>
-                ))}
+        <div className="feature-card">
+            <div className="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="9" stroke="#000000" strokeWidth="2"/>
+                    <path d="M12 7V17M7 12H17" stroke="#FF8C00" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M12 3C12 3 15 7 15 12C15 17 12 21 12 21" stroke="#000000" strokeWidth="1"/>
+                    <path d="M12 3C12 3 9 7 9 12C9 17 12 21 12 21" stroke="#000000" strokeWidth="1"/>
+                </svg>
             </div>
+            <h3>Selamatkan Bumi</h3>
+            <p>Setiap makanan yang Anda beli membantu mengurangi limbah pangan dan emisi karbon.</p>
         </div>
-    </section>
-);
-
-const MerchantsSection = () => (
-    <section className="merchants-section">
-        <div className="section-header-center">
-            <h2 className="section-title-center">Mitra Merchant Pilihan</h2>
-            <p className="section-subtitle">Telah bergabung bersama kami untuk mengurangi limbah pangan.</p>
+        <div className="feature-card">
+            <div className="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L4 5V11C4 16.5 12 21 12 21C12 21 20 16.5 20 11V5L12 2Z" fill="#000000"/>
+                    <path d="M9 12L11 14L15 10" stroke="#FF8C00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="12" cy="12" r="8" stroke="#FFFFFF" strokeWidth="1" strokeDasharray="2 2"/>
+                </svg>
+            </div>
+            <h3>Kualitas Terjamin</h3>
+            <p>Semua mitra kami telah melalui kurasi ketat untuk memastikan kualitas dan keamanan pangan.</p>
         </div>
-        <div className="merchants-grid-container">
-            {[
-                { name: 'Starbucks', logo: 'https://upload.wikimedia.org/wikipedia/en/d/d3/Starbucks_Corporation_Logo_2011.svg', domain: 'starbucks.com' },
-                { name: 'KFC', logo: 'https://upload.wikimedia.org/wikipedia/sco/b/bf/KFC_logo.svg', domain: 'kfc.com' },
-                { name: 'McDonald\'s', logo: 'https://upload.wikimedia.org/wikipedia/commons/3/36/McDonald%27s_Golden_Arches.svg', domain: 'mcdonalds.com' },
-                { name: 'Pizza Hut', logo: 'https://upload.wikimedia.org/wikipedia/sco/d/d2/Pizza_Hut_logo.svg', domain: 'pizzahut.com' },
-                { name: 'Burger King', logo: 'https://upload.wikimedia.org/wikipedia/commons/8/85/Burger_King_logo_%282021%29.svg', domain: 'bk.com' },
-                { name: 'Domino\'s', logo: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Domino%27s_pizza_logo.svg', domain: 'dominos.com' },
-                { name: 'Dunkin\'', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d2/Dunkin%27_Donuts_logo.svg/1280px-Dunkin%27_Donuts_logo.svg.png', domain: 'dunkindonuts.com' },
-                { name: 'Subway', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/5c/Subway_2016_logo.svg', domain: 'subway.com' },
-                { name: 'Taco Bell', logo: 'https://upload.wikimedia.org/wikipedia/en/b/b3/Taco_Bell_2016.svg', domain: 'tacobell.com' },
-                { name: 'Wendy\'s', logo: 'https://upload.wikimedia.org/wikipedia/en/3/32/Wendy%27s_full_logo_2012.svg', domain: 'wendys.com' },
-                { name: 'Baskin-Robbins', logo: 'https://upload.wikimedia.org/wikipedia/commons/d/d8/Baskin-Robbins_logo.svg', domain: 'baskinrobbins.com' },
-                { name: '7-Eleven', logo: 'https://upload.wikimedia.org/wikipedia/commons/4/40/7-eleven_logo.svg', domain: '7-eleven.com' },
-                { name: 'Krispy Kreme', logo: 'https://upload.wikimedia.org/wikipedia/en/d/d3/Krispy_Kreme_logo.svg', domain: 'krispykreme.com' },
-                { name: 'Popeyes', logo: 'https://upload.wikimedia.org/wikipedia/en/f/f6/Popeyes_logo_2020.svg', domain: 'popeyes.com' },
-                { name: 'A&W', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/53/A%26W_logo.svg', domain: 'awrestaurants.com' },
-                { name: 'Dairy Queen', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/ae/Dairy_Queen_logo.svg', domain: 'dairyqueen.com' },
-                { name: 'Carl\'s Jr.', logo: 'https://upload.wikimedia.org/wikipedia/commons/4/4b/Carl%27s_Jr._Logo.svg', domain: 'carlsjr.com' },
-                { name: 'Hard Rock Cafe', logo: 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Hard_Rock_Cafe_logo.svg', domain: 'hardrock.com' },
-                { name: 'Costa Coffee', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Costa_Coffee_logo.svg', domain: 'costa.co.uk' },
-                { name: 'Nando\'s', logo: 'https://upload.wikimedia.org/wikipedia/en/d/d0/Nando%27s_logo.svg', domain: 'nandos.co.uk' }
-            ].map((m, i) => (
-                <div key={i} className="merchant-logo-card">
-                    <div className="merchant-logo-box">
-                        <img 
-                            src={m.logo} 
-                            alt={m.name} 
-                            className="merchant-logo-img" 
-                            onError={(e) => {
-                                if (!e.target.src.includes('google.com')) {
-                                    e.target.src = `https://www.google.com/s2/favicons?domain=${m.domain}&sz=128`;
-                                } else {
-                                    e.target.style.display = 'none';
-                                    e.target.parentNode.classList.add('fallback-active');
-                                    e.target.parentNode.innerHTML = `<div class="fallback-initial">${m.name[0]}</div>`;
-                                }
-                            }}
-                        />
-                    </div>
-                    <span className="merchant-name-label">{m.name}</span>
-                </div>
-            ))}
+        <div className="feature-card">
+            <div className="feature-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 21H21" stroke="#000000" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M5 21V10L12 3L19 10V21" stroke="#000000" strokeWidth="2"/>
+                    <path d="M9 21V14H15V21" stroke="#FF8C00" strokeWidth="2"/>
+                    <rect x="7" y="10" width="10" height="2" fill="#FF8C00"/>
+                </svg>
+            </div>
+            <h3>Pemberdayaan UMKM</h3>
+            <p>Mendukung pedagang lokal dan UMKM untuk mengurangi kerugian akibat stok makanan surplus.</p>
         </div>
     </section>
 );
@@ -238,10 +169,6 @@ const HomeView = ({ products, onSelectProduct, activeCategory, setActiveCategory
         </section>
 
         <FeaturesSection />
-        
-        <HowToOrderSection />
-
-        <MerchantsSection />
 
         <section className="categories-header">
             <h3>Kategori Penyelamatan</h3>

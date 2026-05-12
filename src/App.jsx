@@ -195,7 +195,7 @@ export default function App() {
                 <div className="join-modal-body">
                     <div className="join-option-card">
                         <div className="join-option-image">
-                            <img src="/img/merchant.JPG" alt="Bergabung sebagai Merchant" />
+                            <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=600" alt="Bergabung sebagai Merchant" />
                         </div>
                         <h4>Bergabunglah sebagai Merchant</h4>
                         <ul className="join-benefits">
@@ -207,7 +207,7 @@ export default function App() {
                     </div>
                     <div className="join-option-card">
                         <div className="join-option-image">
-                            <img src="/img/customer.JPG" alt="Bergabung sebagai Pelanggan" />
+                            <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=600" alt="Bergabung sebagai Pelanggan" />
                         </div>
                         <h4>Bergabunglah sebagai Pelanggan</h4>
                         <ul className="join-benefits">

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
     ShoppingCart, MapPin, Search, Plus, Home, User, 
-    X, Star, Clock, Trash2, BarChart3, Package, 
-    Leaf, ShieldCheck, TrendingUp, History, Info, ListFilter,
+    X, Star, Clock, Trash2, BarChart3, Package, Menu,
+    Leaf, ShieldCheck, TrendingUp, History, Info, SlidersHorizontal,
     Recycle, Wallet, Ticket, CreditCard, Heart, Store, Truck, CheckCircle2, RotateCcw,
     Award, Medal, Crown, Zap, Droplets, LogOut, ChevronRight, Settings, Phone,
     Apple, Coffee, Utensils
@@ -120,6 +120,7 @@ export default function App() {
     const [isLanguageSelected, setIsLanguageSelected] = useState(false);
     const [language, setLanguage] = useState("id");
     const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // --- UX Handlers ---
     const showToast = (message) => {
@@ -317,7 +318,33 @@ export default function App() {
                         <MapPin size={14} color="var(--orange)" />
                         <span>Jakarta Selatan</span>
                     </div>
+
+                    {/* Hamburger Button - Mobile Only */}
+                    <button className="hamburger-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label="Menu">
+                        {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                    </button>
                 </div>
+
+                {/* Mobile Navigation Drawer */}
+                {isMobileMenuOpen && (
+                    <nav className="mobile-nav-drawer">
+                        <span onClick={() => { setActiveTab('home'); setIsMobileMenuOpen(false); }} className={`mobile-nav-item ${activeTab === 'home' ? 'active' : ''}`}>
+                            <Home size={18} /> Home
+                        </span>
+                        <span onClick={() => { setActiveTab('about'); setIsMobileMenuOpen(false); }} className={`mobile-nav-item ${activeTab === 'about' ? 'active' : ''}`}>
+                            <Leaf size={18} /> Misi Kami
+                        </span>
+                        <span onClick={() => { setActiveTab('explore'); setIsMobileMenuOpen(false); }} className={`mobile-nav-item ${activeTab === 'explore' ? 'active' : ''}`}>
+                            <Search size={18} /> Eksplorasi
+                        </span>
+                        <span onClick={() => { setActiveTab('merchant'); setIsMobileMenuOpen(false); }} className={`mobile-nav-item ${activeTab === 'merchant' ? 'active' : ''}`}>
+                            <Store size={18} /> Mitra Merchant
+                        </span>
+                        <span className="mobile-nav-item">
+                            <Info size={18} /> Bantuan
+                        </span>
+                    </nav>
+                )}
 
                 <div className="header-bottom-bar">
                     <div className="search-capsule">
@@ -335,7 +362,7 @@ export default function App() {
                             </div>
                             <div className="action-divider"></div>
                             <div className="filter-icon-btn" onClick={() => setIsFilterOpen(true)}>
-                                <ListFilter size={18} color="var(--orange)" />
+                                <SlidersHorizontal size={18} color="var(--orange)" />
                             </div>
                         </div>
                     </div>
@@ -856,7 +883,7 @@ export default function App() {
                         </div>
 
                         <h3 style={{fontWeight: 800, marginBottom: '20px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '10px'}}>
-                            <ListFilter size={20} color="var(--orange)" /> Daftar Produk Anda
+                            <SlidersHorizontal size={20} color="var(--orange)" /> Daftar Produk Anda
                         </h3>
 
                         <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>

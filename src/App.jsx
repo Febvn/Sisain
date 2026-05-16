@@ -5,7 +5,8 @@ import {
     Leaf, ShieldCheck, TrendingUp, History, Info, SlidersHorizontal,
     Recycle, Wallet, Ticket, CreditCard, Heart, Store, Truck, CheckCircle2, RotateCcw,
     Award, Medal, Crown, Zap, Droplets, LogOut, ChevronRight, Settings, Phone, ArrowUp, Smartphone, Percent, Megaphone, ThumbsUp,
-    Apple, Coffee, Utensils, Download, FileText, Upload, ArrowRightLeft, LineChart, Mail, RefreshCw, CalendarClock, AlarmClock, BookOpen
+    Apple, Coffee, Utensils, Download, FileText, Upload, ArrowRightLeft, LineChart, Mail, RefreshCw, CalendarClock, AlarmClock, BookOpen,
+    Instagram, Twitter, Linkedin
 } from 'lucide-react';
 import './index.css';
 import translations from './translations';
@@ -1504,10 +1505,10 @@ export default function App() {
                 </div>
                 <div className="footer-bottom">
                     <p>{t('footerCopy')}</p>
-                    <div style={{ display: 'flex', gap: '25px', fontSize: '0.8rem', fontWeight: 700 }}>
-                        <span>Instagram</span>
-                        <span>Twitter</span>
-                        <span>LinkedIn</span>
+                    <div style={{ display: 'flex', gap: '20px' }}>
+                        <span className="social-icon" title="Instagram"><Instagram size={20} /></span>
+                        <span className="social-icon" title="Twitter"><Twitter size={20} /></span>
+                        <span className="social-icon" title="LinkedIn"><Linkedin size={20} /></span>
                     </div>
                 </div>
             </footer>

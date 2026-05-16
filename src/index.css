@@ -1033,12 +1033,28 @@ main { flex: 1; }
   color: var(--text-muted);
   font-size: 0.85rem;
 }
-.footer-bottom span {
+.social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--bg-color);
+  box-shadow: var(--shadow-light), var(--shadow-dark);
+  color: var(--text-muted);
   cursor: pointer;
   transition: var(--transition-smooth);
-  font-weight: 700;
 }
-.footer-bottom span:hover { color: var(--orange); }
+.social-icon:hover {
+  color: var(--white);
+  background: var(--orange);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(238, 77, 45, 0.3);
+}
+.social-icon:active {
+  transform: scale(0.95);
+}
 
 @media (max-width: 768px) {
   .main-footer {

@@ -278,7 +278,7 @@ export default function App() {
                             <div className="splash-logo-wrap">
                                 <Recycle size={36} strokeWidth={1.5} color="white" />
                             </div>
-                            <span className="splash-brand-text">Sisain</span>
+                            <span className="splash-brand-text">SISAIN</span>
                             <h2 className="splash-title">{t('splashTitle')}</h2>
                             <div className="splash-btn-group">
                                 <button className="splash-btn" onClick={() => { setLanguage("id"); setIsLanguageSelected(true); }}>
@@ -319,7 +319,7 @@ export default function App() {
                         <div className="logo-icon">
                             <Recycle size={22} strokeWidth={2} color="white" />
                         </div>
-                        <span className="logo-text">Sisain</span>
+                        <span className="logo-text">SISAIN</span>
                     </div>
 
                     <nav className="desktop-nav">
@@ -686,7 +686,7 @@ export default function App() {
                                     <div style={{ width: '36px', height: '36px', background: 'var(--orange)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(238,77,45,0.3)' }}>
                                         <Wallet size={18} color="white" />
                                     </div>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>SisainPay</span>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>SISAINPay</span>
                                 </div>
                                 <div>
                                     <p style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--orange)' }}>Rp 85.500</p>
@@ -1290,7 +1290,7 @@ export default function App() {
                                             <Wallet size={36} color="var(--orange)" />
                                         </div>
                                         <div>
-                                            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>Aplikasi Sisain Mitra</h3>
+                                            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '8px' }}>Aplikasi SISAIN Mitra</h3>
                                             <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>Kelola bisnis secara digital untuk pendapatan maksimal.</p>
                                         </div>
                                     </div>
@@ -1332,7 +1332,7 @@ export default function App() {
 
                                 {/* --- Second Grid: Fitur Sisain Mitra --- */}
                                 <div className="card-neumorph" style={{ padding: '60px 40px', maxWidth: '1000px', margin: '0 auto 60px' }}>
-                                    <h2 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-main)', textAlign: 'center', marginBottom: '60px' }}>Fitur Sisain Mitra</h2>
+                                    <h2 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-main)', textAlign: 'center', marginBottom: '60px' }}>Fitur SISAIN Mitra</h2>
                                     
                                     <div className="features-grid-modern" style={{ gap: '50px' }}>
                                         {/* Feature 1 */}
@@ -1461,7 +1461,7 @@ export default function App() {
                     <div className="footer-section">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
                             <div className="logo-icon" style={{ width: '40px', height: '40px' }}><Recycle size={24} color="white" /></div>
-                            <span style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-main)', letterSpacing: '-1px' }}>Sisain</span>
+                            <span style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-main)', letterSpacing: '-1px' }}>SISAIN</span>
                         </div>
                         <p style={{ fontSize: '0.9rem', lineHeight: '1.7', opacity: 0.8 }}>
                             {t('footerDesc')}
@@ -1497,7 +1497,7 @@ export default function App() {
                             </span>
                             <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: 600 }}>
                                 <MapPin size={14} color="var(--orange)" />
-                                Bandung, Indonesia
+                                Lampung, Indonesia
                             </span>
                         </div>
                     </div>

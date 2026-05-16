@@ -24,7 +24,7 @@ const translations = {
         heroSubtitle: "Selamatkan makanan berkualitas dari ribuan mitra merchant dengan harga terbaik. Mari kurangi limbah pangan bersama!",
 
         // === WHY SISAIN ===
-        whySisainTitle: "Kenapa Memilih Sisain?",
+        whySisainTitle: "Kenapa Memilih SISAIN?",
         whySisainSubtitle: "Solusi cerdas untuk kantong hemat dan bumi yang lebih sehat.",
         featureSave: "Hemat Hingga 70%",
         featureSaveDesc: "Nikmati makanan berkualitas dari restoran favorit dengan harga yang jauh lebih terjangkau.",
@@ -36,9 +36,9 @@ const translations = {
         featureUMKMDesc: "Mendukung pedagang lokal dan UMKM untuk mengurangi kerugian akibat stok makanan surplus.",
 
         // === HOW TO ORDER ===
-        howToOrderTitle: "Cara Pesan di Sisain",
-        howToOrderSubtitle: "Pesan makanan surplus dengan mudah di aplikasi Sisain.",
-        orderStep1: "Buka aplikasi Sisain",
+        howToOrderTitle: "Cara Pesan di SISAIN",
+        howToOrderSubtitle: "Pesan makanan surplus dengan mudah di aplikasi SISAIN.",
+        orderStep1: "Buka aplikasi SISAIN",
         orderStep2: "Pilih Merchant favoritmu",
         orderStep3: "Pilih menu yang kamu mau & tambahkan ke keranjangmu",
         orderStep4: "Pastikan alamat pengirimanmu",
@@ -50,8 +50,8 @@ const translations = {
         merchantPartnersSubtitle: "Telah bergabung bersama kami untuk mengurangi limbah pangan.",
 
         // === ABOUT / MISI ===
-        aboutTitle: "Misi Besar Sisain",
-        aboutDesc: "Kami percaya bahwa tidak ada makanan yang layak dibuang. Sisain hadir untuk menghubungkan kelebihan pangan berkualitas dengan para pahlawan penyelamat seperti Anda.",
+        aboutTitle: "Misi Besar SISAIN",
+        aboutDesc: "Kami percaya bahwa tidak ada makanan yang layak dibuang. SISAIN hadir untuk menghubungkan kelebihan pangan berkualitas dengan para pahlawan penyelamat seperti Anda.",
         aboutCircular: "Ekonomi Sirkular",
         aboutCircularDesc: "Membantu pedagang mengurangi kerugian surplus.",
         aboutQuality: "Kualitas Terjamin",
@@ -70,7 +70,7 @@ const translations = {
         profileBronze: "Perunggu",
         profileVerified: "Terverifikasi",
         profileBalance: "Saldo Aktif",
-        profileCoin: "Koin Sisain",
+        profileCoin: "Koin SISAIN",
         profileCoinUsable: "Bisa Dipakai",
         profileOrders: "Pesanan Saya",
         profileViewAll: "Lihat Semua",
@@ -100,7 +100,7 @@ const translations = {
         merchantHeroSurplus: "Surplus",
         merchantHeroTitle2: "Menjadi",
         merchantHeroProfit: "Profit",
-        merchantHeroSubtitle: "Bergabunglah dengan 2000+ mitra lainnya. Kurangi limbah makanan, jangkau pelanggan baru, dan tingkatkan pendapatan toko Anda dengan Sisain.",
+        merchantHeroSubtitle: "Bergabunglah dengan 2000+ mitra lainnya. Kurangi limbah makanan, jangkau pelanggan baru, dan tingkatkan pendapatan toko Anda dengan SISAIN.",
         merchantJoinBtn: "Join Us",
         merchantLoginToast: "Berhasil masuk ke Portal Mitra!",
 
@@ -110,7 +110,7 @@ const translations = {
 
         // === MERCHANT REGISTRATION ===
         merchantRegTitle: "Jual lebih banyak dengan biaya lebih rendah!",
-        merchantRegSubtitle: "Bergabung dengan ekosistem Sisain dan tingkatkan efisiensi operasional Anda.",
+        merchantRegSubtitle: "Bergabung dengan ekosistem SISAIN dan tingkatkan efisiensi operasional Anda.",
         merchantCostSave: "Biaya yang",
         merchantCostSave2: "lebih hemat",
         merchantCostSaveDesc: "Kurangi kerugian stok berlebih.",
@@ -124,19 +124,19 @@ const translations = {
         merchantCostLabel: "Biaya",
 
         // === MERCHANT BENEFITS ===
-        merchantBenefitsTitle: "Apa keuntungan menjadi Mitra Sisain?",
-        merchantBenefit1: "Terintegrasi Ekosistem Sisain",
-        merchantBenefit1Desc: "Pengguna aktif Sisain siap menyelamatkan makanan surplus dari toko Anda setiap hari.",
+        merchantBenefitsTitle: "Apa keuntungan menjadi Mitra SISAIN?",
+        merchantBenefit1: "Terintegrasi Ekosistem SISAIN",
+        merchantBenefit1Desc: "Pengguna aktif SISAIN siap menyelamatkan makanan surplus dari toko Anda setiap hari.",
         merchantBenefit2: "Pembayaran Lancar & Transparan",
         merchantBenefit2Desc: "Dana dari setiap penjualan akan langsung masuk ke Saldo Mitra dan dapat ditarik kapan saja.",
         merchantBenefit3: "Peluang Promosi Eksklusif",
         merchantBenefit3Desc: "Ikuti berbagai kampanye penyelamatan bumi untuk meningkatkan visibilitas toko Anda.",
         merchantBenefit4: "Bantuan Eksposur & Branding",
-        merchantBenefit4Desc: "Toko Anda akan lebih dikenal sebagai pahlawan lingkungan lewat channel publikasi Sisain.",
+        merchantBenefit4Desc: "Toko Anda akan lebih dikenal sebagai pahlawan lingkungan lewat channel publikasi SISAIN.",
 
         // === MERCHANT REGISTRATION FLOW ===
-        merchantRegFlowTitle: "Alur pendaftaran menjadi Mitra Sisain",
-        merchantRegStep1: "Download Aplikasi Sisain Mitra",
+        merchantRegFlowTitle: "Alur pendaftaran menjadi Mitra SISAIN",
+        merchantRegStep1: "Download Aplikasi SISAIN Mitra",
         merchantRegStep1Desc: "Tersedia di Google Play Store dan App Store.",
         merchantRegStep2: "Isi Informasi yang Dibutuhkan",
         merchantRegStep2Desc: "Lengkapi informasi terkait data diri dan detail usaha.",
@@ -144,7 +144,7 @@ const translations = {
         merchantRegStep3Desc: "Siapkan kartu identitas dan rekening bank Anda.",
         merchantRegStep4: "Tunggu Aktivasi Akun",
         merchantRegStep4Desc: "Proses peninjauan berlangsung hingga 1 - 3 hari kerja.",
-        merchantLearnMore: "Cari tahu lebih lengkap mengenai Mitra Sisain",
+        merchantLearnMore: "Cari tahu lebih lengkap mengenai Mitra SISAIN",
 
         // === MERCHANT DASHBOARD ===
         merchantStoreName: "Warung Bu Siti",
@@ -161,7 +161,7 @@ const translations = {
 
         // === MERCHANT FEATURES TAB ===
         merchantFeaturesTitle: "Fitur untuk Merchant",
-        merchantFeat1: "Aplikasi Sisain Mitra",
+        merchantFeat1: "Aplikasi SISAIN Mitra",
         merchantFeat1Desc: "Kelola bisnis secara digital untuk pendapatan maksimal.",
         merchantFeat2: "Saldo Terintegrasi",
         merchantFeat2Desc: "Cek saldo dan pantau riwayat transaksi di satu tempat.",
@@ -171,7 +171,7 @@ const translations = {
         merchantFeat4Desc: "Dapatkan update untuk transaksi baru dan info lainnya.",
 
         // === FITUR SISAIN MITRA ===
-        mitraFeaturesTitle: "Fitur Sisain Mitra",
+        mitraFeaturesTitle: "Fitur SISAIN Mitra",
         mitraFeat1: "Pembaruan Transaksi Instan",
         mitraFeat1Desc: "Terima info terkait pesanan, pembayaran, dan pengelolaan Merchant secara mudah.",
         mitraFeat2: "Manajemen Toko yang Fleksibel",
@@ -186,7 +186,7 @@ const translations = {
         mitraFeat6Desc: "Akses program promosi khusus untuk mendongkrak penjualan toko Anda.",
 
         // === JOIN SISAIN ===
-        joinTitle: "Bergabung dengan Sisain",
+        joinTitle: "Bergabung dengan SISAIN",
         joinMerchantTitle: "Bergabunglah sebagai Merchant",
         joinMerchantPerk1: "Dapatkan lebih banyak pesanan dan penjualan",
         joinMerchantPerk2: "Bangun reputasi bisnis secara online",
@@ -209,7 +209,7 @@ const translations = {
         footerPrivacy: "Kebijakan Privasi",
         footerMerchantRules: "Aturan Main Merchant",
         footerContact: "Hubungi Kami",
-        footerCopy: "© 2026 Sisain.online. Dibuat dengan ❤️ untuk Bumi.",
+        footerCopy: "© 2026 SISAIN.online. Dibuat dengan ❤️ untuk Bumi.",
 
         // === MODALS ===
         modalCategory: "Pilih Kategori",
@@ -265,7 +265,7 @@ const translations = {
         heroSubtitle: "Save quality food from thousands of merchant partners at the best prices. Let's reduce food waste together!",
 
         // === WHY SISAIN ===
-        whySisainTitle: "Why Choose Sisain?",
+        whySisainTitle: "Why Choose SISAIN?",
         whySisainSubtitle: "A smart solution for saving money and a healthier planet.",
         featureSave: "Save Up to 70%",
         featureSaveDesc: "Enjoy quality food from your favorite restaurants at much more affordable prices.",
@@ -277,9 +277,9 @@ const translations = {
         featureUMKMDesc: "Supporting local businesses and MSMEs to reduce losses from surplus food stock.",
 
         // === HOW TO ORDER ===
-        howToOrderTitle: "How to Order on Sisain",
-        howToOrderSubtitle: "Order surplus food easily on the Sisain app.",
-        orderStep1: "Open the Sisain app",
+        howToOrderTitle: "How to Order on SISAIN",
+        howToOrderSubtitle: "Order surplus food easily on the SISAIN app.",
+        orderStep1: "Open the SISAIN app",
         orderStep2: "Choose your favorite Merchant",
         orderStep3: "Select the menu you want & add to your cart",
         orderStep4: "Confirm your delivery address",
@@ -291,8 +291,8 @@ const translations = {
         merchantPartnersSubtitle: "Joined us to help reduce food waste.",
 
         // === ABOUT / MISSION ===
-        aboutTitle: "Sisain's Big Mission",
-        aboutDesc: "We believe that no food deserves to be wasted. Sisain connects quality surplus food with rescue heroes like you.",
+        aboutTitle: "SISAIN's Big Mission",
+        aboutDesc: "We believe that no food deserves to be wasted. SISAIN connects quality surplus food with rescue heroes like you.",
         aboutCircular: "Circular Economy",
         aboutCircularDesc: "Helping merchants reduce surplus losses.",
         aboutQuality: "Guaranteed Quality",
@@ -311,7 +311,7 @@ const translations = {
         profileBronze: "Bronze",
         profileVerified: "Verified",
         profileBalance: "Active Balance",
-        profileCoin: "Sisain Coins",
+        profileCoin: "SISAIN Coins",
         profileCoinUsable: "Available",
         profileOrders: "My Orders",
         profileViewAll: "View All",
@@ -341,7 +341,7 @@ const translations = {
         merchantHeroSurplus: "Surplus",
         merchantHeroTitle2: "Into",
         merchantHeroProfit: "Profit",
-        merchantHeroSubtitle: "Join 2000+ other partners. Reduce food waste, reach new customers, and increase your store revenue with Sisain.",
+        merchantHeroSubtitle: "Join 2000+ other partners. Reduce food waste, reach new customers, and increase your store revenue with SISAIN.",
         merchantJoinBtn: "Join Us",
         merchantLoginToast: "Successfully logged into Merchant Portal!",
 
@@ -351,7 +351,7 @@ const translations = {
 
         // === MERCHANT REGISTRATION ===
         merchantRegTitle: "Sell more at lower costs!",
-        merchantRegSubtitle: "Join the Sisain ecosystem and improve your operational efficiency.",
+        merchantRegSubtitle: "Join the SISAIN ecosystem and improve your operational efficiency.",
         merchantCostSave: "Lower",
         merchantCostSave2: "costs",
         merchantCostSaveDesc: "Reduce losses from excess stock.",
@@ -365,19 +365,19 @@ const translations = {
         merchantCostLabel: "Cost",
 
         // === MERCHANT BENEFITS ===
-        merchantBenefitsTitle: "What are the benefits of being a Sisain Partner?",
-        merchantBenefit1: "Integrated Sisain Ecosystem",
-        merchantBenefit1Desc: "Active Sisain users are ready to rescue surplus food from your store every day.",
+        merchantBenefitsTitle: "What are the benefits of being a SISAIN Partner?",
+        merchantBenefit1: "Integrated SISAIN Ecosystem",
+        merchantBenefit1Desc: "Active SISAIN users are ready to rescue surplus food from your store every day.",
         merchantBenefit2: "Smooth & Transparent Payments",
         merchantBenefit2Desc: "Funds from each sale go directly to your Partner Balance and can be withdrawn anytime.",
         merchantBenefit3: "Exclusive Promotion Opportunities",
         merchantBenefit3Desc: "Join various earth-saving campaigns to increase your store's visibility.",
         merchantBenefit4: "Exposure & Branding Support",
-        merchantBenefit4Desc: "Your store will be known as an environmental hero through Sisain's publication channels.",
+        merchantBenefit4Desc: "Your store will be known as an environmental hero through SISAIN's publication channels.",
 
         // === MERCHANT REGISTRATION FLOW ===
-        merchantRegFlowTitle: "Registration flow to become a Sisain Partner",
-        merchantRegStep1: "Download the Sisain Mitra App",
+        merchantRegFlowTitle: "Registration flow to become a SISAIN Partner",
+        merchantRegStep1: "Download the SISAIN Mitra App",
         merchantRegStep1Desc: "Available on Google Play Store and App Store.",
         merchantRegStep2: "Fill in Required Information",
         merchantRegStep2Desc: "Complete your personal data and business details.",
@@ -385,7 +385,7 @@ const translations = {
         merchantRegStep3Desc: "Prepare your ID card and bank account details.",
         merchantRegStep4: "Wait for Account Activation",
         merchantRegStep4Desc: "The review process takes 1 - 3 business days.",
-        merchantLearnMore: "Learn more about becoming a Sisain Partner",
+        merchantLearnMore: "Learn more about becoming a SISAIN Partner",
 
         // === MERCHANT DASHBOARD ===
         merchantStoreName: "Warung Bu Siti",
@@ -402,7 +402,7 @@ const translations = {
 
         // === MERCHANT FEATURES TAB ===
         merchantFeaturesTitle: "Merchant Features",
-        merchantFeat1: "Sisain Mitra App",
+        merchantFeat1: "SISAIN Mitra App",
         merchantFeat1Desc: "Manage your business digitally for maximum revenue.",
         merchantFeat2: "Integrated Balance",
         merchantFeat2Desc: "Check balance and monitor transaction history in one place.",
@@ -412,7 +412,7 @@ const translations = {
         merchantFeat4Desc: "Get updates for new transactions and other info.",
 
         // === FITUR SISAIN MITRA ===
-        mitraFeaturesTitle: "Sisain Mitra Features",
+        mitraFeaturesTitle: "SISAIN Mitra Features",
         mitraFeat1: "Instant Transaction Updates",
         mitraFeat1Desc: "Receive order, payment, and merchant management info easily.",
         mitraFeat2: "Flexible Store Management",
@@ -427,7 +427,7 @@ const translations = {
         mitraFeat6Desc: "Access special promotional programs to boost your store sales.",
 
         // === JOIN SISAIN ===
-        joinTitle: "Join Sisain",
+        joinTitle: "Join SISAIN",
         joinMerchantTitle: "Join as a Merchant",
         joinMerchantPerk1: "Get more orders and sales",
         joinMerchantPerk2: "Build your business reputation online",
@@ -450,7 +450,7 @@ const translations = {
         footerPrivacy: "Privacy Policy",
         footerMerchantRules: "Merchant Guidelines",
         footerContact: "Contact Us",
-        footerCopy: "© 2026 Sisain.online. Made with ❤️ for Earth.",
+        footerCopy: "© 2026 SISAIN.online. Made with ❤️ for Earth.",
 
         // === MODALS ===
         modalCategory: "Choose Category",

@@ -1042,12 +1042,13 @@ main { flex: 1; }
 
 @media (max-width: 768px) {
   .main-footer {
-    padding: 60px 20px 140px;
+    padding: 40px 15px 120px;
     text-align: center;
+    border-radius: 40px 40px 0 0;
   }
   .footer-content {
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 25px;
   }
   .footer-section > div[style*="flex"] {
     justify-content: center;

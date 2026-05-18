@@ -6,7 +6,7 @@ import {
     Recycle, Wallet, Ticket, CreditCard, Heart, Store, Truck, CheckCircle2, RotateCcw,
     Award, Medal, Crown, Zap, Droplets, LogOut, ChevronRight, Settings, Phone, ArrowUp, Smartphone, Percent, Megaphone, ThumbsUp,
     Apple, Coffee, Croissant, Utensils, Download, FileText, Upload, ArrowRightLeft, LineChart, Mail, RefreshCw, CalendarClock, AlarmClock, BookOpen,
-    Instagram, Twitter, Linkedin, Youtube, Facebook
+    Instagram, Twitter, Linkedin, Youtube, Facebook, Bot, Send, Sparkles, HelpCircle
 } from 'lucide-react';
 import './index.css';
 import translations from './translations';
@@ -139,6 +139,121 @@ export default function App() {
     const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isStoreOpen, setIsStoreOpen] = useState(true);
+
+    // --- Chatbot State ---
+    const [chatMessages, setChatMessages] = useState([
+        {
+            id: 1,
+            sender: 'bot',
+            text: 'Halo! Saya SISAIN AI, asisten virtual pintar Anda. Ada yang bisa saya bantu hari ini mengenai platform SISAIN (penyelamatan makanan surplus)?',
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+    ]);
+    const [chatInput, setChatInput] = useState('');
+    const [isChatLoading, setIsChatLoading] = useState(false);
+    const [chatApiKey, setChatApiKey] = useState(import.meta.env.VITE_GEMINI_API_KEY || '');
+    const [isApiKeyPanelOpen, setIsApiKeyPanelOpen] = useState(false);
+
+    // --- Chatbot Handlers ---
+    const handleSendChatMessage = async (customText = '') => {
+        const textToSend = customText || chatInput;
+        if (!textToSend.trim()) return;
+
+        // Reset input field if typed
+        if (!customText) {
+            setChatInput('');
+        }
+
+        // Add user message to state
+        const userMsg = {
+            id: Date.now(),
+            sender: 'user',
+            text: textToSend,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setChatMessages(prev => [...prev, userMsg]);
+        setIsChatLoading(true);
+
+        // Fetch Gemini response
+        const botResponseText = await getGeminiResponse(textToSend);
+
+        // Add bot response to state
+        const botMsg = {
+            id: Date.now() + 1,
+            sender: 'bot',
+            text: botResponseText,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setChatMessages(prev => [...prev, botMsg]);
+        setIsChatLoading(false);
+
+        // Auto-scroll chat area
+        setTimeout(() => {
+            const chatArea = document.getElementById('chat-messages-area-id');
+            if (chatArea) {
+                chatArea.scrollTo({ top: chatArea.scrollHeight, behavior: 'smooth' });
+            }
+        }, 100);
+    };
+
+    const getGeminiResponse = async (queryText) => {
+        const apiKey = chatApiKey || import.meta.env.VITE_GEMINI_API_KEY || '';
+        if (!apiKey) {
+            return "Maaf, kunci API (Gemini API Key) belum dikonfigurasi. Silakan klik tombol 'Kunci API' di kanan atas untuk memasukkan API Key Anda secara instan agar chatbot aktif!";
+        }
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    contents: [
+                        {
+                            role: 'user',
+                            parts: [
+                                {
+                                    text: `Kamu adalah SISAIN AI, asisten virtual pintar untuk platform SISAIN (penyelamatan makanan surplus berkualitas di Indonesia, khususnya di Lampung).
+Jawablah pertanyaan pengguna berikut dengan ramah, komunikatif, dan menggunakan bahasa Indonesia yang baik serta terstruktur. Jawablah secara spesifik tentang platform SISAIN berdasarkan data berikut.
+
+Informasi SISAIN:
+1. SISAIN (Selamatkan Makanan Surplus) menghubungkan merchant (restoran, cafe, toko roti, dll) yang memiliki stok makanan sisa layak konsumsi dengan pembeli untuk mencegah food waste.
+2. Setiap makanan surplus yang dijual dijamin mendapatkan diskon minimal 50% hingga 70% dari harga normal.
+3. Kategori makanan yang tersedia: Sayur (misal: Premium Vegetable Box), Buah (misal: buah naga, jeruk sunkish), Roti (misal: Croissant, Sourdough), dan Siap Saji (misal: Ayam Geprek).
+4. Fitur Utama Pengguna:
+   - Pencarian makanan terdekat dengan filter radius (1km, 5km, 10km).
+   - Filter ketahanan/shelf life makanan (Hari Ini, Besok, 7 Hari).
+   - Filter waktu buat/upload makanan (1 jam terakhir, 24 jam terakhir, 7 hari terakhir).
+   - Pembayaran digital terintegrasi via SISAINPay dan sistem koin reward (Koin SISAIN).
+   - Gamifikasi lencana prestasi (Badges) seperti Eco Hero, Perunggu, Perak, Emas, dll.
+5. Fitur untuk Merchant (Mitra SISAIN):
+   - Portal khusus (SISAIN Mitra) untuk mengunggah produk surplus secara instan.
+   - Manajemen Buka/Tutup Toko digital dan jam operasional reguler/spesial.
+   - Performa pendapatan harian, statistik total pesanan, dan rating toko secara transparan.
+   - Penarikan saldo pendapatan kapan saja tanpa ribet.
+
+Pertanyaan Pengguna: "${queryText}"`
+                                }
+                            ]
+                        }
+                    ]
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || 'Gagal terhubung dengan server Gemini.');
+            }
+
+            const data = await response.json();
+            const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            return textResult || "Maaf, saya tidak mendapatkan respons yang valid dari AI.";
+        } catch (error) {
+            console.error("Gemini API error details:", error);
+            return `Aduh, terjadi kendala saat memproses jawaban dengan Gemini AI: ${error.message}. Pastikan koneksi internet stabil dan API Key Anda valid.`;
+        }
+    };
 
     // --- Translation Helper ---
     const t = (key) => translations[language]?.[key] || translations['id'][key] || key;
@@ -360,7 +475,7 @@ export default function App() {
                         <span onClick={() => setActiveTab('about')} className={`nav-pill ${activeTab === 'about' ? 'active' : ''}`}>{t('navAbout')}</span>
                         <span onClick={() => setActiveTab('explore')} className={`nav-pill ${activeTab === 'explore' ? 'active' : ''}`}>{t('navExplore')}</span>
                         <span onClick={() => setActiveTab('merchant')} className={`nav-pill ${activeTab === 'merchant' ? 'active' : ''}`}>{t('navMerchant')}</span>
-                        <span className="nav-pill">{t('navHelp')}</span>
+                        <span onClick={() => setActiveTab('help')} className={`nav-pill ${activeTab === 'help' ? 'active' : ''}`}>{t('navHelp')}</span>
                     </nav>
 
                     <div className="nav-auth-group">
@@ -396,7 +511,7 @@ export default function App() {
                         <span onClick={() => { setActiveTab('merchant'); setIsMobileMenuOpen(false); }} className={`mobile-nav-item ${activeTab === 'merchant' ? 'active' : ''}`}>
                             <Store size={18} /> {t('navMerchant')}
                         </span>
-                        <span className="mobile-nav-item">
+                        <span onClick={() => { setActiveTab('help'); setIsMobileMenuOpen(false); }} className={`mobile-nav-item ${activeTab === 'help' ? 'active' : ''}`}>
                             <Info size={18} /> {t('navHelp')}
                         </span>
                     </nav>
@@ -1490,6 +1605,127 @@ export default function App() {
                         )}
                     </div>
                 )}
+
+                {activeTab === 'help' && (
+                    <div className="help-page-container">
+                        <div className="chatbot-card">
+                            {/* Chat Header */}
+                            <div className="chatbot-header">
+                                <div className="chatbot-header-info">
+                                    <div className="chatbot-avatar">
+                                        <Bot size={22} color="white" />
+                                    </div>
+                                    <div className="chatbot-title">
+                                        <h3>SISAIN AI Assistant</h3>
+                                        <p>Online • Siap membantu</p>
+                                    </div>
+                                </div>
+                                <button 
+                                    className="suggestion-chip" 
+                                    style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: 0, padding: '8px 15px' }}
+                                    onClick={() => setIsApiKeyPanelOpen(!isApiKeyPanelOpen)}
+                                >
+                                    <Settings size={14} />
+                                    <span>Kunci API</span>
+                                </button>
+                            </div>
+
+                            {/* API Key configuration slide panel */}
+                            {isApiKeyPanelOpen && (
+                                <div className="chat-api-panel">
+                                    <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', textAlign: 'left' }}>
+                                        Konfigurasi Gemini API Key:
+                                    </label>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <input 
+                                            type="password" 
+                                            placeholder="Paste Gemini API Key Anda disini..." 
+                                            value={chatApiKey} 
+                                            onChange={(e) => setChatApiKey(e.target.value)} 
+                                        />
+                                        <button 
+                                            className="nav-pill active" 
+                                            style={{ border: 'none', padding: '10px 20px', whiteSpace: 'nowrap', fontSize: '0.8rem' }}
+                                            onClick={() => {
+                                                setIsApiKeyPanelOpen(false);
+                                                showToast("API Key Berhasil Disimpan!");
+                                            }}
+                                        >
+                                            Simpan
+                                        </button>
+                                    </div>
+                                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'left', margin: 0 }}>
+                                        Kunci API Anda disimpan secara lokal di memory browser dan hanya digunakan untuk memanggil Gemini API secara langsung.
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Chat Messages scroll area */}
+                            <div className="chat-messages-area" id="chat-messages-area-id">
+                                {chatMessages.map(msg => (
+                                    <div key={msg.id} className={`chat-bubble ${msg.sender}`}>
+                                        <div style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</div>
+                                        <span className="chat-time">{msg.time}</span>
+                                    </div>
+                                ))}
+                                {isChatLoading && (
+                                    <div className="chat-bubble bot" style={{ display: 'inline-block', width: 'fit-content' }}>
+                                        <div className="typing-indicator">
+                                            <span className="typing-dot"></span>
+                                            <span className="typing-dot"></span>
+                                            <span className="typing-dot"></span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Quick suggestions area */}
+                            <div className="chat-suggestions">
+                                {[
+                                    "Apa itu SISAIN?",
+                                    "Bagaimana cara memesan makanan surplus?",
+                                    "Bagaimana cara bergabung sebagai Mitra Merchant?",
+                                    "Apa keuntungan menggunakan SISAIN?"
+                                ].map((q, idx) => (
+                                    <button 
+                                        key={idx} 
+                                        className="suggestion-chip"
+                                        disabled={isChatLoading}
+                                        onClick={() => handleSendChatMessage(q)}
+                                    >
+                                        {q}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Chat Input area */}
+                            <div className="chat-input-area">
+                                <div className="chat-input-wrapper">
+                                    <input 
+                                        type="text" 
+                                        className="chat-text-input" 
+                                        placeholder="Ketik pertanyaan Anda tentang SISAIN..." 
+                                        value={chatInput}
+                                        onChange={(e) => setChatInput(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                handleSendChatMessage();
+                                            }
+                                        }}
+                                        disabled={isChatLoading}
+                                    />
+                                </div>
+                                <button 
+                                    className="chat-send-btn" 
+                                    onClick={() => handleSendChatMessage()}
+                                    disabled={isChatLoading || !chatInput.trim()}
+                                >
+                                    <Send size={18} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
 
             {/* --- PROFESSIONAL FOOTER --- */}
@@ -1510,7 +1746,7 @@ export default function App() {
                             <li onClick={() => setActiveTab('home')}>{t('footerExplore')}</li>
                             <li onClick={() => setActiveTab('about')}>{t('footerMission')}</li>
                             <li onClick={() => setActiveTab('merchant')}>{t('footerMerchant')}</li>
-                            <li>{t('footerFaq')}</li>
+                            <li onClick={() => setActiveTab('help')}>{t('footerFaq')}</li>
                         </ul>
                     </div>
                     <div className="footer-section">

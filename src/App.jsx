@@ -151,8 +151,6 @@ export default function App() {
     ]);
     const [chatInput, setChatInput] = useState('');
     const [isChatLoading, setIsChatLoading] = useState(false);
-    const [chatApiKey, setChatApiKey] = useState(import.meta.env.VITE_GEMINI_API_KEY || '');
-    const [isApiKeyPanelOpen, setIsApiKeyPanelOpen] = useState(false);
 
     // --- Chatbot Handlers ---
     const handleSendChatMessage = async (customText = '') => {
@@ -197,9 +195,9 @@ export default function App() {
     };
 
     const getGeminiResponse = async (queryText) => {
-        const apiKey = chatApiKey || import.meta.env.VITE_GEMINI_API_KEY || '';
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
         if (!apiKey) {
-            return "Maaf, kunci API (Gemini API Key) belum dikonfigurasi. Silakan klik tombol 'Kunci API' di kanan atas untuk memasukkan API Key Anda secara instan agar chatbot aktif!";
+            return "Maaf, asisten virtual SISAIN AI saat ini sedang tidak dapat dihubungi karena kunci API (API Key) belum dikonfigurasi oleh administrator. Silakan hubungi admin SISAIN untuk mengonfigurasinya.";
         }
 
         try {
@@ -1620,45 +1618,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                         <p>Online • Siap membantu</p>
                                     </div>
                                 </div>
-                                <button 
-                                    className="suggestion-chip" 
-                                    style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: 0, padding: '8px 15px' }}
-                                    onClick={() => setIsApiKeyPanelOpen(!isApiKeyPanelOpen)}
-                                >
-                                    <Settings size={14} />
-                                    <span>Kunci API</span>
-                                </button>
                             </div>
-
-                            {/* API Key configuration slide panel */}
-                            {isApiKeyPanelOpen && (
-                                <div className="chat-api-panel">
-                                    <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', textAlign: 'left' }}>
-                                        Konfigurasi Gemini API Key:
-                                    </label>
-                                    <div style={{ display: 'flex', gap: '10px' }}>
-                                        <input 
-                                            type="password" 
-                                            placeholder="Paste Gemini API Key Anda disini..." 
-                                            value={chatApiKey} 
-                                            onChange={(e) => setChatApiKey(e.target.value)} 
-                                        />
-                                        <button 
-                                            className="nav-pill active" 
-                                            style={{ border: 'none', padding: '10px 20px', whiteSpace: 'nowrap', fontSize: '0.8rem' }}
-                                            onClick={() => {
-                                                setIsApiKeyPanelOpen(false);
-                                                showToast("API Key Berhasil Disimpan!");
-                                            }}
-                                        >
-                                            Simpan
-                                        </button>
-                                    </div>
-                                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'left', margin: 0 }}>
-                                        Kunci API Anda disimpan secara lokal di memory browser dan hanya digunakan untuk memanggil Gemini API secara langsung.
-                                    </p>
-                                </div>
-                            )}
 
                             {/* Chat Messages scroll area */}
                             <div className="chat-messages-area" id="chat-messages-area-id">

@@ -225,6 +225,12 @@ const translations = {
         modalRatingShow: "Menampilkan produk dengan rating",
         modalApplyFilter: "Terapkan Filter",
         modalAddToCart: "Tambahkan Ke Keranjang",
+        modalAll: "Semua",
+        modalCreatedTime: "Waktu Unggah / Dibuat",
+        modalCreatedAll: "Semua Waktu",
+        modalCreated1h: "1 Jam Terakhir",
+        modalCreated24h: "24 Jam Terakhir",
+        modalCreated7d: "7 Hari Terakhir",
 
         // === ADD PRODUCT ===
         addProductTitle: "Unggah Produk Surplus",
@@ -466,6 +472,12 @@ const translations = {
         modalRatingShow: "Showing products with rating",
         modalApplyFilter: "Apply Filter",
         modalAddToCart: "Add to Cart",
+        modalAll: "All",
+        modalCreatedTime: "Upload Time / Created",
+        modalCreatedAll: "All Time",
+        modalCreated1h: "Last 1 Hour",
+        modalCreated24h: "Last 24 Hours",
+        modalCreated7d: "Last 7 Days",
 
         // === ADD PRODUCT ===
         addProductTitle: "Upload Surplus Product",

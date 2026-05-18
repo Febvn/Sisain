@@ -5,8 +5,8 @@ import {
     Leaf, ShieldCheck, TrendingUp, History, Info, SlidersHorizontal,
     Recycle, Wallet, Ticket, CreditCard, Heart, Store, Truck, CheckCircle2, RotateCcw,
     Award, Medal, Crown, Zap, Droplets, LogOut, ChevronRight, Settings, Phone, ArrowUp, Smartphone, Percent, Megaphone, ThumbsUp,
-    Apple, Coffee, Utensils, Download, FileText, Upload, ArrowRightLeft, LineChart, Mail, RefreshCw, CalendarClock, AlarmClock, BookOpen,
-    Instagram, Twitter, Linkedin
+    Apple, Coffee, Croissant, Utensils, Download, FileText, Upload, ArrowRightLeft, LineChart, Mail, RefreshCw, CalendarClock, AlarmClock, BookOpen,
+    Instagram, Twitter, Linkedin, Youtube, Facebook
 } from 'lucide-react';
 import './index.css';
 import translations from './translations';
@@ -24,7 +24,9 @@ const INITIAL_PRODUCTS = [
         merchant: "Warung Bu Siti",
         rating: 4.8,
         stock: 5,
-        description: "A complete set of fresh vegetables including carrots, potatoes, beans, and celery. Saved from daily surplus."
+        description: "A complete set of fresh vegetables including carrots, potatoes, beans, and celery. Saved from daily surplus.",
+        createdAt: Date.now() - 15 * 60 * 1000, // 15 mins ago
+        shelfLife: "today"
     },
     {
         id: 2,
@@ -37,7 +39,9 @@ const INITIAL_PRODUCTS = [
         merchant: "Artisan Bakery",
         rating: 4.9,
         stock: 2,
-        description: "Freshly baked artisan sourdough. Surplus from today's morning batch."
+        description: "Freshly baked artisan sourdough. Surplus from today's morning batch.",
+        createdAt: Date.now() - 45 * 60 * 1000, // 45 mins ago
+        shelfLife: "tomorrow"
     },
     {
         id: 3,
@@ -50,7 +54,9 @@ const INITIAL_PRODUCTS = [
         merchant: "Geprek Universe",
         rating: 4.7,
         stock: 10,
-        description: "Crispy chicken with signature spicy sambal. High quality surplus from a corporate event."
+        description: "Crispy chicken with signature spicy sambal. High quality surplus from a corporate event.",
+        createdAt: Date.now() - 3 * 3600 * 1000, // 3 hours ago
+        shelfLife: "today"
     },
     {
         id: 4,
@@ -63,7 +69,9 @@ const INITIAL_PRODUCTS = [
         merchant: "Fresh Orchards",
         rating: 4.6,
         stock: 3,
-        description: "Sweet and juicy red dragon fruit. Surplus from international export batch."
+        description: "Sweet and juicy red dragon fruit. Surplus from international export batch.",
+        createdAt: Date.now() - 12 * 3600 * 1000, // 12 hours ago
+        shelfLife: "7days"
     },
     {
         id: 5,
@@ -76,7 +84,9 @@ const INITIAL_PRODUCTS = [
         merchant: "La Petite Boulangerie",
         rating: 4.9,
         stock: 4,
-        description: "Buttery croissant topped with roasted almonds. Afternoon surplus batch."
+        description: "Buttery croissant topped with roasted almonds. Afternoon surplus batch.",
+        createdAt: Date.now() - 2 * 24 * 3600 * 1000, // 2 days ago
+        shelfLife: "tomorrow"
     },
     {
         id: 6,
@@ -89,7 +99,9 @@ const INITIAL_PRODUCTS = [
         merchant: "Tropical Harvest",
         rating: 4.5,
         stock: 8,
-        description: "Imported Sunkist oranges, juicy and vitamin-packed surplus."
+        description: "Imported Sunkist oranges, juicy and vitamin-packed surplus.",
+        createdAt: Date.now() - 5 * 24 * 3600 * 1000, // 5 days ago
+        shelfLife: "7days"
     }
 ];
 
@@ -119,7 +131,8 @@ export default function App() {
         priceRange: [0, 100000],
         maxDistance: 5,
         shelfLife: 'all',
-        minRating: 0
+        minRating: 0,
+        createdTime: 'all'
     });
     const [isLanguageSelected, setIsLanguageSelected] = useState(false);
     const [language, setLanguage] = useState("id");
@@ -183,7 +196,9 @@ export default function App() {
             merchant: "Warung Bu Siti",
             rating: 5.0,
             distance: "0.0 km",
-            img: newProduct.img || "https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&q=80&w=600"
+            img: newProduct.img || "https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&q=80&w=600",
+            createdAt: Date.now(),
+            shelfLife: "today"
         };
         setProducts(prev => [product, ...prev]);
         setIsAddProductOpen(false);
@@ -202,6 +217,23 @@ export default function App() {
         .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.merchant.toLowerCase().includes(searchQuery.toLowerCase()))
         .filter(p => p.currentPrice >= filters.priceRange[0] && p.currentPrice <= filters.priceRange[1])
         .filter(p => p.rating >= filters.minRating)
+        .filter(p => {
+            const distNum = parseFloat(p.distance) || 0;
+            return distNum <= filters.maxDistance;
+        })
+        .filter(p => {
+            if (filters.shelfLife === 'all') return true;
+            return p.shelfLife === filters.shelfLife;
+        })
+        .filter(p => {
+            if (filters.createdTime === 'all') return true;
+            const uploadTime = p.createdAt || (Date.now() - 24 * 3600 * 1000); // fallback
+            const timeDiff = Date.now() - uploadTime;
+            if (filters.createdTime === '1h') return timeDiff <= 3600 * 1000;
+            if (filters.createdTime === '24h') return timeDiff <= 24 * 3600 * 1000;
+            if (filters.createdTime === '7d') return timeDiff <= 7 * 24 * 3600 * 1000;
+            return true;
+        })
         .sort((a, b) => {
             if (sortType === "termurah") return a.currentPrice - b.currentPrice;
             if (sortType === "rating") return b.rating - a.rating;
@@ -551,6 +583,10 @@ export default function App() {
                                 {filteredProducts.map(p => (
                                     <div key={p.id} className="card-neumorph" onClick={() => setSelectedProduct(p)}>
                                         <div className="card-image-wrapper">
+                                            <div className="discount-ribbon">
+                                                <Percent size={12} strokeWidth={3} />
+                                                <span>50%</span>
+                                            </div>
                                             <img src={p.img} alt={p.name} className="card-image" />
                                         </div>
                                         <h3 className="card-title">{p.name}</h3>
@@ -1505,10 +1541,21 @@ export default function App() {
                 </div>
                 <div className="footer-bottom">
                     <p>{t('footerCopy')}</p>
-                    <div style={{ display: 'flex', gap: '20px' }}>
-                        <span className="social-icon" title="Instagram"><Instagram size={20} /></span>
-                        <span className="social-icon" title="Twitter"><Twitter size={20} /></span>
-                        <span className="social-icon" title="LinkedIn"><Linkedin size={20} /></span>
+                    <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <span className="social-icon" title="Instagram"><Instagram size={18} /></span>
+                        <span className="social-icon" title="Facebook"><Facebook size={18} /></span>
+                        <span className="social-icon" title="X (Twitter)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                            </svg>
+                        </span>
+                        <span className="social-icon" title="TikTok">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.02 1.59 4.23.86.17 1.73.28 2.61.3v3.94c-.78-.07-1.57-.27-2.31-.59-.73-.31-1.4-.77-1.95-1.34v7.41c.02 1.4-.33 2.79-1.01 4.02-.68 1.23-1.7 2.21-2.92 2.82-1.22.61-2.6.85-3.96.67-1.35-.17-2.61-.81-3.6-1.81-1.02-1.02-1.66-2.37-1.81-3.79-.15-1.42.14-2.85.83-4.08.68-1.22 1.73-2.18 2.98-2.73 1.24-.56 2.63-.7 3.96-.4v4.06c-.75-.24-1.56-.21-2.3.08-.74.29-1.37.82-1.78 1.5-.41.68-.57 1.48-.46 2.27.11.79.52 1.51 1.14 2.03.62.52 1.41.81 2.23.82.81.01 1.6-.26 2.21-.76.61-.51.98-1.24 1.05-2.02.04-.63.02-1.26.02-1.89V0h.02z"/>
+                            </svg>
+                        </span>
+                        <span className="social-icon" title="YouTube"><Youtube size={18} /></span>
+                        <span className="social-icon" title="LinkedIn"><Linkedin size={18} /></span>
                     </div>
                 </div>
             </footer>
@@ -1557,7 +1604,7 @@ export default function App() {
                                     {cat === "Semua" && <Package size={24} />}
                                     {cat === "Sayur" && <Leaf size={24} />}
                                     {cat === "Buah" && <Apple size={24} />}
-                                    {cat === "Roti" && <Coffee size={24} />}
+                                    {cat === "Roti" && <Croissant size={24} />}
                                     {cat === "Siap Saji" && <Utensils size={24} />}
                                     <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{cat}</span>
                                 </div>
@@ -1618,10 +1665,61 @@ export default function App() {
 
                         <div className="filter-section-modal" style={{ marginTop: '25px' }}>
                             <h4>{t('modalShelfLife')}</h4>
-                            <div className="cat-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                                <div className="sort-item active" style={{ fontSize: '0.7rem', padding: '10px' }}>{t('modalToday')}</div>
-                                <div className="sort-item" style={{ fontSize: '0.7rem', padding: '10px' }}>{t('modalTomorrow')}</div>
-                                <div className="sort-item" style={{ fontSize: '0.7rem', padding: '10px' }}>{t('modal7Days')}</div>
+                            <div className="filter-grid">
+                                <div 
+                                    className={`sort-item ${filters.shelfLife === 'all' ? 'active' : ''}`} 
+                                    onClick={() => setFilters({ ...filters, shelfLife: 'all' })}
+                                >
+                                    {t('modalAll')}
+                                </div>
+                                <div 
+                                    className={`sort-item ${filters.shelfLife === 'today' ? 'active' : ''}`} 
+                                    onClick={() => setFilters({ ...filters, shelfLife: 'today' })}
+                                >
+                                    {t('modalToday')}
+                                </div>
+                                <div 
+                                    className={`sort-item ${filters.shelfLife === 'tomorrow' ? 'active' : ''}`} 
+                                    onClick={() => setFilters({ ...filters, shelfLife: 'tomorrow' })}
+                                >
+                                    {t('modalTomorrow')}
+                                </div>
+                                <div 
+                                    className={`sort-item ${filters.shelfLife === '7days' ? 'active' : ''}`} 
+                                    onClick={() => setFilters({ ...filters, shelfLife: '7days' })}
+                                >
+                                    {t('modal7Days')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="filter-section-modal" style={{ marginTop: '25px' }}>
+                            <h4>{t('modalCreatedTime')}</h4>
+                            <div className="filter-grid">
+                                <div 
+                                    className={`sort-item ${filters.createdTime === 'all' ? 'active' : ''}`} 
+                                    onClick={() => setFilters({ ...filters, createdTime: 'all' })}
+                                >
+                                    {t('modalCreatedAll')}
+                                </div>
+                                <div 
+                                    className={`sort-item ${filters.createdTime === '1h' ? 'active' : ''}`} 
+                                    onClick={() => setFilters({ ...filters, createdTime: '1h' })}
+                                >
+                                    {t('modalCreated1h')}
+                                </div>
+                                <div 
+                                    className={`sort-item ${filters.createdTime === '24h' ? 'active' : ''}`} 
+                                    onClick={() => setFilters({ ...filters, createdTime: '24h' })}
+                                >
+                                    {t('modalCreated24h')}
+                                </div>
+                                <div 
+                                    className={`sort-item ${filters.createdTime === '7d' ? 'active' : ''}`} 
+                                    onClick={() => setFilters({ ...filters, createdTime: '7d' })}
+                                >
+                                    {t('modalCreated7d')}
+                                </div>
                             </div>
                         </div>
 
@@ -1674,6 +1772,117 @@ export default function App() {
                                     <div style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{formatIDR(selectedProduct.oldPrice)}</div>
                                 </div>
                             </div>
+
+                            {/* Neumorphic Product Details Grid */}
+                            <div style={{ 
+                                display: 'grid', 
+                                gridTemplateColumns: 'repeat(2, 1fr)', 
+                                gap: '15px', 
+                                marginBottom: '25px',
+                                marginTop: '10px'
+                            }}>
+                                {/* Ketahanan / Expiry Badge */}
+                                <div style={{ 
+                                    background: 'var(--bg-color)', 
+                                    padding: '12px 15px', 
+                                    borderRadius: '16px', 
+                                    boxShadow: 'var(--shadow-light), var(--shadow-dark)',
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '10px' 
+                                }}>
+                                    <Clock size={20} color="var(--orange)" />
+                                    <div>
+                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                                            {language === 'id' ? 'Ketahanan' : 'Shelf Life'}
+                                        </div>
+                                        <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                                            {selectedProduct.shelfLife === 'today' && t('modalToday')}
+                                            {selectedProduct.shelfLife === 'tomorrow' && t('modalTomorrow')}
+                                            {selectedProduct.shelfLife === '7days' && t('modal7Days')}
+                                            {!['today', 'tomorrow', '7days'].includes(selectedProduct.shelfLife) && (selectedProduct.shelfLife || t('modalToday'))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Waktu Unggah / Created Time Badge */}
+                                <div style={{ 
+                                    background: 'var(--bg-color)', 
+                                    padding: '12px 15px', 
+                                    borderRadius: '16px', 
+                                    boxShadow: 'var(--shadow-light), var(--shadow-dark)',
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '10px' 
+                                }}>
+                                    <CalendarClock size={20} color="var(--orange)" />
+                                    <div>
+                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                                            {language === 'id' ? 'Diunggah' : 'Uploaded'}
+                                        </div>
+                                        <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                                            {(() => {
+                                                const diff = Date.now() - (selectedProduct.createdAt || (Date.now() - 3600 * 1000));
+                                                const mins = Math.floor(diff / 60000);
+                                                const hours = Math.floor(diff / 3600000);
+                                                const days = Math.floor(diff / 86400000);
+                                                if (language === 'id') {
+                                                    if (mins < 60) return `${Math.max(1, mins)} Menit Lalu`;
+                                                    if (hours < 24) return `${hours} Jam Lalu`;
+                                                    return `${days} Hari Lalu`;
+                                                } else {
+                                                    if (mins < 60) return `${Math.max(1, mins)} mins ago`;
+                                                    if (hours < 24) return `${hours} hrs ago`;
+                                                    return `${days} days ago`;
+                                                }
+                                            })()}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Jarak Badge */}
+                                <div style={{ 
+                                    background: 'var(--bg-color)', 
+                                    padding: '12px 15px', 
+                                    borderRadius: '16px', 
+                                    boxShadow: 'var(--shadow-light), var(--shadow-dark)',
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '10px' 
+                                }}>
+                                    <MapPin size={20} color="var(--orange)" />
+                                    <div>
+                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                                            {language === 'id' ? 'Jarak' : 'Distance'}
+                                        </div>
+                                        <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                                            {selectedProduct.distance || '0.0 km'}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Stok Badge */}
+                                <div style={{ 
+                                    background: 'var(--bg-color)', 
+                                    padding: '12px 15px', 
+                                    borderRadius: '16px', 
+                                    boxShadow: 'var(--shadow-light), var(--shadow-dark)',
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '10px' 
+                                }}>
+                                    <Package size={20} color="var(--orange)" />
+                                    <div>
+                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                                            {language === 'id' ? 'Stok' : 'Stock'}
+                                        </div>
+                                        <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                                            {selectedProduct.stock || 0} porsi
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <p style={{ color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '30px' }}>{selectedProduct.description}</p>
                             <button
                                 className="nav-pill active"

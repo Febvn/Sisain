@@ -5,6 +5,7 @@ const translations = {
 
         // === NAV ===
         navHome: "Home",
+        navLocation: "Lokasi",
         navAbout: "Misi Kami",
         navExplore: "Eksplorasi",
         navMerchant: "Mitra Merchant",
@@ -252,6 +253,7 @@ const translations = {
 
         // === NAV ===
         navHome: "Home",
+        navLocation: "Location",
         navAbout: "Our Mission",
         navExplore: "Explore",
         navMerchant: "Merchant Partner",

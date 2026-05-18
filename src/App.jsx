@@ -108,6 +108,79 @@ const INITIAL_PRODUCTS = [
 const CATEGORIES = ["Semua", "Sayur", "Buah", "Roti", "Siap Saji"];
 const formatIDR = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
 
+const NESTED_REGIONS = {
+    "Jawa": {
+        "DKI Jakarta": {
+            "Jakarta Selatan": ["Cilandak", "Kebayoran Baru", "Kebayoran Lama", "Pasar Minggu", "Tebet", "Setiabudi", "Pancoran", "Jagakarsa", "Mampang Prapatan", "Pesanggrahan"],
+            "Jakarta Pusat": ["Menteng", "Tanah Abang", "Gambir", "Senen", "Kemayoran", "Cempaka Putih", "Sawah Besar", "Johar Baru"],
+            "Jakarta Barat": ["Kembangan", "Kebon Jeruk", "Palmerah", "Grogol Petamburan", "Cengkareng", "Kalideres", "Tambora", "Taman Sari"],
+            "Jakarta Utara": ["Penjaringan", "Tanjung Priok", "Kelapa Gading", "Koja", "Cilincing", "Pademangan"],
+            "Jakarta Timur": ["Jatinegara", "Duren Sawit", "Pulogadung", "Cakung", "Kramat Jati", "Makasar", "Ciracas", "Pasar Rebo", "Matraman", "Cipayung"]
+        },
+        "Jawa Barat": {
+            "Bandung": ["Coblong", "Dago", "Sumur Bandung", "Regol", "Astana Anyar", "Cibeunying Kaler", "Cibeunying Kidul", "Lengkong", "Cicendo", "Andir"],
+            "Bogor": ["Bogor Timur", "Bogor Barat", "Bogor Tengah", "Bogor Utara", "Bogor Selatan", "Tanah Sareal"],
+            "Depok": ["Margonda", "Beji", "Pancoran Mas", "Sukmajaya", "Cimanggis", "Sawangan", "Limo", "Cinere"],
+            "Bekasi": ["Bekasi Barat", "Bekasi Timur", "Bekasi Utara", "Bekasi Selatan", "Pondok Gede", "Jatiasih", "Rawalumbu"],
+            "Cirebon": ["Kejaksan", "Lemahwungkuk", "Harjamukti", "Pekalipan", "Kesambi"]
+        },
+        "Jawa Timur": {
+            "Surabaya": ["Gubeng", "Tegalsari", "Wonokromo", "Rungkut", "Karangpilang", "Sukolilo", "Semampir", "Kenjeran"],
+            "Malang": ["Klojen", "Blimbing", "Lowokwaru", "Sukun", "Kedungkandang"],
+            "Kediri": ["Kota", "Mojoroto", "Pesantren"],
+            "Batu": ["Batu", "Bumiaji", "Junrejo"]
+        },
+        "DI Yogyakarta": {
+            "Yogyakarta": ["Malioboro", "Danurejan", "Gondomanan", "Kraton", "Mergangsan", "Umbulharjo", "Kotagede", "Tegalrejo"],
+            "Sleman": ["Depok", "Kaliurang", "Godean", "Mlati", "Ngaglik"],
+            "Bantul": ["Sewon", "Banguntapan", "Kasihan", "Imogiri"]
+        }
+    },
+    "Sumatera": {
+        "Lampung": {
+            "Bandar Lampung": ["Tanjung Karang Pusat", "Tanjung Karang Timur", "Kedaton", "Rajabasa", "Sukarame", "Teluk Betung Utara"],
+            "Metro": ["Metro Pusat", "Metro Utara", "Metro Barat", "Metro Timur", "Metro Selatan"]
+        },
+        "Sumatera Utara": {
+            "Medan": ["Medan Baru", "Medan Selayang", "Medan Sunggal", "Medan Petisah", "Medan Kota", "Medan Area", "Medan Deli"],
+            "Binjai": ["Binjai Kota", "Binjai Barat", "Binjai Utara", "Binjai Timur", "Binjai Selatan"]
+        },
+        "Sumatera Barat": {
+            "Padang": ["Padang Barat", "Padang Timur", "Padang Utara", "Padang Selatan", "Koto Tangah", "Nanggalo"],
+            "Bukittinggi": ["Guguk Panjang", "Mandiangin Koto Selayan", "Aur Birugo Tigo Baleh"]
+        },
+        "Sumatera Selatan": {
+            "Palembang": ["Ilir Timur I", "Ilir Timur II", "Ilir Barat I", "Ilir Barat II", "Sako", "Sukarami", "Plaju", "Kertapati"]
+        }
+    },
+    "Kalimantan": {
+        "Kalimantan Timur": {
+            "Balikpapan": ["Balikpapan Kota", "Balikpapan Selatan", "Balikpapan Barat", "Balikpapan Utara", "Balikpapan Timur"],
+            "Samarinda": ["Samarinda Kota", "Samarinda Utara", "Samarinda Seberang", "Samarinda Ulu", "Samarinda Ilir"]
+        },
+        "Kalimantan Barat": {
+            "Pontianak": ["Pontianak Kota", "Pontianak Barat", "Pontianak Selatan", "Pontianak Tenggara", "Pontianak Utara", "Pontianak Timur"]
+        }
+    },
+    "Sulawesi": {
+        "Sulawesi Selatan": {
+            "Makassar": ["Ujung Pandang", "Panakkukang", "Rappocini", "Tamalate", "Biringkanaya", "Manggala", "Tallo"]
+        },
+        "Sulawesi Utara": {
+            "Manado": ["Wenang", "Sario", "Malalayang", "Tikala", "Mapanget", "Tuminting"]
+        }
+    },
+    "Bali & Nusa Tenggara": {
+        "Bali": {
+            "Denpasar": ["Denpasar Barat", "Denpasar Timur", "Denpasar Selatan", "Denpasar Utara"],
+            "Badung": ["Kuta", "Kuta Utara", "Kuta Selatan", "Mengwi", "Abiansemal"]
+        },
+        "Nusa Tenggara Barat": {
+            "Mataram": ["Ampenan", "Mataram", "Cakranegara", "Sekarbela", "Selaparang"]
+        }
+    }
+};
+
 export default function App() {
     // --- State Management ---
     const [activeTab, setActiveTab] = useState("home");
@@ -139,6 +212,61 @@ export default function App() {
     const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isStoreOpen, setIsStoreOpen] = useState(true);
+    const [userLocation, setUserLocation] = useState(null);
+    const [inputLocation, setInputLocation] = useState("");
+    const [selectedRadius, setSelectedRadius] = useState(5);
+    const [showMapFiltersModal, setShowMapFiltersModal] = useState(false);
+    const [selectedIsland, setSelectedIsland] = useState("");
+    const [selectedProvince, setSelectedProvince] = useState("");
+    const [selectedCity, setSelectedCity] = useState("");
+    const [selectedDistrict, setSelectedDistrict] = useState("");
+    const [geoSearchQuery, setGeoSearchQuery] = useState("");
+    const [activeAlphabet, setActiveAlphabet] = useState("");
+
+    // --- Nested Geo Location Helpers ---
+    const getGeoSearchResults = (query) => {
+        if (!query.trim()) return [];
+        const cleanQuery = query.toLowerCase();
+        const results = [];
+
+        Object.entries(NESTED_REGIONS).forEach(([island, provinces]) => {
+            if (island.toLowerCase().includes(cleanQuery)) {
+                results.push({ type: 'pulau', name: island, path: [island] });
+            }
+            Object.entries(provinces).forEach(([province, cities]) => {
+                if (province.toLowerCase().includes(cleanQuery)) {
+                    results.push({ type: 'provinsi', name: province, path: [island, province] });
+                }
+                Object.entries(cities).forEach(([city, districts]) => {
+                    if (city.toLowerCase().includes(cleanQuery)) {
+                        results.push({ type: 'kota', name: city, path: [island, province, city] });
+                    }
+                    districts.forEach(district => {
+                        if (district.toLowerCase().includes(cleanQuery)) {
+                            results.push({ type: 'kecamatan', name: district, path: [island, province, city, district] });
+                        }
+                    });
+                });
+            });
+        });
+
+        return results.slice(0, 15);
+    };
+
+    const handleSelectSearchResult = (result) => {
+        const [island, province, city, district] = result.path;
+        setSelectedIsland(island || "");
+        setSelectedProvince(province || "");
+        setSelectedCity(city || "");
+        setSelectedDistrict(district || "");
+        
+        // Update main application location state
+        const finalLoc = district ? `${district}, ${city}` : city ? city : province;
+        setInputLocation(finalLoc);
+        
+        // Clear search input inside modal
+        setGeoSearchQuery("");
+    };
 
     // --- Chatbot State ---
     const [chatMessages, setChatMessages] = useState([
@@ -483,9 +611,9 @@ Pertanyaan Pengguna: "${queryText}"`
                         </button>
                     </div>
 
-                    <div className="location-pill">
+                    <div className="location-pill" style={{ cursor: 'pointer' }} onClick={() => setActiveTab('location')}>
                         <MapPin size={14} color="var(--orange)" />
-                        <span>Jakarta Selatan</span>
+                        <span>{userLocation || t('navLocation')}</span>
                     </div>
 
                     {/* Hamburger Button - Mobile Only */}
@@ -1684,6 +1812,702 @@ Pertanyaan Pengguna: "${queryText}"`
                                 </button>
                             </div>
                         </div>
+                    </div>
+                )}
+
+                {activeTab === 'location' && (
+                    <div style={{ maxWidth: '1200px', margin: '0 auto 80px', padding: '20px', textAlign: 'left' }}>
+                        {/* Header Title Section */}
+                        <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px' }}>
+                            <div style={{ textAlign: 'left' }}>
+                                <h2 style={{ fontSize: '2.2rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <MapPin size={36} color="var(--orange)" />
+                                    {language === 'id' ? 'Atur Lokasi Anda' : 'Set Your Location'}
+                                </h2>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0 }}>
+                                    {language === 'id' 
+                                        ? 'Tentukan lokasi penyelamatan pangan Anda untuk mencocokkan produk surplus terdekat.' 
+                                        : 'Specify your food rescue location to match the nearest surplus products.'}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* MASTER MAP CARD WITH CONSOLIDATED TOP NAVBAR */}
+                        <div className="card-neumorph" style={{ padding: '0', borderRadius: '28px', marginBottom: '35px', overflow: 'hidden' }}>
+                            
+                            {/* MAP NAVBAR (Di Atas Map - Giant Absolute Edge-to-Edge Search Bar) */}
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '15px',
+                                padding: '15px 25px',
+                                background: 'var(--bg-color)',
+                                borderBottom: '1px solid rgba(0,0,0,0.06)',
+                                borderRadius: '28px 28px 0 0',
+                                flexWrap: 'nowrap',
+                                boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)',
+                                width: '100%',
+                                boxSizing: 'border-box'
+                            }}>
+                                <Search size={22} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+                                <input
+                                    className="search-input"
+                                    style={{ 
+                                        flex: 1, 
+                                        border: 'none', 
+                                        background: 'transparent', 
+                                        outline: 'none',
+                                        fontSize: '1rem',
+                                        color: 'var(--text-main)',
+                                        padding: '8px 0',
+                                        width: '100%'
+                                    }}
+                                    placeholder={language === 'id' ? 'Masukkan kota atau alamat lengkap...' : 'Enter city or full address...'}
+                                    value={inputLocation}
+                                    onChange={e => setInputLocation(e.target.value)}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter') {
+                                            showToast(language === 'id' ? `Mencari lokasi: ${inputLocation}` : `Searching location: ${inputLocation}`);
+                                        }
+                                    }}
+                                />
+                                <div className="search-actions" style={{ flexShrink: 0 }}>
+                                    <div className="search-action-btn" onClick={() => setShowMapFiltersModal(true)} style={{ background: 'var(--bg-color)', boxShadow: 'var(--shadow-light), var(--shadow-dark)' }}>
+                                        <Package size={16} color="var(--orange)" />
+                                        <span className="action-label" style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {selectedRadius} km ({inputLocation || (language === 'id' ? 'Indonesia' : 'Indonesia')})
+                                        </span>
+                                    </div>
+                                    <div className="action-divider"></div>
+                                    <div className="filter-icon-btn" onClick={() => setShowMapFiltersModal(true)} style={{ background: 'var(--bg-color)', boxShadow: 'var(--shadow-light), var(--shadow-dark)' }}>
+                                        <SlidersHorizontal size={18} color="var(--orange)" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Google Maps Container */}
+                            <div style={{ 
+                                width: '100%', 
+                                height: '560px', 
+                                background: 'var(--bg-color)',
+                                position: 'relative'
+                            }}>
+                                <iframe
+                                    src={`https://maps.google.com/maps?q=${encodeURIComponent(inputLocation || "Jakarta")}&t=&z=${selectedRadius <= 2 ? 15 : selectedRadius <= 5 ? 13 : selectedRadius <= 12 ? 12 : 10}&ie=UTF8&iwloc=&output=embed`}
+                                    style={{ width: '100%', height: '100%', border: 0 }}
+                                    allowFullScreen=""
+                                    loading="lazy"
+                                    title="Google Maps"
+                                ></iframe>
+                            </div>
+                            
+                            {/* Real-time Map Info Banner */}
+                            <div style={{ 
+                                padding: '20px 25px', 
+                                background: 'rgba(238, 77, 45, 0.04)', 
+                                borderTop: '1px solid rgba(238, 77, 45, 0.1)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px'
+                            }}>
+                                <MapPin size={20} color="var(--orange)" style={{ flexShrink: 0 }} />
+                                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                                    {language === 'id' ? (
+                                        <>Mencari makanan surplus dalam radius <strong>{selectedRadius} km</strong> dari pusat wilayah <strong>{inputLocation || "Jakarta"}</strong>.</>
+                                    ) : (
+                                        <>Searching for surplus food within a <strong>{selectedRadius} km</strong> radius from <strong>{inputLocation || "Jakarta"}</strong>.</>
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* BOTTOM PANEL: Cancel & Save Action Buttons */}
+                        <div className="card-neumorph" style={{ 
+                            padding: '25px 30px', 
+                            borderRadius: '24px', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            gap: '20px',
+                            flexWrap: 'wrap'
+                        }}>
+                            <div>
+                                <h4 style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)', margin: '0 0 4px 0' }}>
+                                    {language === 'id' ? 'Konfirmasi Pilihan Lokasi' : 'Confirm Selected Location'}
+                                </h4>
+                                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                    {language === 'id' 
+                                        ? `Lokasi terpilih: ${inputLocation || 'Jakarta'} | Radius: ${selectedRadius} km`
+                                        : `Selected location: ${inputLocation || 'Jakarta'} | Radius: ${selectedRadius} km`}
+                                </p>
+                            </div>
+                            <div style={{ display: 'flex', gap: '15px', minWidth: '320px', flex: '1 1 auto', justifyContent: 'flex-end' }}>
+                                <button
+                                    className="nav-pill"
+                                    style={{ padding: '14px 28px', border: '2px solid var(--text-muted)', background: 'transparent', color: 'var(--text-muted)', fontSize: '0.95rem', fontWeight: 800, cursor: 'pointer', borderRadius: '50px' }}
+                                    onClick={() => {
+                                        setInputLocation(userLocation || "");
+                                        setActiveTab('home');
+                                    }}
+                                    type="button"
+                                >
+                                    {language === 'id' ? 'Batal' : 'Cancel'}
+                                </button>
+                                <button
+                                    className="nav-pill active"
+                                    style={{ padding: '14px 36px', border: 'none', fontSize: '0.95rem', fontWeight: 800, cursor: 'pointer', borderRadius: '50px', boxShadow: '0 8px 16px rgba(238,77,45,0.25)' }}
+                                    onClick={() => {
+                                        setUserLocation(inputLocation.trim() || null);
+                                        setFilters(prev => ({ ...prev, maxDistance: selectedRadius }));
+                                        showToast(language === 'id' ? 'Lokasi berhasil disimpan!' : 'Location saved successfully!');
+                                        setActiveTab('home');
+                                    }}
+                                    type="button"
+                                >
+                                    {language === 'id' ? 'Simpan Lokasi' : 'Save Location'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* ADVANCED LOCATION FILTERS MODAL POP-UP */}
+                        {showMapFiltersModal && (
+                            <div style={{
+                                position: 'fixed',
+                                top: 0, left: 0,
+                                width: '100vw', height: '100vh',
+                                background: 'rgba(0, 0, 0, 0.4)',
+                                backdropFilter: 'blur(8px)',
+                                WebkitBackdropFilter: 'blur(8px)',
+                                zIndex: 10000,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '20px',
+                                boxSizing: 'border-box',
+                                animation: 'fadeIn 0.3s ease'
+                            }}>
+                                <div className="card-neumorph" style={{
+                                    width: '100%',
+                                    maxWidth: '560px',
+                                    maxHeight: '90vh',
+                                    overflowY: 'auto',
+                                    borderRadius: '32px',
+                                    padding: '26px',
+                                    background: 'var(--bg-color)',
+                                    animation: 'popupBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards',
+                                    boxShadow: 'var(--shadow-light), var(--shadow-dark)',
+                                    position: 'relative',
+                                    boxSizing: 'border-box'
+                                }}>
+                                    {/* Modal Header */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', boxSizing: 'border-box' }}>
+                                        <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <SlidersHorizontal size={20} color="var(--orange)" />
+                                            {language === 'id' ? 'Pilih Wilayah Penyelamatan' : 'Select Rescue Region'}
+                                        </h3>
+                                        <button
+                                            onClick={() => setShowMapFiltersModal(false)}
+                                            style={{
+                                                border: 'none',
+                                                background: 'transparent',
+                                                cursor: 'pointer',
+                                                width: '32px',
+                                                height: '32px',
+                                                borderRadius: '50%',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                boxShadow: 'var(--shadow-light), var(--shadow-dark)',
+                                                color: 'var(--text-muted)'
+                                            }}
+                                            type="button"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+
+                                    {/* Modal Body */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '20px', textAlign: 'left', boxSizing: 'border-box' }}>
+                                        
+                                        {/* 1. Radius Filter Section */}
+                                        <div style={{ 
+                                            padding: '12px 16px', 
+                                            borderRadius: '20px', 
+                                            background: 'var(--bg-color)', 
+                                            boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)',
+                                            boxSizing: 'border-box'
+                                        }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                <h4 style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)', margin: 0 }}>
+                                                    {language === 'id' ? 'Radius Penyelamatan' : 'Rescue Radius'}
+                                                </h4>
+                                                <span style={{ 
+                                                    padding: '2px 8px', 
+                                                    borderRadius: '20px', 
+                                                    background: 'rgba(238, 77, 45, 0.1)', 
+                                                    color: 'var(--orange)', 
+                                                    fontWeight: 800, 
+                                                    fontSize: '0.75rem' 
+                                                }}>
+                                                    {selectedRadius} km
+                                                </span>
+                                            </div>
+                                            
+                                            {/* Compact Range Slider */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', boxSizing: 'border-box' }}>
+                                                <input 
+                                                    type="range" 
+                                                    min="1" 
+                                                    max="30" 
+                                                    value={selectedRadius} 
+                                                    onChange={e => setSelectedRadius(parseInt(e.target.value))}
+                                                    style={{ 
+                                                        flex: 1,
+                                                        accentColor: 'var(--orange)', 
+                                                        cursor: 'pointer',
+                                                        height: '4px',
+                                                        borderRadius: '2px',
+                                                        background: 'rgba(0,0,0,0.08)'
+                                                    }} 
+                                                />
+                                                <div style={{ display: 'flex', gap: '4px' }}>
+                                                    {[5, 10, 20].map(r => (
+                                                        <button
+                                                            key={r}
+                                                            onClick={() => setSelectedRadius(r)}
+                                                            style={{ 
+                                                                border: 'none', 
+                                                                padding: '4px 6px', 
+                                                                borderRadius: '8px', 
+                                                                fontSize: '0.65rem', 
+                                                                fontWeight: 800,
+                                                                background: selectedRadius === r ? 'var(--orange)' : 'var(--bg-color)',
+                                                                color: selectedRadius === r ? 'white' : 'var(--text-muted)',
+                                                                boxShadow: selectedRadius === r ? 'none' : 'var(--shadow-light), var(--shadow-dark)',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                            type="button"
+                                                        >
+                                                            {r}k
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* 2. Search & Suggestion Section */}
+                                        <div style={{ position: 'relative', width: '100%', boxSizing: 'border-box' }}>
+                                            <div className="search-capsule" style={{ width: '100%', marginBottom: '5px', boxSizing: 'border-box' }}>
+                                                <Search size={16} color="var(--text-muted)" />
+                                                <input
+                                                    className="search-input"
+                                                    style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.85rem', color: 'var(--text-main)' }}
+                                                    placeholder={language === 'id' ? 'Cari kota, provinsi, atau kecamatan...' : 'Search city, province, or district...'}
+                                                    value={geoSearchQuery}
+                                                    onChange={e => setGeoSearchQuery(e.target.value)}
+                                                />
+                                                {geoSearchQuery && (
+                                                    <button onClick={() => setGeoSearchQuery("")} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)' }} type="button">
+                                                        <X size={14} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {/* Dropdown suggestions */}
+                                            {geoSearchQuery.trim() && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    top: '44px', left: 0, right: 0,
+                                                    background: 'var(--bg-color)',
+                                                    boxShadow: 'var(--shadow-light), var(--shadow-dark)',
+                                                    borderRadius: '16px',
+                                                    maxHeight: '180px',
+                                                    overflowY: 'auto',
+                                                    zIndex: 1000,
+                                                    padding: '6px',
+                                                    border: '1px solid rgba(0,0,0,0.05)',
+                                                    boxSizing: 'border-box'
+                                                }}>
+                                                    {(() => {
+                                                        const results = getGeoSearchResults(geoSearchQuery);
+                                                        if (results.length === 0) {
+                                                            return (
+                                                                <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                                                                    {language === 'id' ? 'Tidak ada hasil ditemukan' : 'No results found'}
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return results.map((res, i) => (
+                                                            <div
+                                                                key={i}
+                                                                onClick={() => handleSelectSearchResult(res)}
+                                                                style={{
+                                                                    padding: '8px 12px',
+                                                                    borderRadius: '10px',
+                                                                    cursor: 'pointer',
+                                                                    display: 'flex',
+                                                                    flexDirection: 'column',
+                                                                    gap: '3px',
+                                                                    transition: 'background 0.2s',
+                                                                    boxSizing: 'border-box'
+                                                                }}
+                                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(238, 77, 45, 0.08)'}
+                                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                            >
+                                                                <div style={{ fontWeight: 800, fontSize: '0.82rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                    {res.name}
+                                                                    <span style={{ fontSize: '0.65rem', color: 'var(--orange)', background: 'rgba(238,77,45,0.1)', padding: '1px 6px', borderRadius: '10px' }}>
+                                                                        {res.type}
+                                                                    </span>
+                                                                </div>
+                                                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                                                                    {res.path.join(" ➔ ")}
+                                                                </span>
+                                                            </div>
+                                                        ));
+                                                    })()}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* 3. Interactive Breadcrumbs */}
+                                        <div style={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: '6px', 
+                                            flexWrap: 'wrap', 
+                                            fontSize: '0.78rem', 
+                                            fontWeight: 800,
+                                            color: 'var(--text-muted)',
+                                            padding: '8px 12px',
+                                            borderRadius: '12px',
+                                            background: 'var(--bg-color)',
+                                            boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)',
+                                            width: '100%',
+                                            boxSizing: 'border-box'
+                                        }}>
+                                            <span 
+                                                onClick={() => {
+                                                    setSelectedIsland("");
+                                                    setSelectedProvince("");
+                                                    setSelectedCity("");
+                                                    setSelectedDistrict("");
+                                                    setActiveAlphabet("");
+                                                }} 
+                                                style={{ cursor: 'pointer', color: !selectedIsland ? 'var(--orange)' : 'var(--text-main)' }}
+                                            >
+                                                Indonesia
+                                            </span>
+                                            {selectedIsland && (
+                                                <>
+                                                    <span>➔</span>
+                                                    <span 
+                                                        onClick={() => {
+                                                            setSelectedProvince("");
+                                                            setSelectedCity("");
+                                                            setSelectedDistrict("");
+                                                            setActiveAlphabet("");
+                                                        }}
+                                                        style={{ cursor: 'pointer', color: !selectedProvince ? 'var(--orange)' : 'var(--text-main)' }}
+                                                    >
+                                                        {selectedIsland}
+                                                    </span>
+                                                </>
+                                            )}
+                                            {selectedProvince && (
+                                                <>
+                                                    <span>➔</span>
+                                                    <span 
+                                                        onClick={() => {
+                                                            setSelectedCity("");
+                                                            setSelectedDistrict("");
+                                                            setActiveAlphabet("");
+                                                        }}
+                                                        style={{ cursor: 'pointer', color: !selectedCity ? 'var(--orange)' : 'var(--text-main)' }}
+                                                    >
+                                                        {selectedProvince}
+                                                    </span>
+                                                </>
+                                            )}
+                                            {selectedCity && (
+                                                <>
+                                                    <span>➔</span>
+                                                    <span 
+                                                        onClick={() => {
+                                                            setSelectedDistrict("");
+                                                            setActiveAlphabet("");
+                                                        }}
+                                                        style={{ cursor: 'pointer', color: !selectedDistrict ? 'var(--orange)' : 'var(--text-main)' }}
+                                                    >
+                                                        {selectedCity}
+                                                    </span>
+                                                </>
+                                            )}
+                                            {selectedDistrict && (
+                                                <>
+                                                    <span>➔</span>
+                                                    <span style={{ color: 'var(--orange)' }}>
+                                                        {selectedDistrict}
+                                                    </span>
+                                                </>
+                                            )}
+                                        </div>
+
+                                        {/* 4. Alphabet filter grid scroller */}
+                                        <div style={{
+                                            display: 'flex',
+                                            gap: '4px',
+                                            flexWrap: 'wrap',
+                                            justifyContent: 'center',
+                                            padding: '8px 2px',
+                                            width: '100%',
+                                            borderBottom: '1px solid rgba(0,0,0,0.06)',
+                                            boxSizing: 'border-box'
+                                        }}>
+                                            {["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"].map(letter => {
+                                                const isActive = activeAlphabet === letter;
+                                                return (
+                                                    <button
+                                                        key={letter}
+                                                        onClick={() => setActiveAlphabet(isActive ? "" : letter)}
+                                                        style={{
+                                                            border: 'none',
+                                                            width: '24px',
+                                                            height: '24px',
+                                                            borderRadius: '50%',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            flexShrink: 0,
+                                                            cursor: 'pointer',
+                                                            fontWeight: 800,
+                                                            fontSize: '0.7rem',
+                                                            background: isActive ? 'var(--orange)' : 'var(--bg-color)',
+                                                            color: isActive ? 'white' : 'var(--text-muted)',
+                                                            boxShadow: isActive ? '0 3px 6px rgba(238,77,45,0.25)' : 'var(--shadow-light), var(--shadow-dark)',
+                                                            transition: 'all 0.2s ease',
+                                                            boxSizing: 'border-box'
+                                                        }}
+                                                        type="button"
+                                                    >
+                                                        {letter}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* 5. Drilling Grid view */}
+                                        <div style={{ width: '100%', boxSizing: 'border-box' }}>
+                                            {(() => {
+                                                let options = [];
+                                                let levelTitle = "";
+                                                let onSelect = () => {};
+
+                                                if (!selectedIsland) {
+                                                    options = Object.keys(NESTED_REGIONS);
+                                                    levelTitle = language === 'id' ? 'Pilih Pulau / Kepulauan' : 'Select Island / Region';
+                                                    onSelect = (island) => {
+                                                        setSelectedIsland(island);
+                                                        setActiveAlphabet("");
+                                                    };
+                                                } else if (!selectedProvince) {
+                                                    options = Object.keys(NESTED_REGIONS[selectedIsland]);
+                                                    levelTitle = language === 'id' ? `Pilih Provinsi di ${selectedIsland}` : `Select Province in ${selectedIsland}`;
+                                                    onSelect = (prov) => {
+                                                        setSelectedProvince(prov);
+                                                        setActiveAlphabet("");
+                                                    };
+                                                } else if (!selectedCity) {
+                                                    options = Object.keys(NESTED_REGIONS[selectedIsland][selectedProvince]);
+                                                    levelTitle = language === 'id' ? `Pilih Kota/Kabupaten di ${selectedProvince}` : `Select City/Regency in ${selectedProvince}`;
+                                                    onSelect = (city) => {
+                                                        setSelectedCity(city);
+                                                        setInputLocation(city);
+                                                        setActiveAlphabet("");
+                                                    };
+                                                } else if (!selectedDistrict) {
+                                                    options = NESTED_REGIONS[selectedIsland][selectedProvince][selectedCity];
+                                                    levelTitle = language === 'id' ? `Pilih Kecamatan di ${selectedCity}` : `Select Sub-district in ${selectedCity}`;
+                                                    onSelect = (dist) => {
+                                                        setSelectedDistrict(dist);
+                                                        setInputLocation(`${dist}, ${selectedCity}`);
+                                                        setActiveAlphabet("");
+                                                    };
+                                                }
+
+                                                // Filter by active alphabet scroller
+                                                if (activeAlphabet) {
+                                                    options = options.filter(opt => opt.toUpperCase().startsWith(activeAlphabet));
+                                                }
+
+                                                // If complete
+                                                if (selectedDistrict) {
+                                                    return (
+                                                        <div style={{ 
+                                                            textAlign: 'center', 
+                                                            padding: '20px 15px', 
+                                                            borderRadius: '20px', 
+                                                            background: 'rgba(238, 77, 45, 0.03)',
+                                                            border: '2px dashed rgba(238, 77, 45, 0.15)',
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            alignItems: 'center',
+                                                            gap: '10px',
+                                                            boxSizing: 'border-box',
+                                                            width: '100%'
+                                                        }}>
+                                                            <div style={{
+                                                                width: '46px',
+                                                                height: '46px',
+                                                                borderRadius: '50%',
+                                                                background: 'rgba(238, 77, 45, 0.1)',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                boxShadow: 'var(--shadow-light), var(--shadow-dark)',
+                                                                color: 'var(--orange)'
+                                                            }}>
+                                                                <MapPin size={22} />
+                                                            </div>
+                                                            <div>
+                                                                <h5 style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)', margin: '0 0 3px 0' }}>
+                                                                    {language === 'id' ? 'Lokasi Terpilih!' : 'Location Selected!'}
+                                                                </h5>
+                                                                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, fontWeight: 700 }}>
+                                                                    {selectedDistrict}, {selectedCity}, {selectedProvince}, {selectedIsland}
+                                                                </p>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedDistrict("");
+                                                                    setInputLocation(selectedCity);
+                                                                }}
+                                                                style={{
+                                                                    border: 'none',
+                                                                    background: 'rgba(238, 77, 45, 0.08)',
+                                                                    color: 'var(--orange)',
+                                                                    padding: '5px 12px',
+                                                                    borderRadius: '20px',
+                                                                    fontSize: '0.75rem',
+                                                                    fontWeight: 800,
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                                type="button"
+                                                            >
+                                                                {language === 'id' ? 'Ubah Kecamatan' : 'Change Sub-district'}
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <div style={{ width: '100%', boxSizing: 'border-box' }}>
+                                                        <h4 style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '8px' }}>
+                                                            {levelTitle} {activeAlphabet && `(Abjad "${activeAlphabet}")`}
+                                                        </h4>
+                                                        {options.length === 0 ? (
+                                                            <div style={{ padding: '25px 15px', color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center' }}>
+                                                                {language === 'id' ? `Tidak ada lokasi dengan huruf awal "${activeAlphabet}"` : `No locations with starting letter "${activeAlphabet}"`}
+                                                            </div>
+                                                        ) : (
+                                                            <div style={{
+                                                                display: 'grid',
+                                                                gridTemplateColumns: !selectedIsland ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+                                                                gap: '10px',
+                                                                maxHeight: '180px',
+                                                                overflowY: 'auto',
+                                                                padding: '10px 8px',
+                                                                borderRadius: '16px',
+                                                                background: 'var(--bg-color)',
+                                                                boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)',
+                                                                width: '100%',
+                                                                boxSizing: 'border-box'
+                                                            }}>
+                                                                {options.map((opt) => {
+                                                                    const isIslandLevel = !selectedIsland;
+                                                                    const isLastIsland = isIslandLevel && opt === "Bali & Nusa Tenggara";
+                                                                    const islandGradients = {
+                                                                        "Jawa": 'linear-gradient(135deg, rgba(238,77,45,0.08) 0%, rgba(238,77,45,0.02) 100%)',
+                                                                        "Sumatera": 'linear-gradient(135deg, rgba(76,175,80,0.08) 0%, rgba(76,175,80,0.02) 100%)',
+                                                                        "Kalimantan": 'linear-gradient(135deg, rgba(33,150,243,0.08) 0%, rgba(33,150,243,0.02) 100%)',
+                                                                        "Sulawesi": 'linear-gradient(135deg, rgba(156,39,176,0.08) 0%, rgba(156,39,176,0.02) 100%)',
+                                                                        "Bali & Nusa Tenggara": 'linear-gradient(135deg, rgba(255,193,7,0.08) 0%, rgba(255,193,7,0.02) 100%)'
+                                                                    };
+
+                                                                    return (
+                                                                        <button
+                                                                            key={opt}
+                                                                            onClick={() => onSelect(opt)}
+                                                                            style={{
+                                                                                border: 'none',
+                                                                                padding: isIslandLevel ? '14px 10px' : '8px 8px',
+                                                                                borderRadius: '16px',
+                                                                                cursor: 'pointer',
+                                                                                fontSize: isIslandLevel ? '0.85rem' : '0.78rem',
+                                                                                fontWeight: 800,
+                                                                                background: isIslandLevel ? (islandGradients[opt] || 'var(--bg-color)') : 'var(--bg-color)',
+                                                                                boxShadow: 'var(--shadow-light), var(--shadow-dark)',
+                                                                                color: 'var(--text-main)',
+                                                                                display: 'flex',
+                                                                                flexDirection: 'column',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                gap: '4px',
+                                                                                transition: 'transform 0.2s',
+                                                                                width: '100%',
+                                                                                boxSizing: 'border-box',
+                                                                                gridColumn: isLastIsland ? 'span 2' : 'auto'
+                                                                            }}
+                                                                            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                                                                            onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+                                                                            type="button"
+                                                                        >
+                                                                            {isIslandLevel && (
+                                                                                <div style={{
+                                                                                    width: '28px', height: '28px', borderRadius: '50%',
+                                                                                    background: 'var(--bg-color)', display: 'flex', alignItems: 'center',
+                                                                                    justifyContent: 'center', boxShadow: 'var(--shadow-light), var(--shadow-dark)',
+                                                                                    color: 'var(--orange)', marginBottom: '2px'
+                                                                                }}>
+                                                                                    <MapPin size={14} />
+                                                                                </div>
+                                                                            )}
+                                                                            <span style={{ textAlign: 'center' }}>{opt}</span>
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    {/* Modal Footer Actions */}
+                                    <div style={{ display: 'flex', gap: '15px', width: '100%', boxSizing: 'border-box' }}>
+                                        <button
+                                            className="nav-pill"
+                                            style={{ flex: 1, padding: '12px', border: '2px solid var(--text-muted)', background: 'transparent', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 800, cursor: 'pointer', borderRadius: '50px' }}
+                                            onClick={() => setShowMapFiltersModal(false)}
+                                            type="button"
+                                        >
+                                            {language === 'id' ? 'Batal' : 'Cancel'}
+                                        </button>
+                                        <button
+                                            className="nav-pill active"
+                                            style={{ flex: 2, padding: '12px', border: 'none', fontSize: '0.9rem', fontWeight: 800, cursor: 'pointer', borderRadius: '50px', boxShadow: '0 8px 16px rgba(238,77,45,0.25)' }}
+                                            onClick={() => {
+                                                setShowMapFiltersModal(false);
+                                                showToast(language === 'id' ? 'Lokasi berhasil diperbarui!' : 'Location successfully updated!');
+                                            }}
+                                            type="button"
+                                        >
+                                            {language === 'id' ? 'Terapkan' : 'Apply'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </main>

@@ -504,8 +504,43 @@ main { flex: 1; }
   box-shadow: var(--shadow-inset-light), var(--shadow-inset-dark);
   transform: scale(0.92);
 }
-/* Mobile search bar adjustments */
+/* Mobile header & search bar adjustments */
 @media (max-width: 480px) {
+  /* Hide text in location and login/join buttons, turning them into elegant circular icon buttons */
+  .location-pill span,
+  .btn-login-pill span {
+    display: none !important;
+  }
+  
+  .location-pill,
+  .btn-login-pill {
+    padding: 0 !important;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50% !important;
+    gap: 0 !important;
+    box-shadow: var(--shadow-light), var(--shadow-dark) !important;
+  }
+
+  .nav-auth-group {
+    gap: 0 !important;
+  }
+
+  /* Compact logo size on mobile */
+  .logo-text {
+    font-size: 1.1rem;
+    letter-spacing: -0.5px;
+  }
+  
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+
   .search-capsule {
     padding: 4px 4px 4px 12px;
     gap: 8px;
@@ -524,6 +559,14 @@ main { flex: 1; }
     width: 36px;
     height: 36px;
     border-radius: 10px;
+  }
+}
+
+/* For ultra-small screens like Galaxy Fold or old iPhone SE (width < 360px),
+   hide the logo text entirely and keep only the icon/mark to prevent any overflow. */
+@media (max-width: 359px) {
+  .logo-text {
+    display: none !important;
   }
 }
 .filter-section-modal { text-align: left; }
@@ -784,18 +827,21 @@ main { flex: 1; }
   bottom: 25px;
   left: 50%;
   transform: translateX(-50%);
-  width: 95%;
+  width: 90%;
   max-width: 600px;
-  height: 75px;
+  height: 70px;
   background: var(--bg-color);
-  border-radius: 40px;
+  border-radius: 35px;
   box-shadow: var(--shadow-light), var(--shadow-dark);
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 0 10px;
+  padding: 0 12px;
   z-index: 2000;
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tab-btn {
@@ -803,15 +849,17 @@ main { flex: 1; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 8px 12px;
-  min-width: 65px;
-  border-radius: 20px;
+  gap: 3px;
+  padding: 6px 10px;
+  flex: 1; /* Distribute space evenly on mobile */
+  min-width: 0; /* Let it shrink without overflow */
+  border-radius: 18px;
   background: transparent;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  transition: var(--transition-smooth);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
 .tab-btn.active {
@@ -823,27 +871,77 @@ main { flex: 1; }
 }
 
 .tab-btn.active svg {
-  filter: drop-shadow(0 0 5px rgba(238, 77, 45, 0.4));
+  filter: drop-shadow(0 0 5px rgba(238, 77, 45, 0.45));
 }
 
 .tab-btn:hover:not(.active) {
   color: var(--orange);
-  transform: translateY(-3px);
+  transform: translateY(-2px);
 }
 
 .tab-btn span {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  text-align: center;
+  transition: color 0.3s ease;
 }
 
-@media (min-width: 480px) {
+/* --- BOTTOM NAV RESPONSIVE MEDIA QUERIES --- */
+
+/* 1. Large Screens & Desktop: Redundant navigation is hidden on desktop screens */
+@media (min-width: 900px) {
+  .nav-bottom-neumorph {
+    display: none !important;
+  }
+}
+
+/* 2. Tablets and Medium Mobile (between 576px and 899px): Comfortable side-by-side row layout */
+@media (min-width: 576px) and (max-width: 899px) {
+  .nav-bottom-neumorph {
+    width: 85%;
+    height: 75px;
+    padding: 0 20px;
+    border-radius: 40px;
+  }
   .tab-btn {
     flex-direction: row;
-    gap: 10px;
-    padding: 12px 20px;
+    gap: 8px;
+    padding: 10px 16px;
+    max-width: 120px;
   }
   .tab-btn span {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    text-align: left;
+    width: auto;
+  }
+}
+
+/* 3. Ultra-small Screens (less than 360px - e.g., Galaxy Fold folded, iPhone SE portrait):
+   At this width, 5 columns of icon + text cannot fit properly without overlapping or clipping.
+   Solution: Hide the text labels entirely and focus on centered icons to look elegant and clean. */
+@media (max-width: 359px) {
+  .nav-bottom-neumorph {
+    width: 94%;
+    bottom: 12px;
+    height: 60px;
+    padding: 0 6px;
+    border-radius: 30px;
+  }
+  .tab-btn {
+    gap: 0;
+    padding: 8px 4px;
+    border-radius: 15px;
+  }
+  .tab-btn span {
+    display: none !important; /* Hide labels entirely */
+  }
+  .tab-btn svg {
+    width: 20px !important;
+    height: 20px !important;
   }
 }
 

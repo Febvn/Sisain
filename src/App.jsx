@@ -481,45 +481,7 @@ Pertanyaan Pengguna: "${queryText}"`
             return 0; // Default: 'terdekat' (using initial order)
         });
 
-    // --- Join Modal Component ---
-    const JoinModal = () => (
-        <div className="join-modal-overlay" onClick={() => setIsJoinModalOpen(false)}>
-            <div className="join-modal-content" onClick={(e) => e.stopPropagation()}>
-                <div className="join-modal-header">
-                    <h3>{t('joinTitle')}</h3>
-                    <button className="join-modal-close" onClick={() => setIsJoinModalOpen(false)}>
-                        <X size={20} />
-                    </button>
-                </div>
-                <div className="join-modal-body">
-                    <div className="join-option-card">
-                        <div className="join-option-image">
-                            <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=600" alt="Bergabung sebagai Merchant" />
-                        </div>
-                        <h4>{t('joinMerchantTitle')}</h4>
-                        <ul className="join-benefits">
-                            <li>· {t('joinMerchantPerk1')}</li>
-                            <li>· {t('joinMerchantPerk2')}</li>
-                            <li>· {t('joinMerchantPerk3')}</li>
-                        </ul>
-                        <button className="join-btn-primary">{t('joinNowBtn')}</button>
-                    </div>
-                    <div className="join-option-card">
-                        <div className="join-option-image">
-                            <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=600" alt="Bergabung sebagai Pelanggan" />
-                        </div>
-                        <h4>{t('joinCustomerTitle')}</h4>
-                        <ul className="join-benefits">
-                            <li>· {t('joinCustomerPerk1')}</li>
-                            <li>· {t('joinCustomerPerk2')}</li>
-                            <li>· {t('joinCustomerPerk3')}</li>
-                        </ul>
-                        <button className="join-btn-primary">{t('joinNowBtn')}</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+    // (JoinModal removed — join section is now inline on the About page)
 
     return (
         <div className="app-container">
@@ -583,8 +545,7 @@ Pertanyaan Pengguna: "${queryText}"`
                 </div>
             )}
 
-            {/* Join Modal */}
-            {isJoinModalOpen && <JoinModal />}
+            {/* Join Modal removed */}
 
             {/* Header Section */}
             <header className="main-header">
@@ -605,7 +566,7 @@ Pertanyaan Pengguna: "${queryText}"`
                     </nav>
 
                     <div className="nav-auth-group">
-                        <button className="location-pill btn-login-pill" aria-label="Join" title="Join" onClick={() => setIsJoinModalOpen(true)}>
+                        <button className="location-pill btn-login-pill" aria-label="Join" title="Bergabunglah di Misi Kami" onClick={() => setActiveTab('about')}>
                             <User size={14} />
                             <span>{t('navJoin')}</span>
                         </button>
@@ -853,23 +814,118 @@ Pertanyaan Pengguna: "${queryText}"`
                 )}
 
                 {activeTab === 'about' && (
-                    <div style={{ padding: '50px 25px', textAlign: 'center' }}>
-                        <div className="card-neumorph" style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 40px' }}>
-                            <Leaf size={64} color="var(--orange)" style={{ marginBottom: '30px' }} />
-                            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '20px' }}>{t('aboutTitle')}</h2>
-                            <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: '1.8', maxWidth: '600px', margin: '0 auto 40px' }}>
-                                {t('aboutDesc')}
-                            </p>
-                            <div className="cat-grid" style={{ textAlign: 'left' }}>
-                                <div className="cat-item">
-                                    <TrendingUp size={32} color="var(--orange)" />
-                                    <h4 style={{ fontWeight: 800 }}>{t('aboutCircular')}</h4>
-                                    <p style={{ fontSize: '0.8rem', textAlign: 'center' }}>{t('aboutCircularDesc')}</p>
+                    <div style={{ animation: 'fadeIn 0.5s ease', paddingBottom: '100px' }}>
+                        {/* About Hero Banner */}
+                        <section className="hero-banner">
+                            <div className="hero-overlay"></div>
+                            <img src="/sisain_mission.png" className="hero-bg" alt="SISAIN Mission" />
+                            <div className="hero-content-modern">
+                                <h1 className="hero-title-main" style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
+                                    {t('aboutTitle')}
+                                    <Recycle size={40} strokeWidth={2.5} color="white" />
+                                </h1>
+                                <p className="hero-subtitle-main">
+                                    {t('aboutDesc')}
+                                </p>
+                            </div>
+                        </section>
+
+                        {/* Core Values / Pillars */}
+                        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
+                            <div className="features-grid-modern" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+                                {/* Value 1: Circular Economy */}
+                                <div className="card-neumorph feature-card-icon hover-float" style={{ padding: '40px 30px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <div style={{ width: '80px', height: '80px', borderRadius: '25px', background: 'linear-gradient(135deg, rgba(238,77,45,0.1), rgba(238,77,45,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '25px', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                        <TrendingUp size={40} color="var(--orange)" />
+                                    </div>
+                                    <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '15px' }}>{t('aboutCircular')}</h3>
+                                    <p style={{ color: 'var(--text-muted)', lineHeight: '1.7', fontSize: '1rem' }}>{t('aboutCircularDesc')}</p>
                                 </div>
-                                <div className="cat-item">
-                                    <ShieldCheck size={32} color="var(--orange)" />
-                                    <h4 style={{ fontWeight: 800 }}>{t('aboutQuality')}</h4>
-                                    <p style={{ fontSize: '0.8rem', textAlign: 'center' }}>{t('aboutQualityDesc')}</p>
+
+                                {/* Value 2: Quality */}
+                                <div className="card-neumorph feature-card-icon hover-float" style={{ padding: '40px 30px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <div style={{ width: '80px', height: '80px', borderRadius: '25px', background: 'linear-gradient(135deg, rgba(238,77,45,0.1), rgba(238,77,45,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '25px', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                        <ShieldCheck size={40} color="var(--orange)" />
+                                    </div>
+                                    <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '15px' }}>{t('aboutQuality')}</h3>
+                                    <p style={{ color: 'var(--text-muted)', lineHeight: '1.7', fontSize: '1rem' }}>{t('aboutQualityDesc')}</p>
+                                </div>
+
+                                {/* Value 3: Eco Impact */}
+                                <div className="card-neumorph feature-card-icon hover-float" style={{ padding: '40px 30px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <div style={{ width: '80px', height: '80px', borderRadius: '25px', background: 'linear-gradient(135deg, rgba(238,77,45,0.1), rgba(238,77,45,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '25px', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                        <Recycle size={40} color="var(--orange)" />
+                                    </div>
+                                    <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '15px' }}>Zero Food Waste</h3>
+                                    <p style={{ color: 'var(--text-muted)', lineHeight: '1.7', fontSize: '1rem' }}>Bersama kita mewujudkan lingkungan yang lebih hijau dengan mencegah pembuangan makanan layak konsumsi.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Bergabunglah di Misi Kami - Inline Join Section */}
+                        <div style={{ width: '100%', margin: '60px 0 0', padding: '0' }}>
+                            <div className="card-neumorph" style={{ padding: '50px 40px' }}>
+                                {/* Header */}
+                                <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                                    <h2 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--orange)', marginBottom: '12px' }}>Bergabunglah di Misi Kami</h2>
+                                    <p style={{ fontSize: '1rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>Pilih peran Anda dan mulai berdampak nyata bagi lingkungan</p>
+                                </div>
+
+                                {/* Two Cards: Merchant & Pelanggan */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '25px' }}>
+
+                                    {/* Merchant Card */}
+                                    <div className="card-neumorph hover-float" style={{ padding: '35px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '18px' }}>
+                                        <div style={{ width: '70px', height: '70px', borderRadius: '22px', background: 'linear-gradient(135deg, rgba(238,77,45,0.15), rgba(238,77,45,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                            <Store size={36} color="var(--orange)" />
+                                        </div>
+                                        <div>
+                                            <h3 style={{ fontSize: '1.3rem', fontWeight: 900, marginBottom: '8px', color: 'var(--text-main)' }}>Merchant</h3>
+                                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '18px' }}>Bergabunglah sebagai Merchant</p>
+                                            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+                                                {['Dapatkan lebih banyak pesanan dan penjualan', 'Bangun reputasi bisnis secara online', 'Dapatkan dukungan logistik pengiriman'].map((perk, i) => (
+                                                    <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                                                        <CheckCircle2 size={16} color="var(--orange)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                                                        {perk}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                        <button
+                                            className="nav-pill active hover-scale"
+                                            style={{ width: '100%', padding: '14px', fontSize: '1rem', border: 'none', marginTop: '8px' }}
+                                            onClick={() => { setActiveTab('merchant'); showToast('Selamat datang, Mitra SISAIN!'); }}
+                                        >
+                                            Bergabung sebagai Merchant
+                                        </button>
+                                    </div>
+
+                                    {/* Pelanggan Card */}
+                                    <div className="card-neumorph hover-float" style={{ padding: '35px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '18px' }}>
+                                        <div style={{ width: '70px', height: '70px', borderRadius: '22px', background: 'linear-gradient(135deg, rgba(238,77,45,0.15), rgba(238,77,45,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                            <User size={36} color="var(--orange)" />
+                                        </div>
+                                        <div>
+                                            <h3 style={{ fontSize: '1.3rem', fontWeight: 900, marginBottom: '8px', color: 'var(--text-main)' }}>Pelanggan</h3>
+                                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '18px' }}>Bergabunglah sebagai Pelanggan</p>
+                                            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+                                                {['Hemat hingga 70% dari harga normal', 'Nikmati makanan berkualitas terjamin', 'Dukung pengurangan limbah pangan'].map((perk, i) => (
+                                                    <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                                                        <CheckCircle2 size={16} color="var(--orange)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                                                        {perk}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                        <button
+                                            className="nav-pill active hover-scale"
+                                            style={{ width: '100%', padding: '14px', fontSize: '1rem', border: 'none', marginTop: '8px' }}
+                                            onClick={() => { setActiveTab('explore'); showToast('Selamat berbelanja di SISAIN!'); }}
+                                        >
+                                            Bergabung sebagai Pelanggan
+                                        </button>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -1872,9 +1928,9 @@ Pertanyaan Pengguna: "${queryText}"`
                                     }}
                                 />
                                 <div className="search-actions" style={{ flexShrink: 0 }}>
-                                    <div className="search-action-btn" onClick={() => setShowMapFiltersModal(true)} style={{ background: 'var(--bg-color)', boxShadow: 'var(--shadow-light), var(--shadow-dark)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', color: 'var(--text-main)' }}>
                                         <Package size={16} color="var(--orange)" />
-                                        <span className="action-label" style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        <span className="action-label" style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.9rem', fontWeight: 700 }}>
                                             {selectedRadius} km ({inputLocation || (language === 'id' ? 'Indonesia' : 'Indonesia')})
                                         </span>
                                     </div>
@@ -1943,8 +1999,7 @@ Pertanyaan Pengguna: "${queryText}"`
                             </div>
                             <div style={{ display: 'flex', gap: '15px', minWidth: '320px', flex: '1 1 auto', justifyContent: 'flex-end' }}>
                                 <button
-                                    className="nav-pill"
-                                    style={{ padding: '14px 28px', border: '2px solid var(--text-muted)', background: 'transparent', color: 'var(--text-muted)', fontSize: '0.95rem', fontWeight: 800, cursor: 'pointer', borderRadius: '50px' }}
+                                    className="btn-neumorph-secondary"
                                     onClick={() => {
                                         setInputLocation(userLocation || "");
                                         setActiveTab('home');
@@ -1954,8 +2009,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                     {language === 'id' ? 'Batal' : 'Cancel'}
                                 </button>
                                 <button
-                                    className="nav-pill active"
-                                    style={{ padding: '14px 36px', border: 'none', fontSize: '0.95rem', fontWeight: 800, cursor: 'pointer', borderRadius: '50px', boxShadow: '0 8px 16px rgba(238,77,45,0.25)' }}
+                                    className="btn-neumorph-primary"
                                     onClick={() => {
                                         setUserLocation(inputLocation.trim() || null);
                                         setFilters(prev => ({ ...prev, maxDistance: selectedRadius }));
@@ -2000,7 +2054,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                     boxSizing: 'border-box'
                                 }}>
                                     {/* Modal Header */}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', boxSizing: 'border-box' }}>
+                                    <div style={{ marginBottom: '18px', boxSizing: 'border-box' }}>
                                         <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
                                             <SlidersHorizontal size={20} color="var(--orange)" />
                                             {language === 'id' ? 'Pilih Wilayah Penyelamatan' : 'Select Rescue Region'}
@@ -2008,21 +2062,25 @@ Pertanyaan Pengguna: "${queryText}"`
                                         <button
                                             onClick={() => setShowMapFiltersModal(false)}
                                             style={{
+                                                position: 'absolute',
+                                                top: '16px',
+                                                right: '16px',
                                                 border: 'none',
-                                                background: 'transparent',
+                                                background: 'var(--bg-color)',
                                                 cursor: 'pointer',
-                                                width: '32px',
-                                                height: '32px',
+                                                width: '36px',
+                                                height: '36px',
                                                 borderRadius: '50%',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 boxShadow: 'var(--shadow-light), var(--shadow-dark)',
-                                                color: 'var(--text-muted)'
+                                                color: 'var(--text-muted)',
+                                                zIndex: 10
                                             }}
                                             type="button"
                                         >
-                                            <X size={16} />
+                                            <X size={18} />
                                         </button>
                                     </div>
 
@@ -2037,15 +2095,15 @@ Pertanyaan Pengguna: "${queryText}"`
                                             boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)',
                                             boxSizing: 'border-box'
                                         }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                                                 <h4 style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)', margin: 0 }}>
                                                     {language === 'id' ? 'Radius Penyelamatan' : 'Rescue Radius'}
                                                 </h4>
                                                 <span style={{ 
                                                     padding: '2px 8px', 
                                                     borderRadius: '20px', 
-                                                    background: 'rgba(238, 77, 45, 0.1)', 
-                                                    color: 'var(--orange)', 
+                                                    background: `rgba(${selectedRadius <= 5 ? '34, 197, 94' : selectedRadius <= 10 ? '234, 179, 8' : selectedRadius <= 20 ? '249, 115, 22' : '239, 68, 68'}, 0.1)`, 
+                                                    color: selectedRadius <= 5 ? '#22c55e' : selectedRadius <= 10 ? '#eab308' : selectedRadius <= 20 ? '#f97316' : '#ef4444', 
                                                     fontWeight: 800, 
                                                     fontSize: '0.75rem' 
                                                 }}>
@@ -2053,8 +2111,8 @@ Pertanyaan Pengguna: "${queryText}"`
                                                 </span>
                                             </div>
                                             
-                                            {/* Compact Range Slider */}
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', boxSizing: 'border-box' }}>
+                                            {/* Range Slider with Markers Below */}
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', boxSizing: 'border-box', position: 'relative' }}>
                                                 <input 
                                                     type="range" 
                                                     min="1" 
@@ -2062,34 +2120,36 @@ Pertanyaan Pengguna: "${queryText}"`
                                                     value={selectedRadius} 
                                                     onChange={e => setSelectedRadius(parseInt(e.target.value))}
                                                     style={{ 
-                                                        flex: 1,
-                                                        accentColor: 'var(--orange)', 
+                                                        width: '100%',
+                                                        accentColor: selectedRadius <= 5 ? '#22c55e' : selectedRadius <= 10 ? '#eab308' : selectedRadius <= 20 ? '#f97316' : '#ef4444', 
                                                         cursor: 'pointer',
-                                                        height: '4px',
-                                                        borderRadius: '2px',
-                                                        background: 'rgba(0,0,0,0.08)'
+                                                        height: '6px',
+                                                        borderRadius: '3px',
+                                                        background: 'rgba(0,0,0,0.08)',
+                                                        margin: 0
                                                     }} 
                                                 />
-                                                <div style={{ display: 'flex', gap: '4px' }}>
-                                                    {[5, 10, 20].map(r => (
-                                                        <button
-                                                            key={r}
-                                                            onClick={() => setSelectedRadius(r)}
-                                                            style={{ 
-                                                                border: 'none', 
-                                                                padding: '4px 6px', 
-                                                                borderRadius: '8px', 
-                                                                fontSize: '0.65rem', 
-                                                                fontWeight: 800,
-                                                                background: selectedRadius === r ? 'var(--orange)' : 'var(--bg-color)',
-                                                                color: selectedRadius === r ? 'white' : 'var(--text-muted)',
-                                                                boxShadow: selectedRadius === r ? 'none' : 'var(--shadow-light), var(--shadow-dark)',
-                                                                cursor: 'pointer'
-                                                            }}
-                                                            type="button"
-                                                        >
-                                                            {r}k
-                                                        </button>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', marginTop: '4px' }}>
+                                                    {[1, 5, 10, 20, 30].map(r => (
+                                                        <div key={r} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transform: r === 1 ? 'translateX(-5px)' : r === 30 ? 'translateX(5px)' : 'none' }} onClick={() => setSelectedRadius(r)}>
+                                                            <div style={{ 
+                                                                height: '6px', 
+                                                                width: '2px', 
+                                                                background: selectedRadius >= r ? (r <= 5 ? '#22c55e' : r <= 10 ? '#eab308' : r <= 20 ? '#f97316' : '#ef4444') : 'var(--text-muted)', 
+                                                                marginBottom: '4px',
+                                                                opacity: selectedRadius >= r ? 1 : 0.4,
+                                                                transition: 'background 0.3s, opacity 0.3s'
+                                                            }}></div>
+                                                            <span style={{ 
+                                                                fontSize: '0.7rem', 
+                                                                fontWeight: selectedRadius === r ? 900 : 700, 
+                                                                color: selectedRadius === r ? (r <= 5 ? '#22c55e' : r <= 10 ? '#eab308' : r <= 20 ? '#f97316' : '#ef4444') : 'var(--text-muted)',
+                                                                transition: 'color 0.2s',
+                                                                opacity: selectedRadius === r ? 1 : 0.6
+                                                            }}>
+                                                                {r}km
+                                                            </span>
+                                                        </div>
                                                     ))}
                                                 </div>
                                             </div>
@@ -2486,16 +2546,16 @@ Pertanyaan Pengguna: "${queryText}"`
                                     {/* Modal Footer Actions */}
                                     <div style={{ display: 'flex', gap: '15px', width: '100%', boxSizing: 'border-box' }}>
                                         <button
-                                            className="nav-pill"
-                                            style={{ flex: 1, padding: '12px', border: '2px solid var(--text-muted)', background: 'transparent', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 800, cursor: 'pointer', borderRadius: '50px' }}
+                                            className="btn-neumorph-secondary"
+                                            style={{ flex: 1, padding: '12px' }}
                                             onClick={() => setShowMapFiltersModal(false)}
                                             type="button"
                                         >
                                             {language === 'id' ? 'Batal' : 'Cancel'}
                                         </button>
                                         <button
-                                            className="nav-pill active"
-                                            style={{ flex: 2, padding: '12px', border: 'none', fontSize: '0.9rem', fontWeight: 800, cursor: 'pointer', borderRadius: '50px', boxShadow: '0 8px 16px rgba(238,77,45,0.25)' }}
+                                            className="btn-neumorph-primary"
+                                            style={{ flex: 2, padding: '12px' }}
                                             onClick={() => {
                                                 setShowMapFiltersModal(false);
                                                 showToast(language === 'id' ? 'Lokasi berhasil diperbarui!' : 'Location successfully updated!');

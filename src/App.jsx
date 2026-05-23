@@ -660,7 +660,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                     </div>
                                     <div className="features-grid-modern">
                                         <div className="card-neumorph feature-card-icon">
-                                            <div className="feature-icon"><Ticket size={28} /></div>
+                                            <div className="feature-icon"><Ticket size={40} /></div>
                                             <div className="feature-content">
                                                 <h3>{t('featureSave')}</h3>
                                                 <p>{t('featureSaveDesc')}</p>
@@ -668,7 +668,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                         </div>
 
                                         <div className="card-neumorph feature-card-icon">
-                                            <div className="feature-icon"><Leaf size={28} /></div>
+                                            <div className="feature-icon"><Leaf size={40} /></div>
                                             <div className="feature-content">
                                                 <h3>{t('featureEarth')}</h3>
                                                 <p>{t('featureEarthDesc')}</p>
@@ -676,7 +676,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                         </div>
 
                                         <div className="card-neumorph feature-card-icon">
-                                            <div className="feature-icon"><ShieldCheck size={28} /></div>
+                                            <div className="feature-icon"><ShieldCheck size={40} /></div>
                                             <div className="feature-content">
                                                 <h3>{t('featureQuality')}</h3>
                                                 <p>{t('featureQualityDesc')}</p>
@@ -684,7 +684,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                         </div>
 
                                         <div className="card-neumorph feature-card-icon highlight-card">
-                                            <div className="feature-icon"><Store size={28} /></div>
+                                            <div className="feature-icon"><Store size={40} /></div>
                                             <div className="feature-content">
                                                 <h3>{t('featureUMKM')}</h3>
                                                 <p>{t('featureUMKMDesc')}</p>
@@ -1341,7 +1341,7 @@ Pertanyaan Pengguna: "${queryText}"`
                             <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-main)', textAlign: 'center', marginBottom: '40px' }}>{t('merchantBenefitsTitle')}</h2>
                             <div className="features-grid-modern">
                                 <div className="card-neumorph feature-card-icon">
-                                    <div className="feature-icon"><Smartphone size={28} /></div>
+                                    <div className="feature-icon"><Smartphone size={40} /></div>
                                     <div className="feature-content">
                                         <h3>{t('merchantBenefit1')}</h3>
                                         <p>{t('merchantBenefit1Desc')}</p>
@@ -1349,7 +1349,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                 </div>
 
                                 <div className="card-neumorph feature-card-icon">
-                                    <div className="feature-icon"><Wallet size={28} /></div>
+                                    <div className="feature-icon"><Wallet size={40} /></div>
                                     <div className="feature-content">
                                         <h3>{t('merchantBenefit2')}</h3>
                                         <p>{t('merchantBenefit2Desc')}</p>
@@ -1357,7 +1357,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                 </div>
 
                                 <div className="card-neumorph feature-card-icon">
-                                    <div className="feature-icon"><Percent size={28} /></div>
+                                    <div className="feature-icon"><Percent size={40} /></div>
                                     <div className="feature-content">
                                         <h3>{t('merchantBenefit3')}</h3>
                                         <p>{t('merchantBenefit3Desc')}</p>
@@ -1365,7 +1365,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                 </div>
 
                                 <div className="card-neumorph feature-card-icon highlight-card">
-                                    <div className="feature-icon"><ThumbsUp size={28} /></div>
+                                    <div className="feature-icon"><ThumbsUp size={40} /></div>
                                     <div className="feature-content">
                                         <h3>{t('merchantBenefit4')}</h3>
                                         <p>{t('merchantBenefit4Desc')}</p>
@@ -1609,7 +1609,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                 <div className="features-grid-modern" style={{ gap: '50px' }}>
                                     {/* Feature 1 */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '25px', textAlign: 'left' }}>
-                                        <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'var(--bg-color)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-light), var(--shadow-dark)', border: '1px solid rgba(255,255,255,0.5)' }}>
+                                        <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'linear-gradient(135deg, rgba(238,77,45,0.1), rgba(238,77,45,0.05))', borderRadius: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
                                             <Wallet size={36} color="var(--orange)" />
                                         </div>
                                         <div>
@@ -1620,7 +1620,7 @@ Pertanyaan Pengguna: "${queryText}"`
 
                                     {/* Feature 2 */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '25px', textAlign: 'left' }}>
-                                        <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'var(--bg-color)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-light), var(--shadow-dark)', border: '1px solid rgba(255,255,255,0.5)' }}>
+                                        <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'linear-gradient(135deg, rgba(238,77,45,0.1), rgba(238,77,45,0.05))', borderRadius: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
                                             <ArrowRightLeft size={36} color="var(--orange)" />
                                         </div>
                                         <div>
@@ -1631,7 +1631,7 @@ Pertanyaan Pengguna: "${queryText}"`
 
                                     {/* Feature 3 */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '25px', textAlign: 'left' }}>
-                                        <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'var(--bg-color)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-light), var(--shadow-dark)', border: '1px solid rgba(255,255,255,0.5)' }}>
+                                        <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'linear-gradient(135deg, rgba(238,77,45,0.1), rgba(238,77,45,0.05))', borderRadius: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
                                             <LineChart size={36} color="var(--orange)" />
                                         </div>
                                         <div>
@@ -1642,7 +1642,7 @@ Pertanyaan Pengguna: "${queryText}"`
 
                                     {/* Feature 4 */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '25px', textAlign: 'left' }}>
-                                        <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'var(--bg-color)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-light), var(--shadow-dark)', border: '1px solid rgba(255,255,255,0.5)' }}>
+                                        <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'linear-gradient(135deg, rgba(238,77,45,0.1), rgba(238,77,45,0.05))', borderRadius: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
                                             <Mail size={36} color="var(--orange)" />
                                         </div>
                                         <div>
@@ -1660,7 +1660,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                     <div className="features-grid-modern" style={{ gap: '50px' }}>
                                         {/* Feature 1 */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '25px', textAlign: 'left' }}>
-                                            <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'var(--bg-color)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-light), var(--shadow-dark)', border: '1px solid rgba(255,255,255,0.5)' }}>
+                                            <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'linear-gradient(135deg, rgba(238,77,45,0.1), rgba(238,77,45,0.05))', borderRadius: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
                                                 <RefreshCw size={36} color="var(--orange)" />
                                             </div>
                                             <div>
@@ -1671,7 +1671,7 @@ Pertanyaan Pengguna: "${queryText}"`
 
                                         {/* Feature 2 */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '25px', textAlign: 'left' }}>
-                                            <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'var(--bg-color)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-light), var(--shadow-dark)', border: '1px solid rgba(255,255,255,0.5)' }}>
+                                            <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'linear-gradient(135deg, rgba(238,77,45,0.1), rgba(238,77,45,0.05))', borderRadius: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
                                                 <CalendarClock size={36} color="var(--orange)" />
                                             </div>
                                             <div>
@@ -1682,7 +1682,7 @@ Pertanyaan Pengguna: "${queryText}"`
 
                                         {/* Feature 3 */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '25px', textAlign: 'left' }}>
-                                            <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'var(--bg-color)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-light), var(--shadow-dark)', border: '1px solid rgba(255,255,255,0.5)' }}>
+                                            <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'linear-gradient(135deg, rgba(238,77,45,0.1), rgba(238,77,45,0.05))', borderRadius: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
                                                 <AlarmClock size={36} color="var(--orange)" />
                                             </div>
                                             <div>
@@ -1693,7 +1693,7 @@ Pertanyaan Pengguna: "${queryText}"`
 
                                         {/* Feature 4 */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '25px', textAlign: 'left' }}>
-                                            <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'var(--bg-color)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-light), var(--shadow-dark)', border: '1px solid rgba(255,255,255,0.5)' }}>
+                                            <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'linear-gradient(135deg, rgba(238,77,45,0.1), rgba(238,77,45,0.05))', borderRadius: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
                                                 <BookOpen size={36} color="var(--orange)" />
                                             </div>
                                             <div>
@@ -1704,7 +1704,7 @@ Pertanyaan Pengguna: "${queryText}"`
 
                                         {/* Feature 5 */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '25px', textAlign: 'left' }}>
-                                            <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'var(--bg-color)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-light), var(--shadow-dark)', border: '1px solid rgba(255,255,255,0.5)' }}>
+                                            <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'linear-gradient(135deg, rgba(238,77,45,0.1), rgba(238,77,45,0.05))', borderRadius: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
                                                 <Wallet size={36} color="var(--orange)" />
                                             </div>
                                             <div>
@@ -1715,7 +1715,7 @@ Pertanyaan Pengguna: "${queryText}"`
 
                                         {/* Feature 6 */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '25px', textAlign: 'left' }}>
-                                            <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'var(--bg-color)', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-light), var(--shadow-dark)', border: '1px solid rgba(255,255,255,0.5)' }}>
+                                            <div style={{ flexShrink: 0, width: '80px', height: '80px', background: 'linear-gradient(135deg, rgba(238,77,45,0.1), rgba(238,77,45,0.05))', borderRadius: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
                                                 <Megaphone size={36} color="var(--orange)" />
                                             </div>
                                             <div>

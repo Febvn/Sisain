@@ -872,7 +872,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                 </div>
 
                                 {/* Two Cards: Merchant & Pelanggan */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '25px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px' }}>
 
                                     {/* Merchant Card */}
                                     <div className="card-neumorph hover-float" style={{ padding: '35px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '18px' }}>
@@ -1225,33 +1225,22 @@ Pertanyaan Pengguna: "${queryText}"`
                         </section>
 
                         {/* --- Merchant Sub-Navigation Toggle --- */}
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', padding: '0 20px', marginBottom: '40px' }}>
-                            <button
-                                onClick={() => setMerchantSubTab('pendaftaran')}
-                                className="card-neumorph hover-scale"
-                                style={{
-                                    padding: '12px 30px', border: 'none', borderRadius: '50px', fontSize: '1rem', fontWeight: 800, cursor: 'pointer',
-                                    background: merchantSubTab === 'pendaftaran' ? 'var(--orange)' : 'var(--bg-color)',
-                                    color: merchantSubTab === 'pendaftaran' ? 'white' : 'var(--text-muted)',
-                                    boxShadow: merchantSubTab === 'pendaftaran' ? '0 10px 20px rgba(238,77,45,0.3)' : 'var(--shadow-light), var(--shadow-dark)',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                {t('merchantTabRegistration')}
-                            </button>
-                            <button
-                                onClick={() => setMerchantSubTab('fitur')}
-                                className="card-neumorph hover-scale"
-                                style={{
-                                    padding: '12px 30px', border: 'none', borderRadius: '50px', fontSize: '1rem', fontWeight: 800, cursor: 'pointer',
-                                    background: merchantSubTab === 'fitur' ? 'var(--orange)' : 'var(--bg-color)',
-                                    color: merchantSubTab === 'fitur' ? 'white' : 'var(--text-muted)',
-                                    boxShadow: merchantSubTab === 'fitur' ? '0 10px 20px rgba(238,77,45,0.3)' : 'var(--shadow-light), var(--shadow-dark)',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                {t('merchantTabFeatures')}
-                            </button>
+                        <div style={{ display: 'flex', justifyContent: 'center', padding: '0 20px', marginBottom: '40px' }}>
+                            <div className="merchant-tab-switcher">
+                                <button
+                                    onClick={() => setMerchantSubTab('pendaftaran')}
+                                    className={`merchant-tab-btn${merchantSubTab === 'pendaftaran' ? ' active' : ''}`}
+                                >
+                                    {t('merchantTabRegistration')}
+                                </button>
+                                <span className="merchant-tab-divider" />
+                                <button
+                                    onClick={() => setMerchantSubTab('fitur')}
+                                    className={`merchant-tab-btn${merchantSubTab === 'fitur' ? ' active' : ''}`}
+                                >
+                                    {t('merchantTabFeatures')}
+                                </button>
+                            </div>
                         </div>
 
                         {merchantSubTab === 'pendaftaran' && (
@@ -1739,47 +1728,68 @@ Pertanyaan Pengguna: "${queryText}"`
 
                                 {/* --- Join Sisain Section --- */}
                                 <div style={{ maxWidth: '1000px', margin: '0 auto 80px', padding: '0 20px' }}>
-                                    <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--text-main)', textAlign: 'center', marginBottom: '50px' }}>{t('joinTitle')}</h2>
-                                    
-                                    <div className="features-grid-modern" style={{ gap: '40px' }}>
-                                        {/* Card Merchant */}
-                                        <div className="card-neumorph hover-scale" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}>
-                                            <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=600" alt="Merchant" style={{ width: '100%', height: '250px', objectFit: 'cover' }} />
-                                            <div style={{ padding: '40px', display: 'flex', flexDirection: 'column', flex: 1, textAlign: 'left' }}>
-                                                <h3 style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '25px' }}>{t('joinMerchantTitle')}</h3>
-                                                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 30px', flex: 1 }}>
-                                                    <li style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', marginBottom: '15px', color: 'var(--text-muted)' }}>
-                                                        <CheckCircle2 size={24} color="var(--orange)" style={{ flexShrink: 0 }} /> <span>{t('joinMerchantPerk1')}</span>
-                                                    </li>
-                                                    <li style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', marginBottom: '15px', color: 'var(--text-muted)' }}>
-                                                        <CheckCircle2 size={24} color="var(--orange)" style={{ flexShrink: 0 }} /> <span>{t('joinMerchantPerk2')}</span>
-                                                    </li>
-                                                    <li style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', color: 'var(--text-muted)' }}>
-                                                        <CheckCircle2 size={24} color="var(--orange)" style={{ flexShrink: 0 }} /> <span>{t('joinMerchantPerk3')}</span>
-                                                    </li>
-                                                </ul>
-                                                <button className="nav-pill active" style={{ padding: '15px 30px', border: 'none', borderRadius: '50px', fontSize: '1rem', fontWeight: 800, cursor: 'pointer', alignSelf: 'flex-start', boxShadow: '0 10px 20px rgba(238,77,45,0.3)' }}>{t('joinNowBtn')}</button>
-                                            </div>
+                                    <div className="card-neumorph" style={{ padding: '50px 40px' }}>
+                                        {/* Header */}
+                                        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                                            <h2 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--orange)', marginBottom: '12px' }}>Bergabunglah di Misi Kami</h2>
+                                            <p style={{ fontSize: '1rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>Pilih peran Anda dan mulai berdampak nyata bagi lingkungan</p>
                                         </div>
 
-                                        {/* Card Pelanggan */}
-                                        <div className="card-neumorph hover-scale" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}>
-                                            <img src="https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&q=80&w=600" alt="Pelanggan" style={{ width: '100%', height: '250px', objectFit: 'cover' }} />
-                                            <div style={{ padding: '40px', display: 'flex', flexDirection: 'column', flex: 1, textAlign: 'left' }}>
-                                                <h3 style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '25px' }}>{t('joinCustomerTitle')}</h3>
-                                                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 30px', flex: 1 }}>
-                                                    <li style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', marginBottom: '15px', color: 'var(--text-muted)' }}>
-                                                        <CheckCircle2 size={24} color="var(--orange)" style={{ flexShrink: 0 }} /> <span>{t('joinCustomerPerk1')}</span>
-                                                    </li>
-                                                    <li style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', marginBottom: '15px', color: 'var(--text-muted)' }}>
-                                                        <CheckCircle2 size={24} color="var(--orange)" style={{ flexShrink: 0 }} /> <span>{t('joinCustomerPerk2')}</span>
-                                                    </li>
-                                                    <li style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', color: 'var(--text-muted)' }}>
-                                                        <CheckCircle2 size={24} color="var(--orange)" style={{ flexShrink: 0 }} /> <span>{t('joinCustomerPerk3')}</span>
-                                                    </li>
-                                                </ul>
-                                                <button className="nav-pill" style={{ padding: '15px 30px', border: '2px solid var(--orange)', color: 'var(--orange)', background: 'transparent', borderRadius: '50px', fontSize: '1rem', fontWeight: 800, cursor: 'pointer', alignSelf: 'flex-start' }}>{t('joinNowBtn')}</button>
+                                        {/* Two Cards: Merchant & Pelanggan */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '25px' }}>
+
+                                            {/* Merchant Card */}
+                                            <div className="card-neumorph hover-float" style={{ padding: '35px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '18px' }}>
+                                                <div style={{ width: '70px', height: '70px', borderRadius: '22px', background: 'linear-gradient(135deg, rgba(238,77,45,0.15), rgba(238,77,45,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                                    <Store size={36} color="var(--orange)" />
+                                                </div>
+                                                <div>
+                                                    <h3 style={{ fontSize: '1.3rem', fontWeight: 900, marginBottom: '8px', color: 'var(--text-main)' }}>Merchant</h3>
+                                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '18px' }}>Bergabunglah sebagai Merchant</p>
+                                                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+                                                        {[t('joinMerchantPerk1'), t('joinMerchantPerk2'), t('joinMerchantPerk3')].map((perk, i) => (
+                                                            <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                                                                <CheckCircle2 size={16} color="var(--orange)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                                                                {perk}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                                <button
+                                                    className="nav-pill active hover-scale"
+                                                    style={{ width: '100%', padding: '14px', fontSize: '1rem', border: 'none', marginTop: '8px' }}
+                                                    onClick={() => { setActiveTab('merchant'); showToast('Selamat datang, Mitra SISAIN!'); }}
+                                                >
+                                                    Bergabung sebagai Merchant
+                                                </button>
                                             </div>
+
+                                            {/* Pelanggan Card */}
+                                            <div className="card-neumorph hover-float" style={{ padding: '35px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '18px' }}>
+                                                <div style={{ width: '70px', height: '70px', borderRadius: '22px', background: 'linear-gradient(135deg, rgba(238,77,45,0.15), rgba(238,77,45,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                                    <User size={36} color="var(--orange)" />
+                                                </div>
+                                                <div>
+                                                    <h3 style={{ fontSize: '1.3rem', fontWeight: 900, marginBottom: '8px', color: 'var(--text-main)' }}>Pelanggan</h3>
+                                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '18px' }}>Bergabunglah sebagai Pelanggan</p>
+                                                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+                                                        {[t('joinCustomerPerk1'), t('joinCustomerPerk2'), t('joinCustomerPerk3')].map((perk, i) => (
+                                                            <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                                                                <CheckCircle2 size={16} color="var(--orange)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                                                                {perk}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                                <button
+                                                    className="nav-pill active hover-scale"
+                                                    style={{ width: '100%', padding: '14px', fontSize: '1rem', border: 'none', marginTop: '8px' }}
+                                                    onClick={() => { setActiveTab('explore'); showToast('Selamat berbelanja di SISAIN!'); }}
+                                                >
+                                                    Bergabung sebagai Pelanggan
+                                                </button>
+                                            </div>
+
                                         </div>
                                     </div>
                                 </div>

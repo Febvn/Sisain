@@ -1005,7 +1005,210 @@ Pertanyaan Pengguna: "${queryText}"`
                     </div>
                 )}
 
-                {activeTab === 'orders' && (
+                {activeTab === 'register-merchant' && (
+                    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '40px 25px 120px', animation: 'slideUp 0.4s ease' }}>
+                        {/* Back button */}
+                        <button
+                            onClick={() => setIsJoinModalOpen(true)}
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: 'var(--text-muted)', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', marginBottom: '28px', padding: 0 }}
+                        >
+                            ← Kembali
+                        </button>
+
+                        {/* Header */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+                            <div style={{ width: '56px', height: '56px', background: 'var(--orange)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px rgba(238,77,45,0.3)', flexShrink: 0 }}>
+                                <Store size={28} color="white" />
+                            </div>
+                            <div>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '4px' }}>Daftar sebagai Merchant</h2>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Mulai jual surplus makananmu di SISAIN</p>
+                            </div>
+                        </div>
+
+                        <form
+                            className="card-neumorph"
+                            style={{ padding: '35px 30px', display: 'flex', flexDirection: 'column', gap: '20px' }}
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                showToast('Pendaftaran Merchant berhasil dikirim!');
+                                setActiveTab('home');
+                            }}
+                        >
+                            {/* Nama Usaha */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Nama Usaha / Toko *</label>
+                                <input required placeholder="Contoh: Warung Bu Siti" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                            </div>
+
+                            {/* Nama Pemilik */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Nama Pemilik *</label>
+                                <input required placeholder="Nama lengkap pemilik usaha" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                            </div>
+
+                            {/* Email & No HP */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Email *</label>
+                                    <input required type="email" placeholder="email@usaha.com" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>No. WhatsApp *</label>
+                                    <input required type="tel" placeholder="08xxxxxxxxxx" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                                </div>
+                            </div>
+
+                            {/* Kategori Usaha */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Kategori Usaha *</label>
+                                <select required style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', cursor: 'pointer' }}>
+                                    <option value="">Pilih kategori...</option>
+                                    <option>Restoran / Warung Makan</option>
+                                    <option>Kafe / Coffee Shop</option>
+                                    <option>Bakery / Toko Roti</option>
+                                    <option>Katering</option>
+                                    <option>Toko Buah & Sayur</option>
+                                    <option>Minimarket / Supermarket</option>
+                                    <option>Lainnya</option>
+                                </select>
+                            </div>
+
+                            {/* Alamat */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Alamat Usaha *</label>
+                                <textarea required rows={3} placeholder="Jl. Contoh No. 1, Kecamatan, Kota..." style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', resize: 'vertical', fontFamily: 'inherit' }} />
+                            </div>
+
+                            {/* Password */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Password *</label>
+                                    <input required type="password" placeholder="Min. 8 karakter" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Konfirmasi Password *</label>
+                                    <input required type="password" placeholder="Ulangi password" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                                </div>
+                            </div>
+
+                            {/* Syarat */}
+                            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.8rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                                <input required type="checkbox" style={{ marginTop: '3px', accentColor: 'var(--orange)', flexShrink: 0 }} />
+                                Saya menyetujui <span style={{ color: 'var(--orange)', fontWeight: 700 }}>&nbsp;Syarat & Ketentuan&nbsp;</span> serta <span style={{ color: 'var(--orange)', fontWeight: 700 }}>&nbsp;Kebijakan Privasi</span> SISAIN
+                            </label>
+
+                            <button type="submit" className="nav-pill active" style={{ width: '100%', padding: '16px', fontSize: '1rem', border: 'none', cursor: 'pointer', marginTop: '4px' }}>
+                                Daftar sebagai Merchant
+                            </button>
+
+                            <p style={{ textAlign: 'center', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                                Sudah punya akun? <span style={{ color: 'var(--orange)', fontWeight: 700, cursor: 'pointer' }} onClick={() => setIsJoinModalOpen(true)}>Masuk di sini</span>
+                            </p>
+                        </form>
+                    </div>
+                )}
+
+                {activeTab === 'register-pelanggan' && (
+                    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '40px 25px 120px', animation: 'slideUp 0.4s ease' }}>
+                        {/* Back button */}
+                        <button
+                            onClick={() => setIsJoinModalOpen(true)}
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: 'var(--text-muted)', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', marginBottom: '28px', padding: 0 }}
+                        >
+                            ← Kembali
+                        </button>
+
+                        {/* Header */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+                            <div style={{ width: '56px', height: '56px', background: 'var(--orange)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px rgba(238,77,45,0.3)', flexShrink: 0 }}>
+                                <User size={28} color="white" />
+                            </div>
+                            <div>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '4px' }}>Daftar sebagai Pelanggan</h2>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Hemat hingga 70% dan selamatkan makanan bersama kami</p>
+                            </div>
+                        </div>
+
+                        <form
+                            className="card-neumorph"
+                            style={{ padding: '35px 30px', display: 'flex', flexDirection: 'column', gap: '20px' }}
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                showToast('Pendaftaran berhasil! Selamat bergabung 🎉');
+                                setActiveTab('home');
+                            }}
+                        >
+                            {/* Nama Lengkap */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Nama Lengkap *</label>
+                                <input required placeholder="Nama lengkap kamu" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                            </div>
+
+                            {/* Username */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Username *</label>
+                                <input required placeholder="@username" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                            </div>
+
+                            {/* Email & No HP */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Email *</label>
+                                    <input required type="email" placeholder="email@kamu.com" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>No. WhatsApp *</label>
+                                    <input required type="tel" placeholder="08xxxxxxxxxx" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                                </div>
+                            </div>
+
+                            {/* Tanggal Lahir */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Tanggal Lahir</label>
+                                <input type="date" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', cursor: 'pointer' }} />
+                            </div>
+
+                            {/* Kota */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Kota / Kabupaten *</label>
+                                <input required placeholder="Contoh: Bandar Lampung" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                            </div>
+
+                            {/* Password */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Password *</label>
+                                    <input required type="password" placeholder="Min. 8 karakter" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Konfirmasi Password *</label>
+                                    <input required type="password" placeholder="Ulangi password" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                                </div>
+                            </div>
+
+                            {/* Referral (opsional) */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Kode Referral <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(opsional)</span></label>
+                                <input placeholder="Masukkan kode referral jika ada" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                            </div>
+
+                            {/* Syarat */}
+                            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.8rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                                <input required type="checkbox" style={{ marginTop: '3px', accentColor: 'var(--orange)', flexShrink: 0 }} />
+                                Saya menyetujui <span style={{ color: 'var(--orange)', fontWeight: 700 }}>&nbsp;Syarat & Ketentuan&nbsp;</span> serta <span style={{ color: 'var(--orange)', fontWeight: 700 }}>&nbsp;Kebijakan Privasi</span> SISAIN
+                            </label>
+
+                            <button type="submit" className="nav-pill active" style={{ width: '100%', padding: '16px', fontSize: '1rem', border: 'none', cursor: 'pointer', marginTop: '4px' }}>
+                                Daftar sebagai Pelanggan
+                            </button>
+
+                            <p style={{ textAlign: 'center', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                                Sudah punya akun? <span style={{ color: 'var(--orange)', fontWeight: 700, cursor: 'pointer' }} onClick={() => setIsJoinModalOpen(true)}>Masuk di sini</span>
+                            </p>
+                        </form>
+                    </div>
+                )}
                     <div style={{ padding: '30px 25px' }}>
                         <h2 style={{ fontWeight: 800, marginBottom: '30px', fontSize: '1.8rem' }}>{t('cartTitle')}</h2>
                         {cart.length === 0 ? (

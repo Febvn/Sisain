@@ -957,16 +957,10 @@ Pertanyaan Pengguna: "${queryText}"`
                                 </div>
                             </>
                         ) : (
-                            <>
-                                <button className="location-pill btn-login-pill" style={{ marginRight: '8px' }} onClick={() => setIsLoginModalOpen(true)}>
-                                    <User size={14} />
-                                    <span>Masuk</span>
-                                </button>
-                                <button className="location-pill btn-login-pill" aria-label="Join" title="Bergabunglah di Misi Kami" onClick={() => setIsJoinModalOpen(true)}>
-                                    <User size={14} />
-                                    <span>{t('navJoin')}</span>
-                                </button>
-                            </>
+                            <button className="location-pill btn-login-pill" aria-label="Join" title="Bergabunglah di Misi Kami" onClick={() => setIsJoinModalOpen(true)}>
+                                <User size={14} />
+                                <span>{t('navJoin')}</span>
+                            </button>
                         )}
                     </div>
 

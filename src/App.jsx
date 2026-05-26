@@ -1259,40 +1259,36 @@ Pertanyaan Pengguna: "${queryText}"`
                         <form
                             className="card-neumorph"
                             style={{ padding: '35px 30px', display: 'flex', flexDirection: 'column', gap: '20px' }}
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                showToast('Pendaftaran Merchant berhasil dikirim!');
-                                setActiveTab('home');
-                            }}
+                            onSubmit={handleRegisterMerchant}
                         >
                             {/* Nama Usaha */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Nama Usaha / Toko *</label>
-                                <input required placeholder="Contoh: Warung Bu Siti" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                                <input name="businessName" required placeholder="Contoh: Warung Bu Siti" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
                             </div>
 
                             {/* Nama Pemilik */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Nama Pemilik *</label>
-                                <input required placeholder="Nama lengkap pemilik usaha" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                                <input name="ownerName" required placeholder="Nama lengkap pemilik usaha" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
                             </div>
 
                             {/* Email & No HP */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Email *</label>
-                                    <input required type="email" placeholder="email@usaha.com" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                                    <input name="email" required type="email" placeholder="email@usaha.com" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>No. WhatsApp *</label>
-                                    <input required type="tel" placeholder="08xxxxxxxxxx" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                                    <input name="phone" required type="tel" placeholder="08xxxxxxxxxx" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
                                 </div>
                             </div>
 
                             {/* Kategori Usaha */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Kategori Usaha *</label>
-                                <select required style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', cursor: 'pointer' }}>
+                                <select name="category" required style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', cursor: 'pointer' }}>
                                     <option value="">Pilih kategori...</option>
                                     <option>Restoran / Warung Makan</option>
                                     <option>Kafe / Coffee Shop</option>
@@ -1307,18 +1303,28 @@ Pertanyaan Pengguna: "${queryText}"`
                             {/* Alamat */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Alamat Usaha *</label>
-                                <textarea required rows={3} placeholder="Jl. Contoh No. 1, Kecamatan, Kota..." style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', resize: 'vertical', fontFamily: 'inherit' }} />
+                                <textarea name="address" required rows={3} placeholder="Jl. Contoh No. 1, Kecamatan, Kota..." style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', resize: 'vertical', fontFamily: 'inherit' }} />
                             </div>
 
                             {/* Password */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Password *</label>
-                                    <input required type="password" placeholder="Min. 8 karakter" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                                    <div style={{ position: 'relative' }}>
+                                        <input name="password" required type={showPassword ? "text" : "password"} placeholder="Min. 8 karakter" style={{ padding: '14px 18px', paddingRight: '45px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', width: '100%' }} />
+                                        <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        </button>
+                                    </div>
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Konfirmasi Password *</label>
-                                    <input required type="password" placeholder="Ulangi password" style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} />
+                                    <div style={{ position: 'relative' }}>
+                                        <input name="confirmPassword" required type={showConfirmPassword ? "text" : "password"} placeholder="Ulangi password" style={{ padding: '14px 18px', paddingRight: '45px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', width: '100%' }} />
+                                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                                            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1333,7 +1339,7 @@ Pertanyaan Pengguna: "${queryText}"`
                             </button>
 
                             <p style={{ textAlign: 'center', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                                Sudah punya akun? <span style={{ color: 'var(--orange)', fontWeight: 700, cursor: 'pointer' }} onClick={() => setIsJoinModalOpen(true)}>Masuk di sini</span>
+                                Sudah punya akun? <span style={{ color: 'var(--orange)', fontWeight: 700, cursor: 'pointer' }} onClick={() => { setIsLoginModalOpen(true); setActiveTab('home'); }}>Masuk di sini</span>
                             </p>
                         </form>
                     </div>

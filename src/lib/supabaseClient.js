@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Ganti URL dan KEY ini dari Dashboard Supabase Anda nanti
-const supabaseUrl = 'https://your-project-url.supabase.co'
-const supabaseAnonKey = 'your-anon-key'
+// Ambil dari environment variables atau gunakan default untuk development
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-url.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)

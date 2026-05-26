@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Auto Commit on File Edit",
+  "description": "Automatically git add and commit every time a file is edited/saved in the workspace",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "cd c:\\Users\\muham\\.gemini\\antigravity-ide\\scratch\\Sisain && git add -A && git commit -m \"auto: update files\""
+  }
+}

@@ -566,7 +566,7 @@ Pertanyaan Pengguna: "${queryText}"`
                     </nav>
 
                     <div className="nav-auth-group">
-                        <button className="location-pill btn-login-pill" aria-label="Join" title="Bergabunglah di Misi Kami" onClick={() => setActiveTab('about')}>
+                        <button className="location-pill btn-login-pill" aria-label="Join" title="Bergabunglah di Misi Kami" onClick={() => setIsJoinModalOpen(true)}>
                             <User size={14} />
                             <span>{t('navJoin')}</span>
                         </button>
@@ -2007,19 +2007,10 @@ Pertanyaan Pengguna: "${queryText}"`
                                         : `Selected location: ${inputLocation || 'Jakarta'} | Radius: ${selectedRadius} km`}
                                 </p>
                             </div>
-                            <div style={{ display: 'flex', gap: '15px', minWidth: '320px', flex: '1 1 auto', justifyContent: 'flex-end' }}>
+                            <div style={{ minWidth: '320px', flex: '1 1 auto', display: 'flex', justifyContent: 'flex-end' }}>
                                 <button
-                                    className="btn-neumorph-secondary"
-                                    onClick={() => {
-                                        setInputLocation(userLocation || "");
-                                        setActiveTab('home');
-                                    }}
-                                    type="button"
-                                >
-                                    {language === 'id' ? 'Batal' : 'Cancel'}
-                                </button>
-                                <button
-                                    className="btn-neumorph-primary"
+                                    className="nav-pill active"
+                                    style={{ padding: '14px 32px', border: 'none', fontSize: '1rem' }}
                                     onClick={() => {
                                         setUserLocation(inputLocation.trim() || null);
                                         setFilters(prev => ({ ...prev, maxDistance: selectedRadius }));
@@ -2028,7 +2019,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                     }}
                                     type="button"
                                 >
-                                    {language === 'id' ? 'Simpan Lokasi' : 'Save Location'}
+                                    {t('modalApply')}
                                 </button>
                             </div>
                         </div>
@@ -2554,25 +2545,17 @@ Pertanyaan Pengguna: "${queryText}"`
                                     </div>
 
                                     {/* Modal Footer Actions */}
-                                    <div style={{ display: 'flex', gap: '15px', width: '100%', boxSizing: 'border-box' }}>
+                                    <div style={{ width: '100%', boxSizing: 'border-box' }}>
                                         <button
-                                            className="btn-neumorph-secondary"
-                                            style={{ flex: 1, padding: '12px' }}
-                                            onClick={() => setShowMapFiltersModal(false)}
-                                            type="button"
-                                        >
-                                            {language === 'id' ? 'Batal' : 'Cancel'}
-                                        </button>
-                                        <button
-                                            className="btn-neumorph-primary"
-                                            style={{ flex: 2, padding: '12px' }}
+                                            className="nav-pill active"
+                                            style={{ width: '100%', padding: '18px', border: 'none', fontSize: '1.1rem', marginTop: '10px' }}
                                             onClick={() => {
                                                 setShowMapFiltersModal(false);
                                                 showToast(language === 'id' ? 'Lokasi berhasil diperbarui!' : 'Location successfully updated!');
                                             }}
                                             type="button"
                                         >
-                                            {language === 'id' ? 'Terapkan' : 'Apply'}
+                                            {t('modalApply')}
                                         </button>
                                     </div>
                                 </div>

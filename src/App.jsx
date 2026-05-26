@@ -850,6 +850,75 @@ Pertanyaan Pengguna: "${queryText}"`
                 </div>
             )}
 
+            {/* Login Modal */}
+            {isLoginModalOpen && (
+                <div className="modal-backdrop" onClick={() => setIsLoginModalOpen(false)}>
+                    <div className="modal-card" style={{ maxWidth: '480px', padding: '40px 35px' }} onClick={e => e.stopPropagation()}>
+                        <button className="close-btn" onClick={() => setIsLoginModalOpen(false)}><X size={20} /></button>
+
+                        {/* Header */}
+                        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                            <div style={{ width: '60px', height: '60px', background: 'var(--orange)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(238,77,45,0.3)' }}>
+                                <User size={30} color="white" />
+                            </div>
+                            <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '8px' }}>Masuk ke SISAIN</h2>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.6' }}>Selamat datang kembali! Masukkan kredensial Anda</p>
+                        </div>
+
+                        {/* Login Form */}
+                        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            {/* Email */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Email *</label>
+                                <input 
+                                    name="email" 
+                                    required 
+                                    type="email" 
+                                    placeholder="email@kamu.com" 
+                                    style={{ padding: '14px 18px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} 
+                                />
+                            </div>
+
+                            {/* Password */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>Password *</label>
+                                <div style={{ position: 'relative' }}>
+                                    <input 
+                                        name="password" 
+                                        required 
+                                        type={showPassword ? "text" : "password"} 
+                                        placeholder="Masukkan password" 
+                                        style={{ padding: '14px 18px', paddingRight: '45px', borderRadius: '14px', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', width: '100%' }} 
+                                    />
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setShowPassword(!showPassword)} 
+                                        style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Forgot Password */}
+                            <div style={{ textAlign: 'right' }}>
+                                <span style={{ color: 'var(--orange)', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>Lupa Password?</span>
+                            </div>
+
+                            {/* Submit Button */}
+                            <button type="submit" className="nav-pill active" style={{ width: '100%', padding: '16px', fontSize: '1rem', border: 'none', cursor: 'pointer', marginTop: '4px' }}>
+                                Masuk
+                            </button>
+
+                            {/* Register Link */}
+                            <p style={{ textAlign: 'center', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                                Belum punya akun? <span style={{ color: 'var(--orange)', fontWeight: 700, cursor: 'pointer' }} onClick={() => { setIsLoginModalOpen(false); setIsJoinModalOpen(true); }}>Daftar di sini</span>
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             {/* Header Section */}
             <header className="main-header">
                 <div className="header-top">

@@ -6,10 +6,11 @@ import {
     Recycle, Wallet, Ticket, CreditCard, Heart, Store, Truck, CheckCircle2, RotateCcw,
     Award, Medal, Crown, Zap, Droplets, LogOut, ChevronRight, Settings, Phone, ArrowUp, Smartphone, Percent, Megaphone, ThumbsUp,
     Apple, Coffee, Croissant, Utensils, Download, FileText, Upload, ArrowRightLeft, LineChart, Mail, RefreshCw, CalendarClock, AlarmClock, BookOpen,
-    Instagram, Twitter, Linkedin, Youtube, Facebook, Bot, Send, Sparkles, HelpCircle
+    Instagram, Twitter, Linkedin, Youtube, Facebook, Bot, Send, Sparkles, HelpCircle, Eye, EyeOff
 } from 'lucide-react';
 import './index.css';
 import translations from './translations';
+import { supabase } from './lib/supabaseClient';
 
 // --- Senior Architect's Product Data ---
 const INITIAL_PRODUCTS = [
@@ -182,6 +183,14 @@ const NESTED_REGIONS = {
 };
 
 export default function App() {
+    // --- Auth State ---
+    const [user, setUser] = useState(null);
+    const [userProfile, setUserProfile] = useState(null);
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+    const [authLoading, setAuthLoading] = useState(true);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    
     // --- State Management ---
     const [activeTab, setActiveTab] = useState("home");
     const [activeCategories, setActiveCategories] = useState(["Semua"]);
@@ -222,6 +231,227 @@ export default function App() {
     const [selectedDistrict, setSelectedDistrict] = useState("");
     const [geoSearchQuery, setGeoSearchQuery] = useState("");
     const [activeAlphabet, setActiveAlphabet] = useState("");
+
+    // --- Auth Effects & Handlers ---
+    useEffect(() => {
+        // Check active session on mount
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null);
+            if (session?.user) {
+                fetchUserProfile(session.user.id);
+            }
+            setAuthLoading(false);
+        });
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+            if (session?.user) {
+                fetchUserProfile(session.user.id);
+            } else {
+                setUserProfile(null);
+            }
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    const fetchUserProfile = async (userId) => {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
+            
+            if (error) throw error;
+            setUserProfile(data);
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    };
+
+    const handleRegisterMerchant = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const email = formData.get('email');
+        const password = formData.get('password');
+        const confirmPassword = formData.get('confirmPassword');
+        const businessName = formData.get('businessName');
+        const ownerName = formData.get('ownerName');
+        const phone = formData.get('phone');
+        const category = formData.get('category');
+        const address = formData.get('address');
+
+        if (password !== confirmPassword) {
+            showToast('Password tidak cocok!');
+            return;
+        }
+
+        if (password.length < 8) {
+            showToast('Password minimal 8 karakter!');
+            return;
+        }
+
+        try {
+            // Register user with Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: ownerName,
+                        role: 'merchant'
+                    }
+                }
+            });
+
+            if (authError) throw authError;
+
+            // Create profile in database
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert([
+                    {
+                        id: authData.user.id,
+                        email,
+                        full_name: ownerName,
+                        role: 'merchant',
+                        business_name: businessName,
+                        phone,
+                        category,
+                        address
+                    }
+                ]);
+
+            if (profileError) throw profileError;
+
+            showToast('Pendaftaran berhasil! Silakan cek email untuk verifikasi.');
+            setActiveTab('home');
+        } catch (error) {
+            console.error('Registration error:', error);
+            showToast(error.message || 'Terjadi kesalahan saat mendaftar');
+        }
+    };
+
+    const handleRegisterPelanggan = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const email = formData.get('email');
+        const password = formData.get('password');
+        const confirmPassword = formData.get('confirmPassword');
+        const fullName = formData.get('fullName');
+        const username = formData.get('username');
+        const phone = formData.get('phone');
+        const birthDate = formData.get('birthDate');
+        const city = formData.get('city');
+        const referralCode = formData.get('referralCode');
+
+        if (password !== confirmPassword) {
+            showToast('Password tidak cocok!');
+            return;
+        }
+
+        if (password.length < 8) {
+            showToast('Password minimal 8 karakter!');
+            return;
+        }
+
+        try {
+            // Register user with Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: fullName,
+                        role: 'customer'
+                    }
+                }
+            });
+
+            if (authError) throw authError;
+
+            // Create profile in database
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert([
+                    {
+                        id: authData.user.id,
+                        email,
+                        full_name: fullName,
+                        username,
+                        role: 'customer',
+                        phone,
+                        birth_date: birthDate,
+                        city,
+                        referral_code: referralCode
+                    }
+                ]);
+
+            if (profileError) throw profileError;
+
+            showToast('Pendaftaran berhasil! Selamat bergabung 🎉');
+            setActiveTab('home');
+        } catch (error) {
+            console.error('Registration error:', error);
+            showToast(error.message || 'Terjadi kesalahan saat mendaftar');
+        }
+    };
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const email = formData.get('email');
+        const password = formData.get('password');
+
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (error) throw error;
+
+            showToast('Login berhasil! Selamat datang kembali 👋');
+            setIsLoginModalOpen(false);
+            
+            // Redirect based on role
+            if (data.user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', data.user.id)
+                    .single();
+                
+                if (profile?.role === 'merchant') {
+                    setActiveTab('merchant');
+                    setIsMerchantLoggedIn(true);
+                } else {
+                    setActiveTab('explore');
+                }
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            showToast(error.message || 'Email atau password salah');
+        }
+    };
+
+    const handleLogout = async () => {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            
+            setUser(null);
+            setUserProfile(null);
+            setIsMerchantLoggedIn(false);
+            setActiveTab('home');
+            showToast('Logout berhasil. Sampai jumpa! 👋');
+        } catch (error) {
+            console.error('Logout error:', error);
+            showToast('Terjadi kesalahan saat logout');
+        }
+    };
 
     // --- Nested Geo Location Helpers ---
     const getGeoSearchResults = (query) => {

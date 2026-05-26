@@ -938,10 +938,36 @@ Pertanyaan Pengguna: "${queryText}"`
                     </nav>
 
                     <div className="nav-auth-group">
-                        <button className="location-pill btn-login-pill" aria-label="Join" title="Bergabunglah di Misi Kami" onClick={() => setIsJoinModalOpen(true)}>
-                            <User size={14} />
-                            <span>{t('navJoin')}</span>
-                        </button>
+                        {user ? (
+                            <>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div className="location-pill" style={{ cursor: 'pointer', background: 'var(--orange-light)' }} onClick={() => setActiveTab('profile')}>
+                                        <User size={14} color="var(--orange)" />
+                                        <span style={{ color: 'var(--orange)', fontWeight: 700 }}>{userProfile?.full_name || user.email}</span>
+                                    </div>
+                                    <button 
+                                        className="location-pill btn-login-pill" 
+                                        style={{ background: 'var(--bg-color)', color: 'var(--text-muted)' }}
+                                        onClick={handleLogout}
+                                        title="Logout"
+                                    >
+                                        <LogOut size={14} />
+                                        <span>Keluar</span>
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <button className="location-pill btn-login-pill" style={{ marginRight: '8px' }} onClick={() => setIsLoginModalOpen(true)}>
+                                    <User size={14} />
+                                    <span>Masuk</span>
+                                </button>
+                                <button className="location-pill btn-login-pill" aria-label="Join" title="Bergabunglah di Misi Kami" onClick={() => setIsJoinModalOpen(true)}>
+                                    <User size={14} />
+                                    <span>{t('navJoin')}</span>
+                                </button>
+                            </>
+                        )}
                     </div>
 
                     <div className="location-pill" style={{ cursor: 'pointer' }} onClick={() => setActiveTab('location')}>

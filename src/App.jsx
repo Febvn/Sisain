@@ -545,7 +545,80 @@ Pertanyaan Pengguna: "${queryText}"`
                 </div>
             )}
 
-            {/* Join Modal removed */}
+            {/* Join Modal */}
+            {isJoinModalOpen && (
+                <div className="modal-backdrop" onClick={() => setIsJoinModalOpen(false)}>
+                    <div className="modal-card" style={{ maxWidth: '560px', padding: '40px 35px' }} onClick={e => e.stopPropagation()}>
+                        <button className="close-btn" onClick={() => setIsJoinModalOpen(false)}><X size={20} /></button>
+
+                        {/* Header */}
+                        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                            <div style={{ width: '60px', height: '60px', background: 'var(--orange)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(238,77,45,0.3)' }}>
+                                <Recycle size={30} color="white" />
+                            </div>
+                            <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '8px' }}>Bergabunglah di Misi Kami</h2>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.6' }}>Pilih peran Anda dan mulai berdampak nyata bagi lingkungan</p>
+                        </div>
+
+                        {/* Two Role Cards */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+
+                            {/* Merchant Card */}
+                            <div className="card-neumorph" style={{ padding: '28px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px', cursor: 'default' }}>
+                                <div style={{ width: '56px', height: '56px', borderRadius: '18px', background: 'rgba(238,77,45,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                    <Store size={28} color="var(--orange)" />
+                                </div>
+                                <div>
+                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 900, marginBottom: '4px' }}>Merchant</h3>
+                                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '14px' }}>Bergabunglah sebagai Merchant</p>
+                                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+                                        {['Dapatkan lebih banyak pesanan dan penjualan', 'Bangun reputasi bisnis secara online', 'Dapatkan dukungan logistik pengiriman'].map((perk, i) => (
+                                            <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                                                <CheckCircle2 size={14} color="var(--orange)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                                                {perk}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <button
+                                    className="nav-pill active"
+                                    style={{ width: '100%', padding: '12px', fontSize: '0.85rem', border: 'none', marginTop: '4px', cursor: 'pointer' }}
+                                    onClick={() => { setIsJoinModalOpen(false); setActiveTab('register-merchant'); }}
+                                >
+                                    Bergabung sebagai Merchant
+                                </button>
+                            </div>
+
+                            {/* Pelanggan Card */}
+                            <div className="card-neumorph" style={{ padding: '28px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px', cursor: 'default' }}>
+                                <div style={{ width: '56px', height: '56px', borderRadius: '18px', background: 'rgba(238,77,45,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                    <User size={28} color="var(--orange)" />
+                                </div>
+                                <div>
+                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 900, marginBottom: '4px' }}>Pelanggan</h3>
+                                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '14px' }}>Bergabunglah sebagai Pelanggan</p>
+                                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+                                        {['Hemat hingga 70% dari harga normal', 'Nikmati makanan berkualitas terjamin', 'Dukung pengurangan limbah pangan'].map((perk, i) => (
+                                            <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                                                <CheckCircle2 size={14} color="var(--orange)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                                                {perk}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <button
+                                    className="nav-pill active"
+                                    style={{ width: '100%', padding: '12px', fontSize: '0.85rem', border: 'none', marginTop: '4px', cursor: 'pointer' }}
+                                    onClick={() => { setIsJoinModalOpen(false); setActiveTab('register-pelanggan'); }}
+                                >
+                                    Bergabung sebagai Pelanggan
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Header Section */}
             <header className="main-header">

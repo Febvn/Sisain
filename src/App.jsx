@@ -26,7 +26,8 @@ const INITIAL_PRODUCTS = [
         stock: 5,
         description: "A complete set of fresh vegetables including carrots, potatoes, beans, and celery. Saved from daily surplus.",
         createdAt: Date.now() - 15 * 60 * 1000, // 15 mins ago
-        shelfLife: "today"
+        shelfLife: "today",
+        deliveryEnabled: true
     },
     {
         id: 2,
@@ -41,7 +42,8 @@ const INITIAL_PRODUCTS = [
         stock: 2,
         description: "Freshly baked artisan sourdough. Surplus from today's morning batch.",
         createdAt: Date.now() - 45 * 60 * 1000, // 45 mins ago
-        shelfLife: "tomorrow"
+        shelfLife: "tomorrow",
+        deliveryEnabled: true
     },
     {
         id: 3,
@@ -56,7 +58,8 @@ const INITIAL_PRODUCTS = [
         stock: 10,
         description: "Crispy chicken with signature spicy sambal. High quality surplus from a corporate event.",
         createdAt: Date.now() - 3 * 3600 * 1000, // 3 hours ago
-        shelfLife: "today"
+        shelfLife: "today",
+        deliveryEnabled: false
     },
     {
         id: 4,
@@ -71,7 +74,8 @@ const INITIAL_PRODUCTS = [
         stock: 3,
         description: "Sweet and juicy red dragon fruit. Surplus from international export batch.",
         createdAt: Date.now() - 12 * 3600 * 1000, // 12 hours ago
-        shelfLife: "7days"
+        shelfLife: "7days",
+        deliveryEnabled: true
     },
     {
         id: 5,
@@ -86,7 +90,8 @@ const INITIAL_PRODUCTS = [
         stock: 4,
         description: "Buttery croissant topped with roasted almonds. Afternoon surplus batch.",
         createdAt: Date.now() - 2 * 24 * 3600 * 1000, // 2 days ago
-        shelfLife: "tomorrow"
+        shelfLife: "tomorrow",
+        deliveryEnabled: true
     },
     {
         id: 6,
@@ -101,12 +106,21 @@ const INITIAL_PRODUCTS = [
         stock: 8,
         description: "Imported Sunkist oranges, juicy and vitamin-packed surplus.",
         createdAt: Date.now() - 5 * 24 * 3600 * 1000, // 5 days ago
-        shelfLife: "7days"
+        shelfLife: "7days",
+        deliveryEnabled: true
     }
 ];
 
 const CATEGORIES = ["Semua", "Sayur", "Buah", "Roti", "Siap Saji"];
 const formatIDR = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
+
+// Lokasi drop-point antar yang sudah ditentukan (bukan lokasi pelanggan).
+// Semua paket "diantar" diarahkan ke titik kumpul ini.
+const DROPOFF_POINT = {
+    name: "Institut Teknologi Sumatera (ITERA)",
+    address: "Jl. Terusan Ryacudu, Way Hui, Jati Agung, Lampung Selatan",
+    fee: 5000
+};
 
 const NESTED_REGIONS = {
     "Jawa": {
@@ -206,7 +220,7 @@ export default function App() {
     const [isMerchantLoggedIn, setIsMerchantLoggedIn] = useState(false);
     const [merchantSubTab, setMerchantSubTab] = useState("pendaftaran");
     const [newProduct, setNewProduct] = useState({
-        name: "", category: "Sayur", currentPrice: "", oldPrice: "", stock: "", description: "", img: ""
+        name: "", category: "Sayur", currentPrice: "", oldPrice: "", stock: "", description: "", img: "", deliveryEnabled: true
     });
     const [filters, setFilters] = useState({
         priceRange: [0, 100000],
@@ -249,12 +263,30 @@ export default function App() {
     const [completeProfileType, setCompleteProfileType] = useState(''); // 'merchant' or 'customer'
     const [profileImage, setProfileImage] = useState(null);
     const [profileImagePreview, setProfileImagePreview] = useState(null);
+    const [loginType, setLoginType] = useState('customer'); // role pilihan di Login Modal
+    const [pendingLoginEmail, setPendingLoginEmail] = useState(''); // email dari login manual, dipakai saat lengkapi profil
+
+    // --- Cart / Checkout / Tracking State ---
+    const [deliveryMethod, setDeliveryMethod] = useState('delivery'); // 'pickup' | 'delivery'
+    const [paymentMethod, setPaymentMethod] = useState('qris'); // 'qris' | 'transfer' | 'cod'
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+    const [trackingStep, setTrackingStep] = useState(0);
+    const [lastOrderInfo, setLastOrderInfo] = useState(null); // { items, total, method, paymentMethod, pickupCode }
 
     // --- Auth Effects & Handlers (Hardcoded - No Backend) ---
     useEffect(() => {
         // No backend check needed
         setAuthLoading(false);
     }, []);
+
+    // Defense-in-depth: kalau ada non-pelanggan (guest atau merchant) nyangkut di tab "orders",
+    // tendang balik ke home. Tombol keranjang juga sudah disembunyikan untuk mereka.
+    useEffect(() => {
+        if (activeTab === 'orders' && userProfile?.role !== 'customer') {
+            setActiveTab('home');
+        }
+    }, [activeTab, userProfile]);
 
     const handleRegisterMerchant = async (e) => {
         e.preventDefault();
@@ -339,41 +371,14 @@ export default function App() {
         e.preventDefault();
         const formData = new FormData(e.target);
         const email = formData.get('email');
-        const password = formData.get('password');
 
-        if (email.includes('merchant')) {
-            const merchantUser = {
-                id: 'merchant-demo',
-                email,
-                full_name: 'Demo Merchant',
-                role: 'merchant',
-                business_name: 'Warung Demo',
-                phone: '081234567890',
-                category: 'Siap Saji',
-                address: 'Jl. Demo No. 123'
-            };
-            setUser(merchantUser);
-            setUserProfile(merchantUser);
-            setIsMerchantLoggedIn(true);
-            setActiveTab('merchant');
-            showToast('Login berhasil! Selamat datang kembali 👋');
-        } else {
-            const customerUser = {
-                id: 'customer-demo',
-                email,
-                full_name: 'Demo Customer',
-                username: 'democustomer',
-                role: 'customer',
-                phone: '081234567890',
-                city: 'Bandar Lampung'
-            };
-            setUser(customerUser);
-            setUserProfile(customerUser);
-            setActiveTab('explore');
-            showToast('Login berhasil! Selamat datang kembali 👋');
-        }
-        
+        // Demo: login manual juga minta user lengkapi profil dulu.
+        // Form yang muncul tergantung loginType (merchant vs customer).
+        setPendingLoginEmail(email);
+        setCompleteProfileType(loginType);
         setIsLoginModalOpen(false);
+        setIsCompleteProfileModalOpen(true);
+        showToast('Login berhasil! Lengkapi profil Anda terlebih dahulu 📝');
     };
 
     const handleLogout = async () => {
@@ -386,8 +391,9 @@ export default function App() {
 
     const handleGoogleLogin = async (type) => {
         showToast('Login dengan Google (Demo Mode)');
-        
+
         // Set the type and open complete profile modal
+        setPendingLoginEmail(''); // pastikan tidak nyangkut dari manual login sebelumnya
         setCompleteProfileType(type);
         setIsCompleteProfileModalOpen(true);
         setIsRegisterModalOpen(false);
@@ -419,7 +425,7 @@ export default function App() {
 
             const merchantUser = {
                 id: 'google-merchant-' + Date.now(),
-                email: 'merchant@gmail.com',
+                email: pendingLoginEmail || 'merchant@gmail.com',
                 full_name: ownerName,
                 role: 'merchant',
                 business_name: businessName,
@@ -444,7 +450,7 @@ export default function App() {
 
             const customerUser = {
                 id: 'google-customer-' + Date.now(),
-                email: 'customer@gmail.com',
+                email: pendingLoginEmail || 'customer@gmail.com',
                 full_name: fullName,
                 username,
                 role: 'customer',
@@ -464,6 +470,7 @@ export default function App() {
         // Reset image states
         setProfileImage(null);
         setProfileImagePreview(null);
+        setPendingLoginEmail('');
     };
 
     // --- Nested Geo Location Helpers ---
@@ -635,22 +642,84 @@ Pertanyaan Pengguna: "${queryText}"`
     };
 
     const handleAddToCart = (product) => {
-        setCart(prev => [...prev, product]);
+        setCart(prev => {
+            const existing = prev.find(i => i.id === product.id);
+            if (existing) {
+                return prev.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
+            }
+            return [...prev, { ...product, quantity: 1 }];
+        });
         setSelectedProduct(null);
         showToast(`Saved ${product.name}!`);
     };
 
-    const handleCheckout = () => {
-        const newOrder = {
+    const handleUpdateCartQty = (id, delta) => {
+        setCart(prev => prev.flatMap(i => {
+            if (i.id !== id) return [i];
+            const newQty = i.quantity + delta;
+            return newQty <= 0 ? [] : [{ ...i, quantity: newQty }];
+        }));
+    };
+
+    const handleRemoveFromCart = (id) => {
+        setCart(prev => prev.filter(i => i.id !== id));
+    };
+
+    const cartHasPickupOnlyItem = cart.some(i => i.deliveryEnabled === false);
+    const cartSubtotal = cart.reduce((s, i) => s + i.currentPrice * i.quantity, 0);
+    const cartItemCount = cart.reduce((s, i) => s + i.quantity, 0);
+    const effectiveDeliveryMethod = cartHasPickupOnlyItem ? 'pickup' : deliveryMethod;
+    const deliveryFee = effectiveDeliveryMethod === 'delivery' ? DROPOFF_POINT.fee : 0;
+    const cartTotal = cartSubtotal + deliveryFee;
+
+    const handleOpenPayment = () => {
+        if (cart.length === 0) {
+            showToast('Keranjang masih kosong!');
+            return;
+        }
+        setIsPaymentModalOpen(true);
+    };
+
+    const handleConfirmPayment = () => {
+        setIsPaymentModalOpen(false);
+        const pickupCode = 'SIS' + Math.floor(1000 + Math.random() * 9000);
+        const orderInfo = {
             id: Date.now(),
             date: new Date().toLocaleDateString('id-ID'),
             items: [...cart],
-            total: cart.reduce((acc, curr) => acc + curr.currentPrice, 0)
+            subtotal: cartSubtotal,
+            deliveryFee,
+            total: cartTotal,
+            method: effectiveDeliveryMethod,
+            paymentMethod,
+            pickupCode,
+            dropoff: effectiveDeliveryMethod === 'delivery' ? DROPOFF_POINT : null
         };
-        setOrderHistory(prev => [newOrder, ...prev]);
+        setLastOrderInfo(orderInfo);
+        setOrderHistory(prev => [orderInfo, ...prev]);
         setCart([]);
-        setActiveTab("profile");
-        showToast("Food Rescued Successfully!");
+        setTrackingStep(0);
+        setIsTrackingModalOpen(true);
+        showToast('Pembayaran berhasil! 🎉');
+    };
+
+    const handleCloseTracking = () => {
+        setIsTrackingModalOpen(false);
+        setLastOrderInfo(null);
+        setTrackingStep(0);
+        setActiveTab('profile');
+    };
+
+    // Simulasi progress pengantaran ketika tracking modal terbuka (mode delivery saja).
+    useEffect(() => {
+        if (!isTrackingModalOpen || !lastOrderInfo || lastOrderInfo.method !== 'delivery') return;
+        if (trackingStep >= 3) return;
+        const timer = setTimeout(() => setTrackingStep(s => Math.min(s + 1, 3)), 1800);
+        return () => clearTimeout(timer);
+    }, [isTrackingModalOpen, trackingStep, lastOrderInfo]);
+
+    const handleToggleProductDelivery = (productId) => {
+        setProducts(prev => prev.map(p => p.id === productId ? { ...p, deliveryEnabled: !p.deliveryEnabled } : p));
     };
 
     const toggleCategory = (cat) => {
@@ -686,7 +755,7 @@ Pertanyaan Pengguna: "${queryText}"`
         };
         setProducts(prev => [product, ...prev]);
         setIsAddProductOpen(false);
-        setNewProduct({ name: "", category: "Sayur", currentPrice: "", oldPrice: "", stock: "", description: "", img: "" });
+        setNewProduct({ name: "", category: "Sayur", currentPrice: "", oldPrice: "", stock: "", description: "", img: "", deliveryEnabled: true });
         showToast("Produk Berhasil Diunggah!");
     };
 
@@ -862,12 +931,60 @@ Pertanyaan Pengguna: "${queryText}"`
                         <div className="close-btn" onClick={() => setIsLoginModalOpen(false)}><X size={20} /></div>
 
                         {/* Header */}
-                        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                             <div style={{ width: '60px', height: '60px', background: 'var(--orange)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(238,77,45,0.3)' }}>
-                                <User size={30} color="white" />
+                                {loginType === 'merchant' ? <Store size={30} color="white" /> : <User size={30} color="white" />}
                             </div>
                             <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '8px' }}>Masuk ke SISAIN</h2>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.6' }}>Selamat datang kembali! Masukkan kredensial Anda</p>
+                        </div>
+
+                        {/* Role Toggle - Pelanggan vs Merchant */}
+                        <div style={{ display: 'flex', gap: '8px', padding: '6px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', marginBottom: '24px' }}>
+                            <button
+                                type="button"
+                                onClick={() => setLoginType('customer')}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px',
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 700,
+                                    background: loginType === 'customer' ? 'var(--orange)' : 'transparent',
+                                    color: loginType === 'customer' ? 'white' : 'var(--text-muted)',
+                                    transition: 'var(--transition-smooth)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '8px'
+                                }}
+                            >
+                                <User size={16} /> Pelanggan
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setLoginType('merchant')}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px',
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 700,
+                                    background: loginType === 'merchant' ? 'var(--orange)' : 'transparent',
+                                    color: loginType === 'merchant' ? 'white' : 'var(--text-muted)',
+                                    transition: 'var(--transition-smooth)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '8px'
+                                }}
+                            >
+                                <Store size={16} /> Merchant
+                            </button>
                         </div>
 
                         {/* Login Form */}
@@ -941,7 +1058,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                     transition: 'var(--transition-smooth)',
                                     marginBottom: '12px'
                                 }}
-                                onClick={() => handleGoogleLogin('login')}
+                                onClick={() => handleGoogleLogin(loginType)}
                             >
                                 <svg version="1.1" width={20} height={20} viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
                                     <path style={{fill: '#FBBB00'}} d="M113.47,309.408L95.648,375.94l-65.139,1.378C11.042,341.211,0,299.9,0,256c0-42.451,10.324-82.483,28.624-117.732h0.014l57.992,10.632l25.404,57.644c-5.317,15.501-8.215,32.141-8.215,49.456C103.821,274.792,107.225,292.797,113.47,309.408z" />
@@ -1394,8 +1511,8 @@ Pertanyaan Pengguna: "${queryText}"`
                                             {userProfile?.role === 'merchant' ? 'Merchant' : 'Pelanggan'}
                                         </span>
                                     </div>
-                                    <button 
-                                        className="location-pill btn-login-pill" 
+                                    <button
+                                        className="location-pill btn-login-pill"
                                         style={{ background: 'var(--bg-color)', color: 'var(--text-muted)' }}
                                         onClick={handleLogout}
                                         title="Logout"
@@ -1417,6 +1534,21 @@ Pertanyaan Pengguna: "${queryText}"`
                         <MapPin size={14} color="var(--orange)" />
                         <span>{userLocation || t('navLocation')}</span>
                     </div>
+
+                    {/* Cart Button — standalone, hanya untuk pelanggan login */}
+                    {(user && userProfile?.role === 'customer') && (
+                        <button
+                            className="cart-fab-btn"
+                            aria-label="Keranjang"
+                            title="Keranjang Saya"
+                            onClick={() => setActiveTab('orders')}
+                        >
+                            <ShoppingCart size={22} color="white" strokeWidth={2.2} />
+                            {cartItemCount > 0 && (
+                                <span className="cart-fab-badge">{cartItemCount}</span>
+                            )}
+                        </button>
+                    )}
 
                     {/* Hamburger Button - Mobile Only */}
                     <button className="hamburger-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label="Menu">
@@ -1442,6 +1574,30 @@ Pertanyaan Pengguna: "${queryText}"`
                         <span onClick={() => { setActiveTab('help'); setIsMobileMenuOpen(false); }} className={`mobile-nav-item ${activeTab === 'help' ? 'active' : ''}`}>
                             <Info size={18} /> {t('navHelp')}
                         </span>
+                        {(user && userProfile?.role === 'customer') && (
+                            <span
+                                onClick={() => { setActiveTab('orders'); setIsMobileMenuOpen(false); }}
+                                className={`mobile-nav-item ${activeTab === 'orders' ? 'active' : ''}`}
+                                style={{ position: 'relative' }}
+                            >
+                                <ShoppingCart size={18} /> Keranjang
+                                {cartItemCount > 0 && (
+                                    <span style={{
+                                        marginLeft: 'auto',
+                                        background: 'var(--orange)',
+                                        color: 'white',
+                                        fontSize: '0.7rem',
+                                        fontWeight: 800,
+                                        padding: '2px 8px',
+                                        borderRadius: '50px',
+                                        minWidth: '22px',
+                                        textAlign: 'center'
+                                    }}>
+                                        {cartItemCount}
+                                    </span>
+                                )}
+                            </span>
+                        )}
                     </nav>
                 )}
 
@@ -1631,6 +1787,26 @@ Pertanyaan Pengguna: "${queryText}"`
                                                 <span>50%</span>
                                             </div>
                                             <img src={p.img} alt={p.name} className="card-image" />
+                                            {/* Badge metode pengantaran */}
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: '10px',
+                                                right: '10px',
+                                                background: p.deliveryEnabled === false ? 'rgba(255,193,7,0.95)' : 'rgba(76,217,100,0.95)',
+                                                color: p.deliveryEnabled === false ? '#7a5c00' : '#0a5e23',
+                                                padding: '4px 10px',
+                                                borderRadius: '50px',
+                                                fontSize: '0.65rem',
+                                                fontWeight: 800,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                                            }}>
+                                                {p.deliveryEnabled === false
+                                                    ? <><Package size={11} /> Pickup Only</>
+                                                    : <><Truck size={11} /> Bisa Diantar</>}
+                                            </div>
                                         </div>
                                         <h3 className="card-title">{p.name}</h3>
                                         <div className="card-merchant">
@@ -1987,6 +2163,153 @@ Pertanyaan Pengguna: "${queryText}"`
                         </div>
                     </div>
                 )}
+
+                {activeTab === 'orders' && (user && userProfile?.role === 'customer') && (
+                    <div style={{ animation: 'fadeIn 0.5s ease', padding: '40px 20px', maxWidth: '720px', margin: '0 auto' }}>
+                        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                            <div style={{ width: '60px', height: '60px', background: 'var(--orange)', borderRadius: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', boxShadow: '0 8px 24px rgba(238,77,45,0.3)' }}>
+                                <ShoppingCart size={28} color="white" />
+                            </div>
+                            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-main)' }}>Keranjang Saya</h2>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Selamatkan makananmu sebelum dibuang</p>
+                        </div>
+
+                        {cart.length === 0 ? (
+                            <div className="card-neumorph" style={{ padding: '60px 24px', textAlign: 'center' }}>
+                                <ShoppingCart size={48} color="var(--text-muted)" opacity={0.3} style={{ marginBottom: '12px' }} />
+                                <p style={{ color: 'var(--text-muted)', fontWeight: 700, marginBottom: '20px' }}>Keranjang masih kosong</p>
+                                <button
+                                    className="nav-pill active"
+                                    style={{ padding: '12px 28px', border: 'none', cursor: 'pointer' }}
+                                    onClick={() => setActiveTab('explore')}
+                                >
+                                    Jelajahi Produk
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Daftar Item */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                                    {cart.map(item => (
+                                        <div key={item.id} className="card-neumorph" style={{ padding: '14px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                                            <div style={{ width: '70px', height: '70px', borderRadius: '15px', overflow: 'hidden', flexShrink: 0, boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                                <img src={item.img} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            </div>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <h4 style={{ fontWeight: 800, fontSize: '0.95rem', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</h4>
+                                                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{item.merchant}</p>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{ color: 'var(--orange)', fontWeight: 900, fontSize: '0.9rem' }}>{formatIDR(item.currentPrice)}</span>
+                                                    {item.deliveryEnabled === false && (
+                                                        <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: '10px', background: 'rgba(255,193,7,0.15)', color: '#b8860b', fontWeight: 700 }}>
+                                                            Pickup only
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                                                <Trash2 size={16} color="#ff4d4f" style={{ cursor: 'pointer' }} onClick={() => handleRemoveFromCart(item.id)} />
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 8px', borderRadius: '20px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                                    <button
+                                                        onClick={() => handleUpdateCartQty(item.id, -1)}
+                                                        style={{ width: '24px', height: '24px', borderRadius: '50%', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-light), var(--shadow-dark)', cursor: 'pointer', fontWeight: 900, color: 'var(--orange)' }}
+                                                    >−</button>
+                                                    <span style={{ minWidth: '20px', textAlign: 'center', fontWeight: 800, fontSize: '0.85rem' }}>{item.quantity}</span>
+                                                    <button
+                                                        onClick={() => handleUpdateCartQty(item.id, 1)}
+                                                        style={{ width: '24px', height: '24px', borderRadius: '50%', border: 'none', background: 'var(--bg-color)', boxShadow: 'var(--shadow-light), var(--shadow-dark)', cursor: 'pointer', fontWeight: 900, color: 'var(--orange)' }}
+                                                    >+</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Pilihan Pickup vs Delivery */}
+                                <div className="card-neumorph" style={{ padding: '20px', marginBottom: '20px' }}>
+                                    <h3 style={{ fontWeight: 900, fontSize: '1rem', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Truck size={18} color="var(--orange)" /> Metode Pengambilan
+                                    </h3>
+                                    {cartHasPickupOnlyItem && (
+                                        <div style={{ padding: '10px 14px', borderRadius: '10px', background: 'rgba(255,193,7,0.12)', color: '#b8860b', fontSize: '0.75rem', fontWeight: 700, marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Info size={14} /> Ada item pickup-only — opsi antar dinonaktifkan.
+                                        </div>
+                                    )}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                        <div
+                                            onClick={() => setDeliveryMethod('pickup')}
+                                            style={{
+                                                padding: '14px',
+                                                borderRadius: '14px',
+                                                cursor: 'pointer',
+                                                background: 'var(--bg-color)',
+                                                boxShadow: effectiveDeliveryMethod === 'pickup' ? 'var(--shadow-inset-light), var(--shadow-inset-dark)' : 'var(--shadow-light), var(--shadow-dark)',
+                                                border: effectiveDeliveryMethod === 'pickup' ? '2px solid var(--orange)' : '2px solid transparent',
+                                                textAlign: 'center'
+                                            }}
+                                        >
+                                            <Package size={22} color={effectiveDeliveryMethod === 'pickup' ? 'var(--orange)' : 'var(--text-muted)'} style={{ marginBottom: '6px' }} />
+                                            <p style={{ fontWeight: 800, fontSize: '0.85rem' }}>Pickup di Toko</p>
+                                            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Gratis</p>
+                                        </div>
+                                        <div
+                                            onClick={() => !cartHasPickupOnlyItem && setDeliveryMethod('delivery')}
+                                            style={{
+                                                padding: '14px',
+                                                borderRadius: '14px',
+                                                cursor: cartHasPickupOnlyItem ? 'not-allowed' : 'pointer',
+                                                opacity: cartHasPickupOnlyItem ? 0.45 : 1,
+                                                background: 'var(--bg-color)',
+                                                boxShadow: effectiveDeliveryMethod === 'delivery' ? 'var(--shadow-inset-light), var(--shadow-inset-dark)' : 'var(--shadow-light), var(--shadow-dark)',
+                                                border: effectiveDeliveryMethod === 'delivery' ? '2px solid var(--orange)' : '2px solid transparent',
+                                                textAlign: 'center'
+                                            }}
+                                        >
+                                            <Truck size={22} color={effectiveDeliveryMethod === 'delivery' ? 'var(--orange)' : 'var(--text-muted)'} style={{ marginBottom: '6px' }} />
+                                            <p style={{ fontWeight: 800, fontSize: '0.85rem' }}>Antar ke ITERA</p>
+                                            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{formatIDR(DROPOFF_POINT.fee)}</p>
+                                        </div>
+                                    </div>
+                                    {effectiveDeliveryMethod === 'delivery' && (
+                                        <div style={{ marginTop: '14px', padding: '12px 14px', borderRadius: '12px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                                            <MapPin size={16} color="var(--orange)" style={{ marginTop: '2px', flexShrink: 0 }} />
+                                            <div>
+                                                <p style={{ fontWeight: 800, fontSize: '0.82rem' }}>{DROPOFF_POINT.name}</p>
+                                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{DROPOFF_POINT.address}</p>
+                                                <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>Titik kumpul tetap — pelanggan mengambil paket di lokasi ini.</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Ringkasan */}
+                                <div className="card-neumorph" style={{ padding: '20px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.88rem' }}>
+                                        <span style={{ color: 'var(--text-muted)' }}>Subtotal ({cartItemCount} item)</span>
+                                        <span style={{ fontWeight: 700 }}>{formatIDR(cartSubtotal)}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.88rem' }}>
+                                        <span style={{ color: 'var(--text-muted)' }}>Biaya {effectiveDeliveryMethod === 'delivery' ? 'antar' : 'pickup'}</span>
+                                        <span style={{ fontWeight: 700 }}>{deliveryFee === 0 ? 'Gratis' : formatIDR(deliveryFee)}</span>
+                                    </div>
+                                    <div style={{ height: '1px', background: 'var(--text-muted)', opacity: 0.15, margin: '10px 0' }} />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                        <span style={{ fontWeight: 900, fontSize: '1rem' }}>Total</span>
+                                        <span style={{ fontWeight: 900, fontSize: '1.2rem', color: 'var(--orange)' }}>{formatIDR(cartTotal)}</span>
+                                    </div>
+                                    <button
+                                        className="nav-pill active"
+                                        onClick={handleOpenPayment}
+                                        style={{ width: '100%', padding: '16px', border: 'none', cursor: 'pointer', fontSize: '0.95rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                                    >
+                                        <CreditCard size={18} /> Lanjut ke Pembayaran
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
+
                 {activeTab === 'merchant' && (
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
                         {/* --- Merchant Landing Hero --- */}
@@ -2356,34 +2679,84 @@ Pertanyaan Pengguna: "${queryText}"`
                                     </div>
                                 ) : (
                                     products.filter(p => p.merchant === "Warung Bu Siti").map(p => (
-                                        <div key={p.id} className="card-neumorph hover-float" style={{ padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', textAlign: 'left' }}>
-                                            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                                                <div style={{ width: '65px', height: '65px', borderRadius: '15px', overflow: 'hidden', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                                    <img src={p.img} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <div key={p.id} className="card-neumorph hover-float" style={{ padding: '15px', display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                                                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                                    <div style={{ width: '65px', height: '65px', borderRadius: '15px', overflow: 'hidden', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                                        <img src={p.img} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    </div>
+                                                    <div>
+                                                        <h4 style={{ fontWeight: 800, fontSize: '1rem', marginBottom: '4px' }}>{p.name}</h4>
+                                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                                            <span style={{ fontSize: '0.85rem', color: 'var(--orange)', fontWeight: 800 }}>{formatIDR(p.currentPrice)}</span>
+                                                            <div style={{ width: '1px', height: '10px', background: 'var(--text-muted)', opacity: 0.3 }}></div>
+                                                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Stok: {p.stock}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <h4 style={{ fontWeight: 800, fontSize: '1rem', marginBottom: '4px' }}>{p.name}</h4>
-                                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                                        <span style={{ fontSize: '0.85rem', color: 'var(--orange)', fontWeight: 800 }}>{formatIDR(p.currentPrice)}</span>
-                                                        <div style={{ width: '1px', height: '10px', background: 'var(--text-muted)', opacity: 0.3 }}></div>
-                                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Stok: {p.stock}</span>
+                                                <div style={{ display: 'flex', gap: '10px' }}>
+                                                    <div
+                                                        className="filter-icon-btn"
+                                                        style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(238, 77, 45, 0.1)', border: 'none' }}
+                                                        onClick={() => showToast('Edit fitur segera hadir!')}
+                                                    >
+                                                        <Settings size={18} color="var(--orange)" />
+                                                    </div>
+                                                    <div
+                                                        className="filter-icon-btn"
+                                                        style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255, 77, 79, 0.1)', border: 'none' }}
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteProduct(p.id); }}
+                                                    >
+                                                        <Trash2 size={18} color="#ff4d4f" />
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div style={{ display: 'flex', gap: '10px' }}>
-                                                <div
-                                                    className="filter-icon-btn"
-                                                    style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(238, 77, 45, 0.1)', border: 'none' }}
-                                                    onClick={() => showToast('Edit fitur segera hadir!')}
-                                                >
-                                                    <Settings size={18} color="var(--orange)" />
+
+                                            {/* Toggle Pengantaran */}
+                                            <div
+                                                onClick={() => handleToggleProductDelivery(p.id)}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    padding: '10px 14px',
+                                                    borderRadius: '12px',
+                                                    background: 'var(--bg-color)',
+                                                    boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <Truck size={16} color={p.deliveryEnabled ? 'var(--orange)' : 'var(--text-muted)'} />
+                                                    <div>
+                                                        <p style={{ fontWeight: 700, fontSize: '0.78rem', color: 'var(--text-main)' }}>
+                                                            {p.deliveryEnabled ? 'Antar aktif' : 'Pickup-only'}
+                                                        </p>
+                                                        <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                                                            {p.deliveryEnabled ? `Diantar ke ${DROPOFF_POINT.name}` : 'Pelanggan ambil sendiri di toko'}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div
-                                                    className="filter-icon-btn"
-                                                    style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255, 77, 79, 0.1)', border: 'none' }}
-                                                    onClick={(e) => { e.stopPropagation(); handleDeleteProduct(p.id); }}
-                                                >
-                                                    <Trash2 size={18} color="#ff4d4f" />
+                                                <div style={{
+                                                    width: '38px',
+                                                    height: '22px',
+                                                    borderRadius: '11px',
+                                                    background: p.deliveryEnabled ? 'var(--orange)' : 'rgba(0,0,0,0.15)',
+                                                    position: 'relative',
+                                                    transition: 'var(--transition-smooth)',
+                                                    flexShrink: 0
+                                                }}>
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: '2px',
+                                                        left: p.deliveryEnabled ? '18px' : '2px',
+                                                        width: '18px',
+                                                        height: '18px',
+                                                        borderRadius: '50%',
+                                                        background: 'white',
+                                                        transition: 'var(--transition-smooth)',
+                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                                    }} />
                                                 </div>
                                             </div>
                                         </div>
@@ -3441,13 +3814,15 @@ Pertanyaan Pengguna: "${queryText}"`
                     <Search size={22} />
                     <span>{t('navExploreTab')}</span>
                 </button>
-                <button className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
-                    <div style={{ position: 'relative' }}>
-                        <ShoppingCart size={22} />
-                        {cart.length > 0 && <span style={{ position: 'absolute', top: '-8px', right: '-8px', background: 'var(--orange)', color: 'white', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '50px' }}>{cart.length}</span>}
-                    </div>
-                    <span>{t('navCart')}</span>
-                </button>
+                {(user && userProfile?.role === 'customer') && (
+                    <button className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
+                        <div style={{ position: 'relative' }}>
+                            <ShoppingCart size={22} />
+                            {cartItemCount > 0 && <span style={{ position: 'absolute', top: '-8px', right: '-8px', background: 'var(--orange)', color: 'white', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '50px' }}>{cartItemCount}</span>}
+                        </div>
+                        <span>{t('navCart')}</span>
+                    </button>
+                )}
                 <button className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
                     <User size={22} />
                     <span>{t('navProfile')}</span>
@@ -3750,7 +4125,44 @@ Pertanyaan Pengguna: "${queryText}"`
                                 </div>
                             </div>
 
-                            <p style={{ color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '30px' }}>{selectedProduct.description}</p>
+                            <p style={{ color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '20px' }}>{selectedProduct.description}</p>
+
+                            {/* Info Metode Pengantaran */}
+                            <div style={{
+                                padding: '14px 16px',
+                                borderRadius: '14px',
+                                background: 'var(--bg-color)',
+                                boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)',
+                                marginBottom: '24px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px'
+                            }}>
+                                <div style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    borderRadius: '12px',
+                                    background: selectedProduct.deliveryEnabled === false ? 'rgba(255,193,7,0.18)' : 'rgba(76,217,100,0.18)',
+                                    color: selectedProduct.deliveryEnabled === false ? '#b8860b' : '#0a7c2f',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    flexShrink: 0
+                                }}>
+                                    {selectedProduct.deliveryEnabled === false ? <Package size={20} /> : <Truck size={20} />}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <p style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                                        {selectedProduct.deliveryEnabled === false ? 'Pickup di Toko Saja' : `Pickup atau Antar ke ${DROPOFF_POINT.name}`}
+                                    </p>
+                                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                        {selectedProduct.deliveryEnabled === false
+                                            ? 'Pelanggan ambil sendiri di lokasi merchant.'
+                                            : `Tersedia opsi antar ke titik kumpul (+${formatIDR(DROPOFF_POINT.fee)}).`}
+                                    </p>
+                                </div>
+                            </div>
+
                             <button
                                 className="nav-pill active"
                                 style={{ width: '100%', padding: '18px', border: 'none', fontSize: '1.1rem' }}
@@ -3837,10 +4249,245 @@ Pertanyaan Pengguna: "${queryText}"`
                                     required
                                 />
                             </div>
+
+                            {/* Opsi Pengantaran */}
+                            <div className="filter-section-modal">
+                                <h4>Opsi Pengantaran</h4>
+                                <div
+                                    onClick={() => setNewProduct({ ...newProduct, deliveryEnabled: !newProduct.deliveryEnabled })}
+                                    style={{
+                                        padding: '15px',
+                                        borderRadius: '12px',
+                                        background: 'var(--bg-color)',
+                                        boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <Truck size={20} color={newProduct.deliveryEnabled ? 'var(--orange)' : 'var(--text-muted)'} />
+                                        <div>
+                                            <p style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-main)' }}>Antar ke titik kumpul</p>
+                                            <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                                {newProduct.deliveryEnabled ? `Aktif — kurir antar ke ${DROPOFF_POINT.name}` : 'Nonaktif — pelanggan harus pickup'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div
+                                        style={{
+                                            width: '44px',
+                                            height: '24px',
+                                            borderRadius: '12px',
+                                            background: newProduct.deliveryEnabled ? 'var(--orange)' : 'rgba(0,0,0,0.15)',
+                                            position: 'relative',
+                                            transition: 'var(--transition-smooth)',
+                                            flexShrink: 0
+                                        }}
+                                    >
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '2px',
+                                            left: newProduct.deliveryEnabled ? '22px' : '2px',
+                                            width: '20px',
+                                            height: '20px',
+                                            borderRadius: '50%',
+                                            background: 'white',
+                                            transition: 'var(--transition-smooth)',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                        }} />
+                                    </div>
+                                </div>
+                            </div>
+
                             <button className="nav-pill active" type="submit" style={{ width: '100%', padding: '18px', border: 'none', marginTop: '10px' }}>
                                 {t('addProductPublish')}
                             </button>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Payment Modal - Demo */}
+            {isPaymentModalOpen && (
+                <div className="modal-backdrop" onClick={() => setIsPaymentModalOpen(false)}>
+                    <div className="modal-card" style={{ maxWidth: '480px', width: '100%', padding: '32px 28px', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+                        <div className="close-btn" onClick={() => setIsPaymentModalOpen(false)}><X size={20} /></div>
+
+                        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                            <div style={{ width: '56px', height: '56px', background: 'var(--orange)', borderRadius: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px', boxShadow: '0 8px 24px rgba(238,77,45,0.3)' }}>
+                                <CreditCard size={26} color="white" />
+                            </div>
+                            <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-main)' }}>Pembayaran</h2>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Demo — tidak ada transaksi nyata</p>
+                        </div>
+
+                        {/* Ringkasan singkat */}
+                        <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', marginBottom: '20px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '4px' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>{cartItemCount} item</span>
+                                <span style={{ fontWeight: 700 }}>{formatIDR(cartSubtotal)}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '4px' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>{effectiveDeliveryMethod === 'delivery' ? `Antar ke ${DROPOFF_POINT.name}` : 'Pickup di toko'}</span>
+                                <span style={{ fontWeight: 700 }}>{deliveryFee === 0 ? 'Gratis' : formatIDR(deliveryFee)}</span>
+                            </div>
+                            <div style={{ height: '1px', background: 'var(--text-muted)', opacity: 0.15, margin: '8px 0' }} />
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontWeight: 900 }}>Total</span>
+                                <span style={{ fontWeight: 900, fontSize: '1.1rem', color: 'var(--orange)' }}>{formatIDR(cartTotal)}</span>
+                            </div>
+                        </div>
+
+                        {/* Metode Pembayaran */}
+                        <h3 style={{ fontWeight: 800, fontSize: '0.9rem', marginBottom: '10px' }}>Pilih Metode Pembayaran</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+                            {[
+                                { id: 'qris', label: 'QRIS', desc: 'Scan QR semua e-wallet & bank', icon: <Smartphone size={20} /> },
+                                { id: 'transfer', label: 'Transfer Bank', desc: 'BCA, Mandiri, BNI, BRI', icon: <ArrowRightLeft size={20} /> },
+                                { id: 'cod', label: 'Bayar di Tempat (COD)', desc: effectiveDeliveryMethod === 'delivery' ? 'Bayar saat ambil paket' : 'Bayar saat pickup', icon: <Wallet size={20} /> }
+                            ].map(opt => (
+                                <div
+                                    key={opt.id}
+                                    onClick={() => setPaymentMethod(opt.id)}
+                                    style={{
+                                        padding: '14px',
+                                        borderRadius: '14px',
+                                        cursor: 'pointer',
+                                        background: 'var(--bg-color)',
+                                        boxShadow: paymentMethod === opt.id ? 'var(--shadow-inset-light), var(--shadow-inset-dark)' : 'var(--shadow-light), var(--shadow-dark)',
+                                        border: paymentMethod === opt.id ? '2px solid var(--orange)' : '2px solid transparent',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px'
+                                    }}
+                                >
+                                    <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: paymentMethod === opt.id ? 'var(--orange)' : 'rgba(238,77,45,0.1)', color: paymentMethod === opt.id ? 'white' : 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        {opt.icon}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <p style={{ fontWeight: 800, fontSize: '0.9rem' }}>{opt.label}</p>
+                                        <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{opt.desc}</p>
+                                    </div>
+                                    {paymentMethod === opt.id && <CheckCircle2 size={18} color="var(--orange)" />}
+                                </div>
+                            ))}
+                        </div>
+
+                        <button
+                            className="nav-pill active"
+                            onClick={handleConfirmPayment}
+                            style={{ width: '100%', padding: '16px', border: 'none', cursor: 'pointer', fontSize: '0.95rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                        >
+                            Bayar {formatIDR(cartTotal)}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Delivery / Pickup Tracking Modal - Demo */}
+            {isTrackingModalOpen && lastOrderInfo && (
+                <div className="modal-backdrop" onClick={handleCloseTracking}>
+                    <div className="modal-card" style={{ maxWidth: '500px', width: '100%', padding: '32px 28px', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+                        <div className="close-btn" onClick={handleCloseTracking}><X size={20} /></div>
+
+                        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                            <div style={{ width: '60px', height: '60px', background: lastOrderInfo.method === 'delivery' ? 'var(--orange)' : '#4cd964', borderRadius: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px', boxShadow: '0 8px 24px rgba(238,77,45,0.3)' }}>
+                                {lastOrderInfo.method === 'delivery' ? <Truck size={28} color="white" /> : <Package size={28} color="white" />}
+                            </div>
+                            <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-main)' }}>
+                                {lastOrderInfo.method === 'delivery' ? 'Pesanan Sedang Diantar' : 'Siap Diambil'}
+                            </h2>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Order #{lastOrderInfo.id}</p>
+                        </div>
+
+                        {lastOrderInfo.method === 'delivery' ? (
+                            <>
+                                {/* Lokasi tujuan */}
+                                <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', marginBottom: '20px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                                    <MapPin size={20} color="var(--orange)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                                    <div>
+                                        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Sedang diantar ke</p>
+                                        <p style={{ fontWeight: 900, fontSize: '0.95rem' }}>{lastOrderInfo.dropoff.name}</p>
+                                        <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{lastOrderInfo.dropoff.address}</p>
+                                    </div>
+                                </div>
+
+                                {/* Step Tracker */}
+                                <div style={{ marginBottom: '20px' }}>
+                                    {[
+                                        { label: 'Pesanan dikemas merchant', icon: <Package size={16} /> },
+                                        { label: 'Kurir mengambil pesanan', icon: <ShoppingCart size={16} /> },
+                                        { label: `Sedang diantar ke ${lastOrderInfo.dropoff.name}`, icon: <Truck size={16} /> },
+                                        { label: 'Tiba di titik kumpul — siap diambil', icon: <CheckCircle2 size={16} /> }
+                                    ].map((step, idx) => {
+                                        const done = idx < trackingStep;
+                                        const active = idx === trackingStep;
+                                        return (
+                                            <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '14px' }}>
+                                                <div style={{
+                                                    width: '32px',
+                                                    height: '32px',
+                                                    borderRadius: '50%',
+                                                    background: done ? '#4cd964' : active ? 'var(--orange)' : 'var(--bg-color)',
+                                                    color: (done || active) ? 'white' : 'var(--text-muted)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    flexShrink: 0,
+                                                    boxShadow: (done || active) ? 'none' : 'var(--shadow-inset-light), var(--shadow-inset-dark)',
+                                                    animation: active ? 'pulse 1.5s ease-in-out infinite' : 'none'
+                                                }}>
+                                                    {done ? <CheckCircle2 size={16} /> : step.icon}
+                                                </div>
+                                                <div style={{ paddingTop: '6px' }}>
+                                                    <p style={{ fontSize: '0.85rem', fontWeight: active ? 900 : 700, color: (done || active) ? 'var(--text-main)' : 'var(--text-muted)' }}>
+                                                        {step.label}
+                                                    </p>
+                                                    {active && <p style={{ fontSize: '0.7rem', color: 'var(--orange)', fontWeight: 700, marginTop: '2px' }}>Sedang berlangsung...</p>}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {trackingStep >= 3 && (
+                                    <div style={{ padding: '14px', borderRadius: '14px', background: 'rgba(76,217,100,0.12)', color: '#0a7c2f', textAlign: 'center', fontWeight: 800, fontSize: '0.9rem', marginBottom: '16px' }}>
+                                        🎉 Paket sudah tiba! Ambil di {lastOrderInfo.dropoff.name}.
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                {/* Pickup view */}
+                                <div style={{ padding: '24px', borderRadius: '18px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', marginBottom: '20px', textAlign: 'center' }}>
+                                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '6px' }}>Tunjukkan kode ini di toko</p>
+                                    <p style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--orange)', letterSpacing: '4px', marginBottom: '6px' }}>{lastOrderInfo.pickupCode}</p>
+                                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Pesanan siap diambil dalam ~15 menit</p>
+                                </div>
+                            </>
+                        )}
+
+                        {/* Detail bayar */}
+                        <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', marginBottom: '20px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '4px' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>Metode</span>
+                                <span style={{ fontWeight: 700, textTransform: 'uppercase' }}>{lastOrderInfo.paymentMethod}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>Total dibayar</span>
+                                <span style={{ fontWeight: 900, color: 'var(--orange)' }}>{formatIDR(lastOrderInfo.total)}</span>
+                            </div>
+                        </div>
+
+                        <button
+                            className="nav-pill active"
+                            onClick={handleCloseTracking}
+                            style={{ width: '100%', padding: '14px', border: 'none', cursor: 'pointer', fontSize: '0.9rem' }}
+                        >
+                            {lastOrderInfo.method === 'delivery' && trackingStep < 3 ? 'Tutup (lanjut di background)' : 'Selesai'}
+                        </button>
                     </div>
                 </div>
             )}

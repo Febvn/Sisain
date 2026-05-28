@@ -409,6 +409,66 @@ main { flex: 1; }
   background: rgba(255,140,0,0.12);
   color: var(--orange);
 }
+
+/* ===== STANDALONE CART BUTTON (FAB-style) ===== */
+.cart-fab-btn {
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  margin-left: 12px;           /* memberi nafas dari pill sebelahnya */
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ff6b35 0%, var(--orange) 100%);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(238,77,45,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+  transition: var(--transition-smooth);
+}
+.cart-fab-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(238,77,45,0.45), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.cart-fab-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(238,77,45,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.cart-fab-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 50px;
+  background: white;
+  color: var(--orange);
+  font-size: 0.72rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  border: 2px solid #fff8f5;
+}
+@media (max-width: 768px) {
+  .cart-fab-btn {
+    width: 42px;
+    height: 42px;
+    margin-left: 8px;
+    border-radius: 12px;
+  }
+  .cart-fab-badge {
+    min-width: 19px;
+    height: 19px;
+    font-size: 0.65rem;
+    top: -5px;
+    right: -5px;
+  }
+}
+
 /* ===== HAMBURGER BUTTON ===== */
 .hamburger-btn {
   display: none; /* Hidden on desktop */

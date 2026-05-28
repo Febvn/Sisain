@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
     ShoppingCart, MapPin, Search, Plus, Home, User,
     X, Star, Clock, Trash2, BarChart3, Package, Menu,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import './index.css';
 import translations from './translations';
+import { supabase } from './lib/supabaseClient';
 
 // --- Senior Architect's Product Data ---
 const INITIAL_PRODUCTS = [
@@ -182,11 +183,11 @@ const NESTED_REGIONS = {
 };
 
 export default function App() {
-    // --- Auth State (Hardcoded - No Backend) ---
+    // --- Auth State ---
     const [user, setUser] = useState(null);
     const [userProfile, setUserProfile] = useState(null);
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-    const [authLoading, setAuthLoading] = useState(false);
+    const [authLoading, setAuthLoading] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     
@@ -245,16 +246,45 @@ export default function App() {
     });
     const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
     const [registerType, setRegisterType] = useState(''); // 'merchant' or 'customer'
-    const [isCompleteProfileModalOpen, setIsCompleteProfileModalOpen] = useState(false);
-    const [completeProfileType, setCompleteProfileType] = useState(''); // 'merchant' or 'customer'
-    const [profileImage, setProfileImage] = useState(null);
-    const [profileImagePreview, setProfileImagePreview] = useState(null);
 
-    // --- Auth Effects & Handlers (Hardcoded - No Backend) ---
+    // --- Auth Effects & Handlers ---
     useEffect(() => {
-        // No backend check needed
-        setAuthLoading(false);
+        // Check active session on mount
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null);
+            if (session?.user) {
+                fetchUserProfile(session.user.id);
+            }
+            setAuthLoading(false);
+        });
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+            if (session?.user) {
+                fetchUserProfile(session.user.id);
+            } else {
+                setUserProfile(null);
+            }
+        });
+
+        return () => subscription.unsubscribe();
     }, []);
+
+    const fetchUserProfile = async (userId) => {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
+            
+            if (error) throw error;
+            setUserProfile(data);
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    };
 
     const handleRegisterMerchant = async (e) => {
         e.preventDefault();
@@ -274,23 +304,46 @@ export default function App() {
             return;
         }
 
-        const newUser = {
-            id: Date.now().toString(),
-            email,
-            full_name: ownerName,
-            role: 'merchant',
-            business_name: ownerName + "'s Business",
-            phone: '',
-            category: 'Lainnya',
-            address: ''
-        };
+        try {
+            // Register user with Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: ownerName,
+                        role: 'merchant'
+                    }
+                }
+            });
 
-        setUser(newUser);
-        setUserProfile(newUser);
-        showToast('Pendaftaran berhasil! Selamat bergabung sebagai merchant 🎉');
-        setIsRegisterModalOpen(false);
-        setActiveTab('merchant');
-        setIsMerchantLoggedIn(true);
+            if (authError) throw authError;
+
+            // Create profile in database
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert([
+                    {
+                        id: authData.user.id,
+                        email,
+                        full_name: ownerName,
+                        role: 'merchant',
+                        business_name: ownerName + "'s Business", // Default
+                        phone: '',
+                        category: 'Lainnya',
+                        address: ''
+                    }
+                ]);
+
+            if (profileError) throw profileError;
+
+            showToast('Pendaftaran berhasil! Silakan cek email untuk verifikasi.');
+            setIsRegisterModalOpen(false);
+            setActiveTab('home');
+        } catch (error) {
+            console.error('Registration error:', error);
+            showToast(error.message || 'Terjadi kesalahan saat mendaftar');
+        }
     };
 
     const handleRegisterPelanggan = async (e) => {
@@ -316,23 +369,46 @@ export default function App() {
             return;
         }
 
-        const newUser = {
-            id: Date.now().toString(),
-            email,
-            full_name: fullName,
-            username,
-            role: 'customer',
-            phone,
-            birth_date: birthDate,
-            city,
-            referral_code: referralCode
-        };
+        try {
+            // Register user with Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: fullName,
+                        role: 'customer'
+                    }
+                }
+            });
 
-        setUser(newUser);
-        setUserProfile(newUser);
-        showToast('Pendaftaran berhasil! Selamat bergabung 🎉');
-        setIsRegisterModalOpen(false);
-        setActiveTab('explore');
+            if (authError) throw authError;
+
+            // Create profile in database
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert([
+                    {
+                        id: authData.user.id,
+                        email,
+                        full_name: fullName,
+                        username,
+                        role: 'customer',
+                        phone,
+                        birth_date: birthDate,
+                        city,
+                        referral_code: referralCode
+                    }
+                ]);
+
+            if (profileError) throw profileError;
+
+            showToast('Pendaftaran berhasil! Selamat bergabung ðŸŽ‰');
+            setActiveTab('home');
+        } catch (error) {
+            console.error('Registration error:', error);
+            showToast(error.message || 'Terjadi kesalahan saat mendaftar');
+        }
     };
 
     const handleLogin = async (e) => {
@@ -341,129 +417,52 @@ export default function App() {
         const email = formData.get('email');
         const password = formData.get('password');
 
-        if (email.includes('merchant')) {
-            const merchantUser = {
-                id: 'merchant-demo',
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
                 email,
-                full_name: 'Demo Merchant',
-                role: 'merchant',
-                business_name: 'Warung Demo',
-                phone: '081234567890',
-                category: 'Siap Saji',
-                address: 'Jl. Demo No. 123'
-            };
-            setUser(merchantUser);
-            setUserProfile(merchantUser);
-            setIsMerchantLoggedIn(true);
-            setActiveTab('merchant');
-            showToast('Login berhasil! Selamat datang kembali 👋');
-        } else {
-            const customerUser = {
-                id: 'customer-demo',
-                email,
-                full_name: 'Demo Customer',
-                username: 'democustomer',
-                role: 'customer',
-                phone: '081234567890',
-                city: 'Bandar Lampung'
-            };
-            setUser(customerUser);
-            setUserProfile(customerUser);
-            setActiveTab('explore');
-            showToast('Login berhasil! Selamat datang kembali 👋');
+                password
+            });
+
+            if (error) throw error;
+
+            showToast('Login berhasil! Selamat datang kembali ðŸ‘‹');
+            setIsLoginModalOpen(false);
+            
+            // Redirect based on role
+            if (data.user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', data.user.id)
+                    .single();
+                
+                if (profile?.role === 'merchant') {
+                    setActiveTab('merchant');
+                    setIsMerchantLoggedIn(true);
+                } else {
+                    setActiveTab('explore');
+                }
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            showToast(error.message || 'Email atau password salah');
         }
-        
-        setIsLoginModalOpen(false);
     };
 
     const handleLogout = async () => {
-        setUser(null);
-        setUserProfile(null);
-        setIsMerchantLoggedIn(false);
-        setActiveTab('home');
-        showToast('Logout berhasil. Sampai jumpa! 👋');
-    };
-
-    const handleGoogleLogin = async (type) => {
-        showToast('Login dengan Google (Demo Mode)');
-        
-        // Set the type and open complete profile modal
-        setCompleteProfileType(type);
-        setIsCompleteProfileModalOpen(true);
-        setIsRegisterModalOpen(false);
-        setIsLoginModalOpen(false);
-    };
-
-    const handleImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setProfileImage(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setProfileImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            
+            setUser(null);
+            setUserProfile(null);
+            setIsMerchantLoggedIn(false);
+            setActiveTab('home');
+            showToast('Logout berhasil. Sampai jumpa! ðŸ‘‹');
+        } catch (error) {
+            console.error('Logout error:', error);
+            showToast('Terjadi kesalahan saat logout');
         }
-    };
-
-    const handleCompleteProfile = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-
-        if (completeProfileType === 'merchant') {
-            const ownerName = formData.get('ownerName') || 'Mitra SISAIN';
-            const businessName = formData.get('businessName') || `${ownerName}'s Business`;
-            const category = formData.get('category') || 'Lainnya';
-            const address = formData.get('address') || '';
-            const phone = formData.get('phone') || '';
-
-            const merchantUser = {
-                id: 'google-merchant-' + Date.now(),
-                email: 'merchant@gmail.com',
-                full_name: ownerName,
-                role: 'merchant',
-                business_name: businessName,
-                phone,
-                category,
-                address,
-                profile_image: profileImagePreview
-            };
-
-            setUser(merchantUser);
-            setUserProfile(merchantUser);
-            setIsMerchantLoggedIn(true);
-            showToast('Profil merchant berhasil dilengkapi!');
-            setIsCompleteProfileModalOpen(false);
-            setActiveTab('merchant');
-        } else {
-            const username = formData.get('username');
-            const birthDate = formData.get('birthDate');
-            const city = formData.get('city');
-            const phone = formData.get('phone');
-            const fullName = formData.get('fullName');
-
-            const customerUser = {
-                id: 'google-customer-' + Date.now(),
-                email: 'customer@gmail.com',
-                full_name: fullName,
-                username,
-                role: 'customer',
-                phone,
-                birth_date: birthDate,
-                city,
-                profile_image: profileImagePreview
-            };
-
-            setUser(customerUser);
-            setUserProfile(customerUser);
-            showToast('Profil pelanggan berhasil dilengkapi!');
-            setIsCompleteProfileModalOpen(false);
-            setActiveTab('explore');
-        }
-        
-        // Reset image states
-        setProfileImage(null);
-        setProfileImagePreview(null);
     };
 
     // --- Nested Geo Location Helpers ---
@@ -761,10 +760,10 @@ Pertanyaan Pengguna: "${queryText}"`
                             <h2 className="splash-title">{t('splashTitle')}</h2>
                             <div className="splash-btn-group">
                                 <button className="splash-btn" onClick={() => { setLanguage("id"); setIsLanguageSelected(true); }}>
-                                    [ID] Bahasa Indonesia
+                                    ðŸ‡®ðŸ‡© Bahasa Indonesia
                                 </button>
                                 <button className="splash-btn" onClick={() => { setLanguage("en"); setIsLanguageSelected(true); }}>
-                                    [EN] English
+                                    ðŸ‡ºðŸ‡¸ English
                                 </button>
                             </div>
                         </div>
@@ -941,7 +940,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                     transition: 'var(--transition-smooth)',
                                     marginBottom: '12px'
                                 }}
-                                onClick={() => handleGoogleLogin('login')}
+                                onClick={() => showToast('Login dengan Google akan segera tersedia!')}
                             >
                                 <svg version="1.1" width={20} height={20} viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
                                     <path style={{fill: '#FBBB00'}} d="M113.47,309.408L95.648,375.94l-65.139,1.378C11.042,341.211,0,299.9,0,256c0-42.451,10.324-82.483,28.624-117.732h0.014l57.992,10.632l25.404,57.644c-5.317,15.501-8.215,32.141-8.215,49.456C103.821,274.792,107.225,292.797,113.47,309.408z" />
@@ -1094,7 +1093,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                     color: 'var(--text-main)',
                                     transition: 'var(--transition-smooth)'
                                 }}
-                                onClick={() => handleGoogleLogin(registerType)}
+                                onClick={() => showToast('Login dengan Google akan segera tersedia!')}
                             >
                                 <svg version="1.1" width={20} height={20} viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
                                     <path style={{fill: '#FBBB00'}} d="M113.47,309.408L95.648,375.94l-65.139,1.378C11.042,341.211,0,299.9,0,256c0-42.451,10.324-82.483,28.624-117.732h0.014l57.992,10.632l25.404,57.644c-5.317,15.501-8.215,32.141-8.215,49.456C103.821,274.792,107.225,292.797,113.47,309.408z" />
@@ -1109,258 +1108,6 @@ Pertanyaan Pengguna: "${queryText}"`
                             <p style={{ textAlign: 'center', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                                 Sudah punya akun? <span style={{ color: 'var(--orange)', fontWeight: 700, cursor: 'pointer' }} onClick={() => { setIsRegisterModalOpen(false); setIsLoginModalOpen(true); }}>Masuk di sini</span>
                             </p>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Complete Profile Modal - After Google Login */}
-            {isCompleteProfileModalOpen && (
-                <div className="modal-backdrop" onClick={() => setIsCompleteProfileModalOpen(false)}>
-                    <div className="modal-card" style={{ maxWidth: '520px', width: '100%', padding: '40px 35px', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-                        <div className="close-btn" onClick={() => setIsCompleteProfileModalOpen(false)}><X size={20} /></div>
-
-                        {/* Header */}
-                        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                            <div style={{ width: '60px', height: '60px', background: 'var(--orange)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(238,77,45,0.3)' }}>
-                                {completeProfileType === 'merchant' ? <Store size={30} color="white" /> : <User size={30} color="white" />}
-                            </div>
-                            <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '8px' }}>
-                                Lengkapi Profil Anda
-                            </h2>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.6' }}>
-                                {completeProfileType === 'merchant' ? 'Isi data bisnis Anda untuk mulai berjualan' : 'Isi data diri untuk melanjutkan'}
-                            </p>
-                        </div>
-
-                        {/* Complete Profile Form */}
-                        <form onSubmit={handleCompleteProfile} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            
-                            {/* Profile Image Upload */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                                <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)', alignSelf: 'flex-start' }}>
-                                    Foto Profil {completeProfileType === 'merchant' ? '/ Logo Bisnis' : ''}
-                                </label>
-                                <div style={{ 
-                                    width: '120px', 
-                                    height: '120px', 
-                                    borderRadius: '50%', 
-                                    background: 'var(--bg-color)', 
-                                    boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    overflow: 'hidden',
-                                    position: 'relative',
-                                    cursor: 'pointer',
-                                    border: '3px dashed var(--text-muted)',
-                                    opacity: 0.7,
-                                    transition: 'var(--transition-smooth)'
-                                }}
-                                onClick={() => document.getElementById('profileImageInput').click()}
-                                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                                onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
-                                >
-                                    {profileImagePreview ? (
-                                        <img src={profileImagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    ) : (
-                                        <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-                                            <Upload size={32} style={{ marginBottom: '8px' }} />
-                                            <p style={{ fontSize: '0.75rem' }}>Upload Foto</p>
-                                        </div>
-                                    )}
-                                </div>
-                                <input 
-                                    id="profileImageInput"
-                                    type="file" 
-                                    accept="image/*"
-                                    onChange={handleImageUpload}
-                                    style={{ display: 'none' }}
-                                />
-                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-                                    Format: JPG, PNG (Max 2MB)
-                                </p>
-                            </div>
-
-                            {completeProfileType === 'merchant' ? (
-                                <>
-                                    {/* Owner Name */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Nama Pemilik (Opsional)
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <User size={18} color="var(--text-muted)" />
-                                            <input 
-                                                name="ownerName"
-                                                type="text" 
-                                                placeholder="Nama lengkap pemilik" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Business Name */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Nama Bisnis (Opsional)
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <Store size={18} color="var(--text-muted)" />
-                                            <input 
-                                                name="businessName"
-                                                type="text" 
-                                                placeholder="Nama toko/warung/restoran" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Category */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Kategori Bisnis (Opsional)
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <Package size={18} color="var(--text-muted)" />
-                                            <select 
-                                                name="category"
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', cursor: 'pointer' }} 
-                                            >
-                                                <option value="">Pilih kategori</option>
-                                                <option value="Sayur">Sayur</option>
-                                                <option value="Buah">Buah</option>
-                                                <option value="Roti">Roti & Bakery</option>
-                                                <option value="Siap Saji">Siap Saji</option>
-                                                <option value="Lainnya">Lainnya</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {/* Phone */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Nomor Telepon (Opsional)
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <Phone size={18} color="var(--text-muted)" />
-                                            <input 
-                                                name="phone"
-                                                type="tel" 
-                                                placeholder="08xxxxxxxxxx" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Address */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Alamat Lengkap (Opsional)
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <MapPin size={18} color="var(--text-muted)" style={{ marginTop: '2px' }} />
-                                            <textarea 
-                                                name="address"
-                                                rows="3"
-                                                placeholder="Alamat lengkap bisnis Anda" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', resize: 'vertical', fontFamily: 'inherit' }} 
-                                            />
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    {/* Full Name */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Nama Lengkap *
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <User size={18} color="var(--text-muted)" />
-                                            <input 
-                                                name="fullName"
-                                                required 
-                                                type="text" 
-                                                placeholder="Nama lengkap Anda" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Username */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Username *
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>@</span>
-                                            <input 
-                                                name="username"
-                                                required 
-                                                type="text" 
-                                                placeholder="username_anda" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Phone */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Nomor Telepon *
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <Phone size={18} color="var(--text-muted)" />
-                                            <input 
-                                                name="phone"
-                                                required 
-                                                type="tel" 
-                                                placeholder="08xxxxxxxxxx" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Birth Date */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Tanggal Lahir *
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <CalendarClock size={18} color="var(--text-muted)" />
-                                            <input 
-                                                name="birthDate"
-                                                required 
-                                                type="date" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', cursor: 'pointer' }} 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* City */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Kota *
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <MapPin size={18} color="var(--text-muted)" />
-                                            <input 
-                                                name="city"
-                                                required 
-                                                type="text" 
-                                                placeholder="Kota tempat tinggal" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} 
-                                            />
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-
-                            {/* Submit Button */}
-                            <button type="submit" className="nav-pill active" style={{ width: '100%', padding: '16px', fontSize: '1rem', border: 'none', cursor: 'pointer', marginTop: '12px' }}>
-                                Simpan & Lanjutkan
-                            </button>
                         </form>
                     </div>
                 </div>
@@ -1766,10 +1513,10 @@ Pertanyaan Pengguna: "${queryText}"`
                                             Bergabung sebagai Pelanggan
                                         </button>
                                     </div>
-
                                 </div>
                             </div>
-                        </div>
+                            </>
+                        )}
                     </div>
                 )}
 
@@ -1989,6 +1736,91 @@ Pertanyaan Pengguna: "${queryText}"`
                 )}
                 {activeTab === 'merchant' && (
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
+                        {/* Check if user is logged in as merchant */}
+                        {user && userProfile?.role === 'merchant' ? (
+                            /* Merchant Dashboard */
+                            <div style={{ padding: '30px 20px 120px', maxWidth: '1200px', margin: '0 auto' }}>
+                                <div style={{ marginBottom: '30px' }}>
+                                    <h1 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '8px' }}>Dashboard Merchant</h1>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Kelola produk surplus Anda di sini</p>
+                                </div>
+
+                                {/* Stats Cards */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+                                    {[
+                                        { icon: <Package size={24} color="var(--orange)" />, label: 'Total Produk', value: products.filter(p => p.merchant === (userProfile?.business_name || userProfile?.full_name)).length },
+                                        { icon: <ShoppingCart size={24} color="var(--orange)" />, label: 'Pesanan Hari Ini', value: '0' },
+                                        { icon: <TrendingUp size={24} color="var(--orange)" />, label: 'Pendapatan', value: 'Rp 0' },
+                                        { icon: <Star size={24} color="var(--orange)" />, label: 'Rating', value: '5.0' }
+                                    ].map((stat, idx) => (
+                                        <div key={idx} className="card-neumorph" style={{ padding: '20px', textAlign: 'center' }}>
+                                            <div style={{ marginBottom: '12px' }}>{stat.icon}</div>
+                                            <p style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '4px' }}>{stat.value}</p>
+                                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{stat.label}</p>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Add Product Button */}
+                                <div style={{ marginBottom: '30px' }}>
+                                    <button 
+                                        className="nav-pill active"
+                                        style={{ padding: '14px 28px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                                        onClick={() => setIsAddProductOpen(true)}
+                                    >
+                                        <Plus size={20} /> Tambah Produk Baru
+                                    </button>
+                                </div>
+
+                                {/* Products List */}
+                                <div>
+                                    <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '20px' }}>Produk Saya</h2>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+                                        {products
+                                            .filter(p => p.merchant === (userProfile?.business_name || userProfile?.full_name))
+                                            .map(product => (
+                                                <div key={product.id} className="card-neumorph" style={{ padding: '0', overflow: 'hidden', cursor: 'default' }}>
+                                                    <div style={{ position: 'relative', width: '100%', paddingTop: '75%', overflow: 'hidden' }}>
+                                                        <img 
+                                                            src={product.img} 
+                                                            alt={product.name}
+                                                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                                                        />
+                                                    </div>
+                                                    <div style={{ padding: '15px' }}>
+                                                        <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '8px' }}>{product.name}</h3>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                                            <div>
+                                                                <p style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--orange)' }}>{formatIDR(product.currentPrice)}</p>
+                                                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatIDR(product.oldPrice)}</p>
+                                                            </div>
+                                                            <div style={{ textAlign: 'right' }}>
+                                                                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Stok</p>
+                                                                <p style={{ fontSize: '1rem', fontWeight: 800 }}>{product.stock}</p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            style={{ width: '100%', padding: '10px', background: '#ff4d4f', color: 'white', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}
+                                                            onClick={() => handleDeleteProduct(product.id)}
+                                                        >
+                                                            <Trash2 size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                                                            Hapus Produk
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                    </div>
+                                    {products.filter(p => p.merchant === (userProfile?.business_name || userProfile?.full_name)).length === 0 && (
+                                        <div className="card-neumorph" style={{ padding: '60px 20px', textAlign: 'center' }}>
+                                            <Package size={64} color="var(--text-muted)" opacity={0.3} style={{ marginBottom: '20px' }} />
+                                            <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Belum ada produk. Klik "Tambah Produk Baru" untuk mulai berjualan!</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                            {/* Merchant Landing Page for non-logged in users */}
                         {/* --- Merchant Landing Hero --- */}
                         <section className="hero-banner" style={{ marginBottom: '40px' }}>
                             <div className="hero-overlay"></div>

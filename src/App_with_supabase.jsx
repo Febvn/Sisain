@@ -247,14 +247,53 @@ export default function App() {
     const [registerType, setRegisterType] = useState(''); // 'merchant' or 'customer'
     const [isCompleteProfileModalOpen, setIsCompleteProfileModalOpen] = useState(false);
     const [completeProfileType, setCompleteProfileType] = useState(''); // 'merchant' or 'customer'
-    const [profileImage, setProfileImage] = useState(null);
-    const [profileImagePreview, setProfileImagePreview] = useState(null);
 
-    // --- Auth Effects & Handlers (Hardcoded - No Backend) ---
+    // --- Auth Effects & Handlers ---
     useEffect(() => {
-        // No backend check needed
-        setAuthLoading(false);
+        // Check active session on mount
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null);
+            if (session?.user) {
+                fetchUserProfile(session.user.id);
+                
+                // Check if there's a pending registration type from Google login
+                const pendingType = localStorage.getItem('pendingRegistrationType');
+                if (pendingType && !userProfile?.role) {
+                    setCompleteProfileType(pendingType);
+                    setIsCompleteProfileModalOpen(true);
+                    localStorage.removeItem('pendingRegistrationType');
+                }
+            }
+            setAuthLoading(false);
+        });
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+            if (session?.user) {
+                fetchUserProfile(session.user.id);
+            } else {
+                setUserProfile(null);
+            }
+        });
+
+        return () => subscription.unsubscribe();
     }, []);
+
+    const fetchUserProfile = async (userId) => {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
+            
+            if (error) throw error;
+            setUserProfile(data);
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    };
 
     const handleRegisterMerchant = async (e) => {
         e.preventDefault();
@@ -274,23 +313,46 @@ export default function App() {
             return;
         }
 
-        const newUser = {
-            id: Date.now().toString(),
-            email,
-            full_name: ownerName,
-            role: 'merchant',
-            business_name: ownerName + "'s Business",
-            phone: '',
-            category: 'Lainnya',
-            address: ''
-        };
+        try {
+            // Register user with Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: ownerName,
+                        role: 'merchant'
+                    }
+                }
+            });
 
-        setUser(newUser);
-        setUserProfile(newUser);
-        showToast('Pendaftaran berhasil! Selamat bergabung sebagai merchant 🎉');
-        setIsRegisterModalOpen(false);
-        setActiveTab('merchant');
-        setIsMerchantLoggedIn(true);
+            if (authError) throw authError;
+
+            // Create profile in database
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert([
+                    {
+                        id: authData.user.id,
+                        email,
+                        full_name: ownerName,
+                        role: 'merchant',
+                        business_name: ownerName + "'s Business", // Default
+                        phone: '',
+                        category: 'Lainnya',
+                        address: ''
+                    }
+                ]);
+
+            if (profileError) throw profileError;
+
+            showToast('Pendaftaran berhasil! Silakan cek email untuk verifikasi.');
+            setIsRegisterModalOpen(false);
+            setActiveTab('home');
+        } catch (error) {
+            console.error('Registration error:', error);
+            showToast(error.message || 'Terjadi kesalahan saat mendaftar');
+        }
     };
 
     const handleRegisterPelanggan = async (e) => {
@@ -316,23 +378,46 @@ export default function App() {
             return;
         }
 
-        const newUser = {
-            id: Date.now().toString(),
-            email,
-            full_name: fullName,
-            username,
-            role: 'customer',
-            phone,
-            birth_date: birthDate,
-            city,
-            referral_code: referralCode
-        };
+        try {
+            // Register user with Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: fullName,
+                        role: 'customer'
+                    }
+                }
+            });
 
-        setUser(newUser);
-        setUserProfile(newUser);
-        showToast('Pendaftaran berhasil! Selamat bergabung 🎉');
-        setIsRegisterModalOpen(false);
-        setActiveTab('explore');
+            if (authError) throw authError;
+
+            // Create profile in database
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert([
+                    {
+                        id: authData.user.id,
+                        email,
+                        full_name: fullName,
+                        username,
+                        role: 'customer',
+                        phone,
+                        birth_date: birthDate,
+                        city,
+                        referral_code: referralCode
+                    }
+                ]);
+
+            if (profileError) throw profileError;
+
+            showToast('Pendaftaran berhasil! Selamat bergabung ðŸŽ‰');
+            setActiveTab('home');
+        } catch (error) {
+            console.error('Registration error:', error);
+            showToast(error.message || 'Terjadi kesalahan saat mendaftar');
+        }
     };
 
     const handleLogin = async (e) => {
@@ -341,68 +426,74 @@ export default function App() {
         const email = formData.get('email');
         const password = formData.get('password');
 
-        if (email.includes('merchant')) {
-            const merchantUser = {
-                id: 'merchant-demo',
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
                 email,
-                full_name: 'Demo Merchant',
-                role: 'merchant',
-                business_name: 'Warung Demo',
-                phone: '081234567890',
-                category: 'Siap Saji',
-                address: 'Jl. Demo No. 123'
-            };
-            setUser(merchantUser);
-            setUserProfile(merchantUser);
-            setIsMerchantLoggedIn(true);
-            setActiveTab('merchant');
-            showToast('Login berhasil! Selamat datang kembali 👋');
-        } else {
-            const customerUser = {
-                id: 'customer-demo',
-                email,
-                full_name: 'Demo Customer',
-                username: 'democustomer',
-                role: 'customer',
-                phone: '081234567890',
-                city: 'Bandar Lampung'
-            };
-            setUser(customerUser);
-            setUserProfile(customerUser);
-            setActiveTab('explore');
-            showToast('Login berhasil! Selamat datang kembali 👋');
+                password
+            });
+
+            if (error) throw error;
+
+            showToast('Login berhasil! Selamat datang kembali ðŸ‘‹');
+            setIsLoginModalOpen(false);
+            
+            // Redirect based on role
+            if (data.user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', data.user.id)
+                    .single();
+                
+                if (profile?.role === 'merchant') {
+                    setActiveTab('merchant');
+                    setIsMerchantLoggedIn(true);
+                } else {
+                    setActiveTab('explore');
+                }
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            showToast(error.message || 'Email atau password salah');
         }
-        
-        setIsLoginModalOpen(false);
     };
 
     const handleLogout = async () => {
-        setUser(null);
-        setUserProfile(null);
-        setIsMerchantLoggedIn(false);
-        setActiveTab('home');
-        showToast('Logout berhasil. Sampai jumpa! 👋');
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            
+            setUser(null);
+            setUserProfile(null);
+            setIsMerchantLoggedIn(false);
+            setActiveTab('home');
+            showToast('Logout berhasil. Sampai jumpa! ðŸ‘‹');
+        } catch (error) {
+            console.error('Logout error:', error);
+            showToast('Terjadi kesalahan saat logout');
+        }
     };
 
     const handleGoogleLogin = async (type) => {
-        showToast('Login dengan Google (Demo Mode)');
-        
-        // Set the type and open complete profile modal
-        setCompleteProfileType(type);
-        setIsCompleteProfileModalOpen(true);
-        setIsRegisterModalOpen(false);
-        setIsLoginModalOpen(false);
-    };
+        try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin,
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                    }
+                }
+            });
 
-    const handleImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setProfileImage(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setProfileImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
+            if (error) throw error;
+
+            localStorage.setItem('pendingRegistrationType', type);
+            
+        } catch (error) {
+            console.error('Google login error:', error);
+            showToast(error.message || 'Terjadi kesalahan saat login dengan Google');
         }
     };
 
@@ -410,60 +501,58 @@ export default function App() {
         e.preventDefault();
         const formData = new FormData(e.target);
 
-        if (completeProfileType === 'merchant') {
-            const ownerName = formData.get('ownerName') || 'Mitra SISAIN';
-            const businessName = formData.get('businessName') || `${ownerName}'s Business`;
-            const category = formData.get('category') || 'Lainnya';
-            const address = formData.get('address') || '';
-            const phone = formData.get('phone') || '';
+        try {
+            if (completeProfileType === 'merchant') {
+                const businessName = formData.get('businessName');
+                const category = formData.get('category');
+                const address = formData.get('address');
+                const phone = formData.get('phone');
 
-            const merchantUser = {
-                id: 'google-merchant-' + Date.now(),
-                email: 'merchant@gmail.com',
-                full_name: ownerName,
-                role: 'merchant',
-                business_name: businessName,
-                phone,
-                category,
-                address,
-                profile_image: profileImagePreview
-            };
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({
+                        business_name: businessName,
+                        category,
+                        address,
+                        phone,
+                        role: 'merchant'
+                    })
+                    .eq('id', user.id);
 
-            setUser(merchantUser);
-            setUserProfile(merchantUser);
-            setIsMerchantLoggedIn(true);
-            showToast('Profil merchant berhasil dilengkapi!');
-            setIsCompleteProfileModalOpen(false);
-            setActiveTab('merchant');
-        } else {
-            const username = formData.get('username');
-            const birthDate = formData.get('birthDate');
-            const city = formData.get('city');
-            const phone = formData.get('phone');
-            const fullName = formData.get('fullName');
+                if (error) throw error;
 
-            const customerUser = {
-                id: 'google-customer-' + Date.now(),
-                email: 'customer@gmail.com',
-                full_name: fullName,
-                username,
-                role: 'customer',
-                phone,
-                birth_date: birthDate,
-                city,
-                profile_image: profileImagePreview
-            };
+                showToast('Profil merchant berhasil dilengkapi!');
+                setIsCompleteProfileModalOpen(false);
+                fetchUserProfile(user.id);
+                setActiveTab('merchant');
+            } else {
+                const username = formData.get('username');
+                const birthDate = formData.get('birthDate');
+                const city = formData.get('city');
+                const phone = formData.get('phone');
 
-            setUser(customerUser);
-            setUserProfile(customerUser);
-            showToast('Profil pelanggan berhasil dilengkapi!');
-            setIsCompleteProfileModalOpen(false);
-            setActiveTab('explore');
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({
+                        username,
+                        birth_date: birthDate,
+                        city,
+                        phone,
+                        role: 'customer'
+                    })
+                    .eq('id', user.id);
+
+                if (error) throw error;
+
+                showToast('Profil pelanggan berhasil dilengkapi!');
+                setIsCompleteProfileModalOpen(false);
+                fetchUserProfile(user.id);
+                setActiveTab('explore');
+            }
+        } catch (error) {
+            console.error('Complete profile error:', error);
+            showToast(error.message || 'Terjadi kesalahan saat melengkapi profil');
         }
-        
-        // Reset image states
-        setProfileImage(null);
-        setProfileImagePreview(null);
     };
 
     // --- Nested Geo Location Helpers ---
@@ -761,10 +850,10 @@ Pertanyaan Pengguna: "${queryText}"`
                             <h2 className="splash-title">{t('splashTitle')}</h2>
                             <div className="splash-btn-group">
                                 <button className="splash-btn" onClick={() => { setLanguage("id"); setIsLanguageSelected(true); }}>
-                                    [ID] Bahasa Indonesia
+                                    ðŸ‡®ðŸ‡© Bahasa Indonesia
                                 </button>
                                 <button className="splash-btn" onClick={() => { setLanguage("en"); setIsLanguageSelected(true); }}>
-                                    [EN] English
+                                    ðŸ‡ºðŸ‡¸ English
                                 </button>
                             </div>
                         </div>
@@ -1109,258 +1198,6 @@ Pertanyaan Pengguna: "${queryText}"`
                             <p style={{ textAlign: 'center', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                                 Sudah punya akun? <span style={{ color: 'var(--orange)', fontWeight: 700, cursor: 'pointer' }} onClick={() => { setIsRegisterModalOpen(false); setIsLoginModalOpen(true); }}>Masuk di sini</span>
                             </p>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Complete Profile Modal - After Google Login */}
-            {isCompleteProfileModalOpen && (
-                <div className="modal-backdrop" onClick={() => setIsCompleteProfileModalOpen(false)}>
-                    <div className="modal-card" style={{ maxWidth: '520px', width: '100%', padding: '40px 35px', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-                        <div className="close-btn" onClick={() => setIsCompleteProfileModalOpen(false)}><X size={20} /></div>
-
-                        {/* Header */}
-                        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                            <div style={{ width: '60px', height: '60px', background: 'var(--orange)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(238,77,45,0.3)' }}>
-                                {completeProfileType === 'merchant' ? <Store size={30} color="white" /> : <User size={30} color="white" />}
-                            </div>
-                            <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '8px' }}>
-                                Lengkapi Profil Anda
-                            </h2>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.6' }}>
-                                {completeProfileType === 'merchant' ? 'Isi data bisnis Anda untuk mulai berjualan' : 'Isi data diri untuk melanjutkan'}
-                            </p>
-                        </div>
-
-                        {/* Complete Profile Form */}
-                        <form onSubmit={handleCompleteProfile} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            
-                            {/* Profile Image Upload */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                                <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)', alignSelf: 'flex-start' }}>
-                                    Foto Profil {completeProfileType === 'merchant' ? '/ Logo Bisnis' : ''}
-                                </label>
-                                <div style={{ 
-                                    width: '120px', 
-                                    height: '120px', 
-                                    borderRadius: '50%', 
-                                    background: 'var(--bg-color)', 
-                                    boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    overflow: 'hidden',
-                                    position: 'relative',
-                                    cursor: 'pointer',
-                                    border: '3px dashed var(--text-muted)',
-                                    opacity: 0.7,
-                                    transition: 'var(--transition-smooth)'
-                                }}
-                                onClick={() => document.getElementById('profileImageInput').click()}
-                                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                                onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
-                                >
-                                    {profileImagePreview ? (
-                                        <img src={profileImagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    ) : (
-                                        <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-                                            <Upload size={32} style={{ marginBottom: '8px' }} />
-                                            <p style={{ fontSize: '0.75rem' }}>Upload Foto</p>
-                                        </div>
-                                    )}
-                                </div>
-                                <input 
-                                    id="profileImageInput"
-                                    type="file" 
-                                    accept="image/*"
-                                    onChange={handleImageUpload}
-                                    style={{ display: 'none' }}
-                                />
-                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-                                    Format: JPG, PNG (Max 2MB)
-                                </p>
-                            </div>
-
-                            {completeProfileType === 'merchant' ? (
-                                <>
-                                    {/* Owner Name */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Nama Pemilik (Opsional)
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <User size={18} color="var(--text-muted)" />
-                                            <input 
-                                                name="ownerName"
-                                                type="text" 
-                                                placeholder="Nama lengkap pemilik" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Business Name */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Nama Bisnis (Opsional)
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <Store size={18} color="var(--text-muted)" />
-                                            <input 
-                                                name="businessName"
-                                                type="text" 
-                                                placeholder="Nama toko/warung/restoran" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Category */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Kategori Bisnis (Opsional)
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <Package size={18} color="var(--text-muted)" />
-                                            <select 
-                                                name="category"
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', cursor: 'pointer' }} 
-                                            >
-                                                <option value="">Pilih kategori</option>
-                                                <option value="Sayur">Sayur</option>
-                                                <option value="Buah">Buah</option>
-                                                <option value="Roti">Roti & Bakery</option>
-                                                <option value="Siap Saji">Siap Saji</option>
-                                                <option value="Lainnya">Lainnya</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {/* Phone */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Nomor Telepon (Opsional)
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <Phone size={18} color="var(--text-muted)" />
-                                            <input 
-                                                name="phone"
-                                                type="tel" 
-                                                placeholder="08xxxxxxxxxx" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Address */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Alamat Lengkap (Opsional)
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <MapPin size={18} color="var(--text-muted)" style={{ marginTop: '2px' }} />
-                                            <textarea 
-                                                name="address"
-                                                rows="3"
-                                                placeholder="Alamat lengkap bisnis Anda" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', resize: 'vertical', fontFamily: 'inherit' }} 
-                                            />
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    {/* Full Name */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Nama Lengkap *
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <User size={18} color="var(--text-muted)" />
-                                            <input 
-                                                name="fullName"
-                                                required 
-                                                type="text" 
-                                                placeholder="Nama lengkap Anda" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Username */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Username *
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>@</span>
-                                            <input 
-                                                name="username"
-                                                required 
-                                                type="text" 
-                                                placeholder="username_anda" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Phone */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Nomor Telepon *
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <Phone size={18} color="var(--text-muted)" />
-                                            <input 
-                                                name="phone"
-                                                required 
-                                                type="tel" 
-                                                placeholder="08xxxxxxxxxx" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Birth Date */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Tanggal Lahir *
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <CalendarClock size={18} color="var(--text-muted)" />
-                                            <input 
-                                                name="birthDate"
-                                                required 
-                                                type="date" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)', cursor: 'pointer' }} 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* City */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <label style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                                            Kota *
-                                        </label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 18px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                            <MapPin size={18} color="var(--text-muted)" />
-                                            <input 
-                                                name="city"
-                                                required 
-                                                type="text" 
-                                                placeholder="Kota tempat tinggal" 
-                                                style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '0.9rem', outline: 'none', color: 'var(--text-main)' }} 
-                                            />
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-
-                            {/* Submit Button */}
-                            <button type="submit" className="nav-pill active" style={{ width: '100%', padding: '16px', fontSize: '1rem', border: 'none', cursor: 'pointer', marginTop: '12px' }}>
-                                Simpan & Lanjutkan
-                            </button>
                         </form>
                     </div>
                 </div>

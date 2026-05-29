@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     ShoppingCart, MapPin, Search, Plus, Home, User,
     X, Star, Clock, Trash2, BarChart3, Package, Menu,
@@ -122,6 +122,57 @@ const DROPOFF_POINT = {
     fee: 5000
 };
 
+// Titik antar yang tersedia untuk pelanggan (Lampung)
+const LAMPUNG_DELIVERY_POINTS = [
+    {
+        id: 'itera',
+        name: 'Institut Teknologi Sumatera (ITERA)',
+        address: 'Jl. Terusan Ryacudu, Way Hui, Jati Agung, Lampung Selatan',
+        lat: -5.3585,
+        lng: 105.3149,
+        fee: 5000
+    },
+    {
+        id: 'unila',
+        name: 'Universitas Lampung (UNILA)',
+        address: 'Jl. Prof. Dr. Ir. Sumantri Brojonegoro No.1, Gedong Meneng, Bandar Lampung',
+        lat: -5.3705,
+        lng: 105.2417,
+        fee: 5000
+    },
+    {
+        id: 'uinril',
+        name: 'UIN Raden Intan Lampung',
+        address: 'Jl. Letnan Kolonel H. Endro Suratmin, Sukarame, Bandar Lampung',
+        lat: -5.3776,
+        lng: 105.3030,
+        fee: 5000
+    }
+];
+
+// Default-center peta saat tab lokasi dibuka (Lampung)
+const LAMPUNG_MAP_CENTER = { lat: -5.3700, lng: 105.2800, zoom: 12 };
+
+// Hitung sisa hari sampai tanggal expire (negatif = lewat). Tanggal format YYYY-MM-DD.
+const daysUntilExpiry = (expiryDate) => {
+    if (!expiryDate) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const exp = new Date(expiryDate);
+    exp.setHours(0, 0, 0, 0);
+    return Math.round((exp - today) / (24 * 3600 * 1000));
+};
+
+// Diskon yang disarankan otomatis berdasarkan sisa hari sebelum expire.
+const suggestedDiscountPercent = (expiryDate) => {
+    const d = daysUntilExpiry(expiryDate);
+    if (d === null) return 0;
+    if (d <= 0) return 60;     // expired hari ini → 60%
+    if (d <= 1) return 40;     // ≤ 1 hari → 40% (kondisi utama yang user minta)
+    if (d <= 3) return 20;     // ≤ 3 hari → 20%
+    return 0;
+};
+
 const NESTED_REGIONS = {
     "Jawa": {
         "DKI Jakarta": {
@@ -195,6 +246,114 @@ const NESTED_REGIONS = {
     }
 };
 
+/**
+ * Leaflet-based OpenStreetMap.
+ * Three modes:
+ *   - "customer": shows fixed delivery points; user clicks a marker to select ONE.
+ *   - "multi": same markers but multiple can be toggled on/off (merchant picking which destinations they serve).
+ *   - "merchant": user clicks anywhere on the map to drop a store-location pin.
+ */
+function LeafletLocationMap({
+    mode = 'customer',
+    points = [],
+    selectedPointId = null,
+    selectedPointIds = [],
+    onSelectPoint = () => {},
+    onTogglePoint = () => {},
+    storeLocation = null,
+    onPickStoreLocation = () => {},
+    center = LAMPUNG_MAP_CENTER,
+    height = 480
+}) {
+    const containerRef = useRef(null);
+    const mapRef = useRef(null);
+    const markersRef = useRef([]);
+    const storeMarkerRef = useRef(null);
+
+    // Init map once
+    useEffect(() => {
+        if (!containerRef.current || mapRef.current || typeof window === 'undefined' || !window.L) return;
+        const L = window.L;
+        const map = L.map(containerRef.current, { zoomControl: true, scrollWheelZoom: true })
+            .setView([center.lat, center.lng], center.zoom);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+        }).addTo(map);
+        mapRef.current = map;
+
+        // Invalidate size shortly after mount in case the container started hidden
+        setTimeout(() => { if (mapRef.current) mapRef.current.invalidateSize(); }, 200);
+
+        return () => {
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+            }
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Customer/multi-mode markers
+    useEffect(() => {
+        if ((mode !== 'customer' && mode !== 'multi') || !mapRef.current || !window.L) return;
+        const L = window.L;
+        markersRef.current.forEach(m => m.remove());
+        markersRef.current = [];
+
+        points.forEach(p => {
+            const isSel = mode === 'multi'
+                ? selectedPointIds.includes(p.id)
+                : p.id === selectedPointId;
+            const icon = L.divIcon({
+                className: 'sisain-marker',
+                html: `<div style="width:${isSel ? 36 : 28}px;height:${isSel ? 36 : 28}px;border-radius:50%;background:${isSel ? '#ee4d2d' : '#ffffff'};border:3px solid ${isSel ? '#ee4d2d' : 'rgba(238,77,45,0.55)'};box-shadow:0 4px 12px rgba(238,77,45,${isSel ? 0.6 : 0.25});display:flex;align-items:center;justify-content:center;color:${isSel ? '#fff' : '#ee4d2d'};font-weight:900;font-size:${isSel ? '14px' : '11px'};opacity:${isSel ? 1 : 0.85};">${isSel ? '✓' : (mode === 'multi' ? '+' : '●')}</div>`,
+                iconSize: [isSel ? 36 : 28, isSel ? 36 : 28],
+                iconAnchor: [isSel ? 18 : 14, isSel ? 18 : 14]
+            });
+            const marker = L.marker([p.lat, p.lng], { icon })
+                .addTo(mapRef.current)
+                .bindPopup(`<strong>${p.name}</strong><br/><span style="font-size:0.8em;color:#666">${p.address || ''}</span><br/><em style="font-size:0.75em;color:#ee4d2d">${mode === 'multi' ? (isSel ? 'Klik untuk hapus' : 'Klik untuk aktifkan') : ''}</em>`)
+                .on('click', () => {
+                    if (mode === 'multi') onTogglePoint(p);
+                    else onSelectPoint(p);
+                });
+            markersRef.current.push(marker);
+        });
+    }, [mode, points, selectedPointId, selectedPointIds, onSelectPoint, onTogglePoint]);
+
+    // Merchant-mode click handler + marker
+    useEffect(() => {
+        if (mode !== 'merchant' || !mapRef.current || !window.L) return;
+        const L = window.L;
+        const map = mapRef.current;
+
+        const handleClick = (e) => {
+            onPickStoreLocation({ lat: e.latlng.lat, lng: e.latlng.lng });
+        };
+        map.on('click', handleClick);
+
+        // Render or update store marker
+        if (storeMarkerRef.current) {
+            storeMarkerRef.current.remove();
+            storeMarkerRef.current = null;
+        }
+        if (storeLocation) {
+            const icon = L.divIcon({
+                className: 'sisain-store-marker',
+                html: `<div style="width:40px;height:40px;border-radius:50% 50% 50% 0;background:#ee4d2d;border:3px solid #fff;box-shadow:0 6px 14px rgba(238,77,45,0.5);transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);color:#fff;font-size:18px;">🏪</span></div>`,
+                iconSize: [40, 40],
+                iconAnchor: [20, 40]
+            });
+            storeMarkerRef.current = L.marker([storeLocation.lat, storeLocation.lng], { icon }).addTo(map);
+        }
+
+        return () => { map.off('click', handleClick); };
+    }, [mode, storeLocation, onPickStoreLocation]);
+
+    return <div ref={containerRef} style={{ width: '100%', height: `${height}px`, borderRadius: '20px', overflow: 'hidden' }} />;
+}
+
 export default function App() {
     // --- Auth State (Hardcoded - No Backend) ---
     const [user, setUser] = useState(null);
@@ -220,8 +379,27 @@ export default function App() {
     const [isMerchantLoggedIn, setIsMerchantLoggedIn] = useState(false);
     const [merchantSubTab, setMerchantSubTab] = useState("pendaftaran");
     const [newProduct, setNewProduct] = useState({
-        name: "", category: "Sayur", currentPrice: "", oldPrice: "", stock: "", description: "", img: "", deliveryEnabled: true
+        name: "", category: "Sayur", currentPrice: "", oldPrice: "", stock: "", description: "", img: "", deliveryEnabled: true,
+        createdDate: "", expiryDate: "", discountPercent: "",
+        deliveryPoints: LAMPUNG_DELIVERY_POINTS.map(p => p.id)
     });
+    const [editingProduct, setEditingProduct] = useState(null);
+    // Titik antar yang dipilih pelanggan (default = ITERA)
+    const [selectedDeliveryPointId, setSelectedDeliveryPointId] = useState('itera');
+    // Lokasi toko yang dipilih merchant pada peta {lat, lng, address?}
+    const [merchantStoreLocation, setMerchantStoreLocation] = useState(null);
+
+    // --- Delivery point helpers (used throughout product UI) ---
+    const selectedDeliveryPoint = LAMPUNG_DELIVERY_POINTS.find(p => p.id === selectedDeliveryPointId) || LAMPUNG_DELIVERY_POINTS[0];
+    // For legacy products (no deliveryPoints field): treat deliveryEnabled=true as "all 3 points", false as "none"
+    const productDeliveryPoints = (p) => Array.isArray(p?.deliveryPoints)
+        ? p.deliveryPoints
+        : (p?.deliveryEnabled === false ? [] : LAMPUNG_DELIVERY_POINTS.map(x => x.id));
+    const productSupportsPoint = (p, pointId) => productDeliveryPoints(p).includes(pointId);
+    const formatPointNames = (ids) => ids
+        .map(id => LAMPUNG_DELIVERY_POINTS.find(p => p.id === id)?.name)
+        .filter(Boolean)
+        .join(', ');
     const [filters, setFilters] = useState({
         priceRange: [0, 100000],
         maxDistance: 5,
@@ -665,11 +843,12 @@ Pertanyaan Pengguna: "${queryText}"`
         setCart(prev => prev.filter(i => i.id !== id));
     };
 
-    const cartHasPickupOnlyItem = cart.some(i => i.deliveryEnabled === false);
+    // Pickup-only relative to user's selected delivery point: product must support that point to allow delivery
+    const cartHasPickupOnlyItem = cart.some(i => !productSupportsPoint(i, selectedDeliveryPointId));
     const cartSubtotal = cart.reduce((s, i) => s + i.currentPrice * i.quantity, 0);
     const cartItemCount = cart.reduce((s, i) => s + i.quantity, 0);
     const effectiveDeliveryMethod = cartHasPickupOnlyItem ? 'pickup' : deliveryMethod;
-    const deliveryFee = effectiveDeliveryMethod === 'delivery' ? DROPOFF_POINT.fee : 0;
+    const deliveryFee = effectiveDeliveryMethod === 'delivery' ? selectedDeliveryPoint.fee : 0;
     const cartTotal = cartSubtotal + deliveryFee;
 
     const handleOpenPayment = () => {
@@ -693,7 +872,7 @@ Pertanyaan Pengguna: "${queryText}"`
             method: effectiveDeliveryMethod,
             paymentMethod,
             pickupCode,
-            dropoff: effectiveDeliveryMethod === 'delivery' ? DROPOFF_POINT : null
+            dropoff: effectiveDeliveryMethod === 'delivery' ? selectedDeliveryPoint : null
         };
         setLastOrderInfo(orderInfo);
         setOrderHistory(prev => [orderInfo, ...prev]);
@@ -719,7 +898,12 @@ Pertanyaan Pengguna: "${queryText}"`
     }, [isTrackingModalOpen, trackingStep, lastOrderInfo]);
 
     const handleToggleProductDelivery = (productId) => {
-        setProducts(prev => prev.map(p => p.id === productId ? { ...p, deliveryEnabled: !p.deliveryEnabled } : p));
+        setProducts(prev => prev.map(p => {
+            if (p.id !== productId) return p;
+            const cur = productDeliveryPoints(p);
+            const next = cur.length > 0 ? [] : LAMPUNG_DELIVERY_POINTS.map(x => x.id);
+            return { ...p, deliveryPoints: next, deliveryEnabled: next.length > 0 };
+        }));
     };
 
     const toggleCategory = (cat) => {
@@ -740,23 +924,58 @@ Pertanyaan Pengguna: "${queryText}"`
 
     const handleAddProduct = (e) => {
         e.preventDefault();
+        const oldPrice = parseInt(newProduct.oldPrice) || 0;
+        const enteredDiscount = newProduct.discountPercent === "" ? null : parseInt(newProduct.discountPercent);
+        const autoDiscount = suggestedDiscountPercent(newProduct.expiryDate);
+        const finalDiscount = enteredDiscount !== null ? enteredDiscount : autoDiscount;
+        // currentPrice yang merchant input dipakai bila > 0; selainnya dihitung dari diskon.
+        const enteredCurrent = parseInt(newProduct.currentPrice);
+        const computedCurrent = finalDiscount > 0 ? Math.round(oldPrice * (1 - finalDiscount / 100)) : oldPrice;
         const product = {
             ...newProduct,
             id: Date.now(),
-            currentPrice: parseInt(newProduct.currentPrice),
-            oldPrice: parseInt(newProduct.oldPrice),
+            currentPrice: enteredCurrent > 0 ? enteredCurrent : computedCurrent,
+            oldPrice,
             stock: parseInt(newProduct.stock),
+            discountPercent: finalDiscount,
             merchant: "Warung Bu Siti",
             rating: 5.0,
             distance: "0.0 km",
             img: newProduct.img || "https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&q=80&w=600",
             createdAt: Date.now(),
-            shelfLife: "today"
+            createdDate: newProduct.createdDate || new Date().toISOString().slice(0, 10),
+            expiryDate: newProduct.expiryDate || null,
+            shelfLife: daysUntilExpiry(newProduct.expiryDate) <= 1 ? "today" : "tomorrow",
+            deliveryPoints: newProduct.deliveryPoints || [],
+            deliveryEnabled: (newProduct.deliveryPoints || []).length > 0
         };
         setProducts(prev => [product, ...prev]);
         setIsAddProductOpen(false);
-        setNewProduct({ name: "", category: "Sayur", currentPrice: "", oldPrice: "", stock: "", description: "", img: "", deliveryEnabled: true });
+        setNewProduct({ name: "", category: "Sayur", currentPrice: "", oldPrice: "", stock: "", description: "", img: "", deliveryEnabled: true, createdDate: "", expiryDate: "", discountPercent: "", deliveryPoints: LAMPUNG_DELIVERY_POINTS.map(p => p.id) });
         showToast("Produk Berhasil Diunggah!");
+    };
+
+    const handleSaveEditedProduct = (e) => {
+        e.preventDefault();
+        if (!editingProduct) return;
+        const oldPrice = parseInt(editingProduct.oldPrice) || 0;
+        const discountPercent = editingProduct.discountPercent === "" || editingProduct.discountPercent === null
+            ? 0 : parseInt(editingProduct.discountPercent);
+        const currentPrice = discountPercent > 0 ? Math.round(oldPrice * (1 - discountPercent / 100)) : oldPrice;
+        const dp = Array.isArray(editingProduct.deliveryPoints) ? editingProduct.deliveryPoints : productDeliveryPoints(editingProduct);
+        setProducts(prev => prev.map(p => p.id === editingProduct.id ? {
+            ...p,
+            ...editingProduct,
+            oldPrice,
+            currentPrice,
+            stock: parseInt(editingProduct.stock) || 0,
+            discountPercent,
+            shelfLife: daysUntilExpiry(editingProduct.expiryDate) <= 1 ? "today" : "tomorrow",
+            deliveryPoints: dp,
+            deliveryEnabled: dp.length > 0
+        } : p));
+        setEditingProduct(null);
+        showToast("Produk berhasil diperbarui!");
     };
 
     const handleDeleteProduct = (productId) => {
@@ -1532,7 +1751,7 @@ Pertanyaan Pengguna: "${queryText}"`
 
                     <div className="location-pill" style={{ cursor: 'pointer' }} onClick={() => setActiveTab('location')}>
                         <MapPin size={14} color="var(--orange)" />
-                        <span>{userLocation || t('navLocation')}</span>
+                        <span>{t('navLocation')}</span>
                     </div>
 
                     {/* Cart Button — standalone, hanya untuk pelanggan login */}
@@ -1788,25 +2007,30 @@ Pertanyaan Pengguna: "${queryText}"`
                                             </div>
                                             <img src={p.img} alt={p.name} className="card-image" />
                                             {/* Badge metode pengantaran */}
-                                            <div style={{
-                                                position: 'absolute',
-                                                top: '10px',
-                                                right: '10px',
-                                                background: p.deliveryEnabled === false ? 'rgba(255,193,7,0.95)' : 'rgba(76,217,100,0.95)',
-                                                color: p.deliveryEnabled === false ? '#7a5c00' : '#0a5e23',
-                                                padding: '4px 10px',
-                                                borderRadius: '50px',
-                                                fontSize: '0.65rem',
-                                                fontWeight: 800,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '4px',
-                                                boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                                            }}>
-                                                {p.deliveryEnabled === false
-                                                    ? <><Package size={11} /> Pickup Only</>
-                                                    : <><Truck size={11} /> Bisa Diantar</>}
-                                            </div>
+                                            {(() => {
+                                                const supports = productSupportsPoint(p, selectedDeliveryPointId);
+                                                return (
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: '10px',
+                                                        right: '10px',
+                                                        background: !supports ? 'rgba(255,193,7,0.95)' : 'rgba(76,217,100,0.95)',
+                                                        color: !supports ? '#7a5c00' : '#0a5e23',
+                                                        padding: '4px 10px',
+                                                        borderRadius: '50px',
+                                                        fontSize: '0.65rem',
+                                                        fontWeight: 800,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                                                    }}>
+                                                        {!supports
+                                                            ? <><Package size={11} /> Pickup Only</>
+                                                            : <><Truck size={11} /> Antar ke {selectedDeliveryPoint.id === 'itera' ? 'ITERA' : selectedDeliveryPoint.id === 'unila' ? 'UNILA' : 'UIN RIL'}</>}
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
                                         <h3 className="card-title">{p.name}</h3>
                                         <div className="card-merchant">
@@ -2200,7 +2424,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                                 <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{item.merchant}</p>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <span style={{ color: 'var(--orange)', fontWeight: 900, fontSize: '0.9rem' }}>{formatIDR(item.currentPrice)}</span>
-                                                    {item.deliveryEnabled === false && (
+                                                    {!productSupportsPoint(item, selectedDeliveryPointId) && (
                                                         <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: '10px', background: 'rgba(255,193,7,0.15)', color: '#b8860b', fontWeight: 700 }}>
                                                             Pickup only
                                                         </span>
@@ -2266,16 +2490,16 @@ Pertanyaan Pengguna: "${queryText}"`
                                             }}
                                         >
                                             <Truck size={22} color={effectiveDeliveryMethod === 'delivery' ? 'var(--orange)' : 'var(--text-muted)'} style={{ marginBottom: '6px' }} />
-                                            <p style={{ fontWeight: 800, fontSize: '0.85rem' }}>Antar ke ITERA</p>
-                                            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{formatIDR(DROPOFF_POINT.fee)}</p>
+                                            <p style={{ fontWeight: 800, fontSize: '0.85rem' }}>Antar ke {selectedDeliveryPoint.id === 'itera' ? 'ITERA' : selectedDeliveryPoint.id === 'unila' ? 'UNILA' : 'UIN RIL'}</p>
+                                            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{formatIDR(selectedDeliveryPoint.fee)}</p>
                                         </div>
                                     </div>
                                     {effectiveDeliveryMethod === 'delivery' && (
                                         <div style={{ marginTop: '14px', padding: '12px 14px', borderRadius: '12px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                                             <MapPin size={16} color="var(--orange)" style={{ marginTop: '2px', flexShrink: 0 }} />
                                             <div>
-                                                <p style={{ fontWeight: 800, fontSize: '0.82rem' }}>{DROPOFF_POINT.name}</p>
-                                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{DROPOFF_POINT.address}</p>
+                                                <p style={{ fontWeight: 800, fontSize: '0.82rem' }}>{selectedDeliveryPoint.name}</p>
+                                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{selectedDeliveryPoint.address}</p>
                                                 <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>Titik kumpul tetap — pelanggan mengambil paket di lokasi ini.</p>
                                             </div>
                                         </div>
@@ -2706,7 +2930,15 @@ Pertanyaan Pengguna: "${queryText}"`
                                                     <div
                                                         className="filter-icon-btn"
                                                         style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(238, 77, 45, 0.1)', border: 'none' }}
-                                                        onClick={() => showToast('Edit fitur segera hadir!')}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setEditingProduct({
+                                                                ...p,
+                                                                createdDate: p.createdDate || new Date().toISOString().slice(0, 10),
+                                                                expiryDate: p.expiryDate || "",
+                                                                discountPercent: p.discountPercent ?? (p.oldPrice ? Math.round((1 - p.currentPrice / p.oldPrice) * 100) : 0)
+                                                            });
+                                                        }}
                                                     >
                                                         <Settings size={18} color="var(--orange)" />
                                                     </div>
@@ -2735,13 +2967,15 @@ Pertanyaan Pengguna: "${queryText}"`
                                                 }}
                                             >
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                    <Truck size={16} color={p.deliveryEnabled ? 'var(--orange)' : 'var(--text-muted)'} />
+                                                    <Truck size={16} color={productDeliveryPoints(p).length > 0 ? 'var(--orange)' : 'var(--text-muted)'} />
                                                     <div>
                                                         <p style={{ fontWeight: 700, fontSize: '0.78rem', color: 'var(--text-main)' }}>
-                                                            {p.deliveryEnabled ? 'Antar aktif' : 'Pickup-only'}
+                                                            {productDeliveryPoints(p).length > 0 ? `Antar aktif (${productDeliveryPoints(p).length} titik)` : 'Pickup-only'}
                                                         </p>
                                                         <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-                                                            {p.deliveryEnabled ? `Diantar ke ${DROPOFF_POINT.name}` : 'Pelanggan ambil sendiri di toko'}
+                                                            {productDeliveryPoints(p).length > 0
+                                                                ? productDeliveryPoints(p).map(id => id === 'itera' ? 'ITERA' : id === 'unila' ? 'UNILA' : 'UIN RIL').join(', ')
+                                                                : 'Pelanggan ambil sendiri di toko'}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -3056,147 +3290,166 @@ Pertanyaan Pengguna: "${queryText}"`
                     </div>
                 )}
 
-                {activeTab === 'location' && (
+                {activeTab === 'location' && (() => {
+                    const isMerchantView = userProfile?.role === 'merchant';
+                    const selectedPoint = LAMPUNG_DELIVERY_POINTS.find(p => p.id === selectedDeliveryPointId) || LAMPUNG_DELIVERY_POINTS[0];
+                    return (
                     <div style={{ maxWidth: '1200px', margin: '0 auto 80px', padding: '20px', textAlign: 'left' }}>
                         {/* Header Title Section */}
-                        <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px' }}>
-                            <div style={{ textAlign: 'left' }}>
-                                <h2 style={{ fontSize: '2.2rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <MapPin size={36} color="var(--orange)" />
-                                    {language === 'id' ? 'Atur Lokasi Anda' : 'Set Your Location'}
-                                </h2>
-                                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0 }}>
-                                    {language === 'id' 
-                                        ? 'Tentukan lokasi penyelamatan pangan Anda untuk mencocokkan produk surplus terdekat.' 
-                                        : 'Specify your food rescue location to match the nearest surplus products.'}
-                                </p>
-                            </div>
+                        <div style={{ marginBottom: '24px' }}>
+                            <h2 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <MapPin size={32} color="var(--orange)" />
+                                {isMerchantView
+                                    ? (language === 'id' ? 'Lokasi Toko Anda' : 'Your Store Location')
+                                    : (language === 'id' ? 'Pilih Titik Antar' : 'Choose Delivery Point')}
+                            </h2>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0 }}>
+                                {isMerchantView
+                                    ? (language === 'id' ? 'Klik pada peta untuk menentukan lokasi operasional toko Anda, atau gunakan tombol GPS di bawah.' : 'Click on the map to set your store operational location, or use the GPS button below.')
+                                    : (language === 'id' ? `Tersedia 3 titik antar di Lampung. Klik salah satu marker untuk memilih.` : `3 delivery points available in Lampung. Click a marker to select.`)}
+                            </p>
                         </div>
 
-                        {/* MASTER MAP CARD WITH CONSOLIDATED TOP NAVBAR */}
-                        <div className="card-neumorph" style={{ padding: '0', borderRadius: '28px', marginBottom: '35px', overflow: 'hidden' }}>
-                            
-                            {/* MAP NAVBAR (Di Atas Map - Giant Absolute Edge-to-Edge Search Bar) */}
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '15px',
-                                padding: '15px 25px',
-                                background: 'var(--bg-color)',
-                                borderBottom: '1px solid rgba(0,0,0,0.06)',
-                                borderRadius: '28px 28px 0 0',
-                                flexWrap: 'nowrap',
-                                boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)',
-                                width: '100%',
-                                boxSizing: 'border-box'
-                            }}>
-                                <Search size={22} color="var(--text-muted)" style={{ flexShrink: 0 }} />
-                                <input
-                                    className="search-input"
-                                    style={{ 
-                                        flex: 1, 
-                                        border: 'none', 
-                                        background: 'transparent', 
-                                        outline: 'none',
-                                        fontSize: '1rem',
-                                        color: 'var(--text-main)',
-                                        padding: '8px 0',
-                                        width: '100%'
-                                    }}
-                                    placeholder={language === 'id' ? 'Masukkan kota atau alamat lengkap...' : 'Enter city or full address...'}
-                                    value={inputLocation}
-                                    onChange={e => setInputLocation(e.target.value)}
-                                    onKeyDown={e => {
-                                        if (e.key === 'Enter') {
-                                            showToast(language === 'id' ? `Mencari lokasi: ${inputLocation}` : `Searching location: ${inputLocation}`);
-                                        }
-                                    }}
-                                />
-                                <div className="search-actions" style={{ flexShrink: 0 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', color: 'var(--text-main)' }}>
-                                        <Package size={16} color="var(--orange)" />
-                                        <span className="action-label" style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.9rem', fontWeight: 700 }}>
-                                            {selectedRadius} km ({inputLocation || (language === 'id' ? 'Indonesia' : 'Indonesia')})
-                                        </span>
+                        {/* MAP CARD */}
+                        <div className="card-neumorph" style={{ padding: '0', borderRadius: '24px', marginBottom: '24px', overflow: 'hidden' }}>
+                            <LeafletLocationMap
+                                mode={isMerchantView ? 'merchant' : 'customer'}
+                                points={LAMPUNG_DELIVERY_POINTS}
+                                selectedPointId={selectedDeliveryPointId}
+                                onSelectPoint={(p) => {
+                                    if (!user) {
+                                        showToast(language === 'id' ? 'Login dulu untuk pilih lokasi.' : 'Login first to choose a location.');
+                                        return;
+                                    }
+                                    setSelectedDeliveryPointId(p.id);
+                                    showToast(language === 'id' ? `Dipilih: ${p.name}` : `Selected: ${p.name}`);
+                                }}
+                                storeLocation={merchantStoreLocation}
+                                onPickStoreLocation={(latlng) => {
+                                    if (!user) {
+                                        showToast(language === 'id' ? 'Login dulu untuk simpan lokasi.' : 'Login first to save location.');
+                                        return;
+                                    }
+                                    setMerchantStoreLocation(latlng);
+                                }}
+                                height={520}
+                            />
+                        </div>
+
+                        {/* Customer: 3-card grid removed by request — selection happens directly on the map.
+                            Selected point detail is shown in the bottom save panel. */}
+
+                        {/* MERCHANT: GPS button + selected location display */}
+                        {isMerchantView && (
+                            <div className="card-neumorph" style={{ padding: '20px', borderRadius: '20px', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                                    <div>
+                                        <p style={{ fontWeight: 800, fontSize: '0.95rem', marginBottom: '4px' }}>
+                                            {language === 'id' ? 'Lokasi toko terpilih' : 'Selected store location'}
+                                        </p>
+                                        <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                                            {merchantStoreLocation
+                                                ? `Lat ${merchantStoreLocation.lat.toFixed(5)}, Lng ${merchantStoreLocation.lng.toFixed(5)}`
+                                                : (language === 'id' ? 'Belum dipilih — klik pada peta atau pakai GPS.' : 'Not set yet — click the map or use GPS.')}
+                                        </p>
                                     </div>
-                                    <div className="action-divider"></div>
-                                    <div className="filter-icon-btn" onClick={() => setShowMapFiltersModal(true)} style={{ background: 'var(--bg-color)', boxShadow: 'var(--shadow-light), var(--shadow-dark)' }}>
-                                        <SlidersHorizontal size={18} color="var(--orange)" />
-                                    </div>
+                                    <button
+                                        type="button"
+                                        className="nav-pill active"
+                                        style={{ padding: '12px 20px', border: 'none', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                                        onClick={() => {
+                                            if (!navigator.geolocation) {
+                                                showToast(language === 'id' ? 'GPS tidak didukung di browser ini.' : 'Geolocation not supported.');
+                                                return;
+                                            }
+                                            showToast(language === 'id' ? 'Mengambil lokasi GPS…' : 'Getting GPS location…');
+                                            navigator.geolocation.getCurrentPosition(
+                                                (pos) => {
+                                                    setMerchantStoreLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                                                    showToast(language === 'id' ? 'Lokasi GPS diterapkan!' : 'GPS location applied!');
+                                                },
+                                                (err) => {
+                                                    showToast(language === 'id' ? `Gagal: ${err.message}` : `Failed: ${err.message}`);
+                                                },
+                                                { enableHighAccuracy: true, timeout: 10000 }
+                                            );
+                                        }}
+                                    >
+                                        <MapPin size={16} /> {language === 'id' ? 'Pakai lokasi GPS saya' : 'Use my GPS location'}
+                                    </button>
                                 </div>
                             </div>
+                        )}
 
-                            {/* Google Maps Container */}
-                            <div style={{ 
-                                width: '100%', 
-                                height: '560px', 
-                                background: 'var(--bg-color)',
-                                position: 'relative'
-                            }}>
-                                <iframe
-                                    src={`https://maps.google.com/maps?q=${encodeURIComponent(inputLocation || "Jakarta")}&t=&z=${selectedRadius <= 2 ? 15 : selectedRadius <= 5 ? 13 : selectedRadius <= 12 ? 12 : 10}&ie=UTF8&iwloc=&output=embed`}
-                                    style={{ width: '100%', height: '100%', border: 0 }}
-                                    allowFullScreen=""
-                                    loading="lazy"
-                                    title="Google Maps"
-                                ></iframe>
-                            </div>
-                            
-                            {/* Real-time Map Info Banner */}
-                            <div style={{ 
-                                padding: '20px 25px', 
-                                background: 'rgba(238, 77, 45, 0.04)', 
-                                borderTop: '1px solid rgba(238, 77, 45, 0.1)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px'
-                            }}>
-                                <MapPin size={20} color="var(--orange)" style={{ flexShrink: 0 }} />
-                                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-                                    {language === 'id' ? (
-                                        <>Mencari makanan surplus dalam radius <strong>{selectedRadius} km</strong> dari pusat wilayah <strong>{inputLocation || "Jakarta"}</strong>.</>
-                                    ) : (
-                                        <>Searching for surplus food within a <strong>{selectedRadius} km</strong> radius from <strong>{inputLocation || "Jakarta"}</strong>.</>
-                                    )}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* BOTTOM PANEL: Cancel & Save Action Buttons */}
-                        <div className="card-neumorph" style={{ 
-                            padding: '25px 30px', 
-                            borderRadius: '24px', 
-                            display: 'flex', 
+                        {/* BOTTOM SAVE / DETAIL PANEL — compact */}
+                        <div className="card-neumorph" style={{
+                            padding: '12px 16px',
+                            borderRadius: '16px',
+                            display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                            gap: '20px',
+                            gap: '12px',
                             flexWrap: 'wrap'
                         }}>
-                            <div>
-                                <h4 style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)', margin: '0 0 4px 0' }}>
-                                    {language === 'id' ? 'Konfirmasi Pilihan Lokasi' : 'Confirm Selected Location'}
-                                </h4>
-                                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                    {language === 'id' 
-                                        ? `Lokasi terpilih: ${inputLocation || 'Jakarta'} | Radius: ${selectedRadius} km`
-                                        : `Selected location: ${inputLocation || 'Jakarta'} | Radius: ${selectedRadius} km`}
-                                </p>
+                            <div style={{ minWidth: 0, display: 'flex', gap: '10px', alignItems: 'center', flex: '1 1 240px' }}>
+                                <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <MapPin size={16} color="white" />
+                                </div>
+                                <div style={{ minWidth: 0 }}>
+                                    {isMerchantView ? (
+                                        <>
+                                            <p style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)', margin: '0 0 2px 0' }}>
+                                                {merchantStoreLocation
+                                                    ? (language === 'id' ? 'Lokasi toko terpilih' : 'Selected store location')
+                                                    : (language === 'id' ? 'Belum dipilih' : 'Not selected')}
+                                            </p>
+                                            <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.3 }}>
+                                                {merchantStoreLocation
+                                                    ? `Lat ${merchantStoreLocation.lat.toFixed(5)}, Lng ${merchantStoreLocation.lng.toFixed(5)}`
+                                                    : (language === 'id' ? 'Klik peta atau pakai GPS.' : 'Click the map or use GPS.')}
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)', margin: '0 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {selectedPoint.name}
+                                            </p>
+                                            <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' }}>
+                                                {selectedPoint.address}
+                                            </p>
+                                        </>
+                                    )}
+                                </div>
                             </div>
-                            <div style={{ minWidth: '320px', flex: '1 1 auto', display: 'flex', justifyContent: 'flex-end' }}>
+                            {user ? (
                                 <button
                                     className="nav-pill active"
-                                    style={{ padding: '14px 32px', border: 'none', fontSize: '1rem' }}
+                                    style={{ padding: '10px 20px', border: 'none', fontSize: '0.88rem', flexShrink: 0 }}
+                                    disabled={isMerchantView && !merchantStoreLocation}
                                     onClick={() => {
-                                        setUserLocation(inputLocation.trim() || null);
-                                        setFilters(prev => ({ ...prev, maxDistance: selectedRadius }));
-                                        showToast(language === 'id' ? 'Lokasi berhasil disimpan!' : 'Location saved successfully!');
-                                        setActiveTab('home');
+                                        if (isMerchantView) {
+                                            if (!merchantStoreLocation) return;
+                                            showToast(language === 'id' ? 'Lokasi toko disimpan!' : 'Store location saved!');
+                                        } else {
+                                            setUserLocation(selectedPoint.name);
+                                            showToast(language === 'id' ? `Antar ke ${selectedPoint.name}` : `Delivery to ${selectedPoint.name}`);
+                                            setActiveTab('home');
+                                        }
                                     }}
                                     type="button"
                                 >
                                     {t('modalApply')}
                                 </button>
-                            </div>
+                            ) : (
+                                <button
+                                    className="nav-pill"
+                                    style={{ padding: '10px 16px', border: 'none', fontSize: '0.82rem', opacity: 0.85, background: 'var(--bg-color)', flexShrink: 0 }}
+                                    onClick={() => setIsLoginModalOpen(true)}
+                                    type="button"
+                                >
+                                    {language === 'id' ? 'Login untuk simpan' : 'Login to save'}
+                                </button>
+                            )}
                         </div>
 
                         {/* ADVANCED LOCATION FILTERS MODAL POP-UP */}
@@ -3737,7 +3990,8 @@ Pertanyaan Pengguna: "${queryText}"`
                             </div>
                         )}
                     </div>
-                )}
+                    );
+                })()}
             </main>
 
             {/* --- PROFESSIONAL FOOTER --- */}
@@ -4161,29 +4415,44 @@ Pertanyaan Pengguna: "${queryText}"`
                                 alignItems: 'center',
                                 gap: '12px'
                             }}>
-                                <div style={{
-                                    width: '40px',
-                                    height: '40px',
-                                    borderRadius: '12px',
-                                    background: selectedProduct.deliveryEnabled === false ? 'rgba(255,193,7,0.18)' : 'rgba(76,217,100,0.18)',
-                                    color: selectedProduct.deliveryEnabled === false ? '#b8860b' : '#0a7c2f',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    flexShrink: 0
-                                }}>
-                                    {selectedProduct.deliveryEnabled === false ? <Package size={20} /> : <Truck size={20} />}
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <p style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-main)' }}>
-                                        {selectedProduct.deliveryEnabled === false ? 'Pickup di Toko Saja' : `Pickup atau Antar ke ${DROPOFF_POINT.name}`}
-                                    </p>
-                                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                                        {selectedProduct.deliveryEnabled === false
-                                            ? 'Pelanggan ambil sendiri di lokasi merchant.'
-                                            : `Tersedia opsi antar ke titik kumpul (+${formatIDR(DROPOFF_POINT.fee)}).`}
-                                    </p>
-                                </div>
+                                {(() => {
+                                    const pts = productDeliveryPoints(selectedProduct);
+                                    const supportsMine = pts.includes(selectedDeliveryPointId);
+                                    const isPickupOnly = pts.length === 0;
+                                    return (
+                                        <>
+                                            <div style={{
+                                                width: '40px',
+                                                height: '40px',
+                                                borderRadius: '12px',
+                                                background: isPickupOnly ? 'rgba(255,193,7,0.18)' : (supportsMine ? 'rgba(76,217,100,0.18)' : 'rgba(255,193,7,0.18)'),
+                                                color: isPickupOnly ? '#b8860b' : (supportsMine ? '#0a7c2f' : '#b8860b'),
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexShrink: 0
+                                            }}>
+                                                {isPickupOnly || !supportsMine ? <Package size={20} /> : <Truck size={20} />}
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <p style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                                                    {isPickupOnly
+                                                        ? 'Pickup di Toko Saja'
+                                                        : supportsMine
+                                                            ? `Pickup atau Antar ke ${selectedDeliveryPoint.name}`
+                                                            : `Pickup saja — antar tidak tersedia ke ${selectedDeliveryPoint.name}`}
+                                                </p>
+                                                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                                    {isPickupOnly
+                                                        ? 'Pelanggan ambil sendiri di lokasi merchant.'
+                                                        : supportsMine
+                                                            ? `Tersedia opsi antar ke titik kumpul (+${formatIDR(selectedDeliveryPoint.fee)}).`
+                                                            : `Produk hanya diantar ke: ${pts.map(id => id === 'itera' ? 'ITERA' : id === 'unila' ? 'UNILA' : 'UIN RIL').join(', ')}.`}
+                                                </p>
+                                            </div>
+                                        </>
+                                    );
+                                })()}
                             </div>
 
                             <button
@@ -4238,7 +4507,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                     />
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '15px' }}>
+                            <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
                                 <div className="filter-section-modal" style={{ flex: 1 }}>
                                     <h4>{t('addProductNormalPrice')}</h4>
                                     <input
@@ -4251,17 +4520,64 @@ Pertanyaan Pengguna: "${queryText}"`
                                     />
                                 </div>
                                 <div className="filter-section-modal" style={{ flex: 1 }}>
-                                    <h4>{t('addProductSurplusPrice')}</h4>
+                                    <h4 style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                        <span>Diskon (%)</span>
+                                        {newProduct.expiryDate && daysUntilExpiry(newProduct.expiryDate) <= 1 && daysUntilExpiry(newProduct.expiryDate) >= 0 && (
+                                            <span style={{ fontSize: '0.62rem', color: 'var(--orange)', fontWeight: 800, background: 'rgba(238,77,45,0.1)', padding: '2px 7px', borderRadius: '20px' }}>
+                                                saran {suggestedDiscountPercent(newProduct.expiryDate)}%
+                                            </span>
+                                        )}
+                                    </h4>
                                     <input
                                         type="number"
+                                        min="0"
+                                        max="100"
                                         style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
-                                        placeholder="Rp"
-                                        value={newProduct.currentPrice}
-                                        onChange={e => setNewProduct({ ...newProduct, currentPrice: e.target.value })}
+                                        placeholder="0 - 100"
+                                        value={newProduct.discountPercent}
+                                        onChange={e => setNewProduct({ ...newProduct, discountPercent: e.target.value })}
+                                    />
+                                    {parseInt(newProduct.oldPrice) > 0 && parseInt(newProduct.discountPercent) > 0 && (
+                                        <p style={{ fontSize: '0.72rem', color: 'var(--orange)', fontWeight: 700, marginTop: '6px' }}>
+                                            Harga setelah diskon: {formatIDR(Math.round(parseInt(newProduct.oldPrice) * (1 - parseInt(newProduct.discountPercent) / 100)))}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Tanggal Buat & Expire */}
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <div className="filter-section-modal" style={{ flex: 1 }}>
+                                    <h4>Tanggal Buat</h4>
+                                    <input
+                                        type="date"
+                                        style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                        value={newProduct.createdDate}
+                                        onChange={e => setNewProduct({ ...newProduct, createdDate: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <div className="filter-section-modal" style={{ flex: 1 }}>
+                                    <h4>Tanggal Expire</h4>
+                                    <input
+                                        type="date"
+                                        style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                        value={newProduct.expiryDate}
+                                        onChange={e => {
+                                            const exp = e.target.value;
+                                            const suggested = suggestedDiscountPercent(exp);
+                                            // Auto-fill discount when expiry ≤ 1 day and user hasn't manually overridden
+                                            setNewProduct(prev => ({
+                                                ...prev,
+                                                expiryDate: exp,
+                                                discountPercent: prev.discountPercent === "" && suggested > 0 ? String(suggested) : prev.discountPercent
+                                            }));
+                                        }}
                                         required
                                     />
                                 </div>
                             </div>
+
                             <div className="filter-section-modal">
                                 <h4>{t('addProductDesc')}</h4>
                                 <textarea
@@ -4273,59 +4589,201 @@ Pertanyaan Pengguna: "${queryText}"`
                                 />
                             </div>
 
-                            {/* Opsi Pengantaran */}
+                            {/* Opsi Pengantaran — peta interaktif, klik marker untuk toggle */}
                             <div className="filter-section-modal">
-                                <h4>Opsi Pengantaran</h4>
-                                <div
-                                    onClick={() => setNewProduct({ ...newProduct, deliveryEnabled: !newProduct.deliveryEnabled })}
-                                    style={{
-                                        padding: '15px',
-                                        borderRadius: '12px',
-                                        background: 'var(--bg-color)',
-                                        boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <Truck size={20} color={newProduct.deliveryEnabled ? 'var(--orange)' : 'var(--text-muted)'} />
-                                        <div>
-                                            <p style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-main)' }}>Antar ke titik kumpul</p>
-                                            <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                                {newProduct.deliveryEnabled ? `Aktif — kurir antar ke ${DROPOFF_POINT.name}` : 'Nonaktif — pelanggan harus pickup'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div
-                                        style={{
-                                            width: '44px',
-                                            height: '24px',
-                                            borderRadius: '12px',
-                                            background: newProduct.deliveryEnabled ? 'var(--orange)' : 'rgba(0,0,0,0.15)',
-                                            position: 'relative',
-                                            transition: 'var(--transition-smooth)',
-                                            flexShrink: 0
+                                <h4 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                                    <span>Antar ke (klik marker pada peta)</span>
+                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>
+                                        {(newProduct.deliveryPoints?.length || 0) === 0 ? 'Pickup-only' : `${newProduct.deliveryPoints.length}/3 titik`}
+                                    </span>
+                                </h4>
+                                <div style={{ borderRadius: '14px', overflow: 'hidden', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                    <LeafletLocationMap
+                                        mode="multi"
+                                        points={LAMPUNG_DELIVERY_POINTS}
+                                        selectedPointIds={newProduct.deliveryPoints || []}
+                                        onTogglePoint={(p) => {
+                                            const cur = newProduct.deliveryPoints || [];
+                                            const sel = cur.includes(p.id);
+                                            setNewProduct({
+                                                ...newProduct,
+                                                deliveryPoints: sel ? cur.filter(id => id !== p.id) : [...cur, p.id]
+                                            });
                                         }}
-                                    >
-                                        <div style={{
-                                            position: 'absolute',
-                                            top: '2px',
-                                            left: newProduct.deliveryEnabled ? '22px' : '2px',
-                                            width: '20px',
-                                            height: '20px',
-                                            borderRadius: '50%',
-                                            background: 'white',
-                                            transition: 'var(--transition-smooth)',
-                                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                                        }} />
-                                    </div>
+                                        height={240}
+                                    />
                                 </div>
+                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
+                                    {LAMPUNG_DELIVERY_POINTS.map(p => {
+                                        const sel = (newProduct.deliveryPoints || []).includes(p.id);
+                                        return (
+                                            <span key={p.id} style={{
+                                                fontSize: '0.7rem',
+                                                fontWeight: 800,
+                                                padding: '4px 10px',
+                                                borderRadius: '20px',
+                                                background: sel ? 'var(--orange)' : 'rgba(238,77,45,0.08)',
+                                                color: sel ? 'white' : 'var(--text-muted)'
+                                            }}>
+                                                {p.id === 'itera' ? 'ITERA' : p.id === 'unila' ? 'UNILA' : 'UIN RIL'}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '8px' }}>
+                                    Klik marker pada peta untuk aktifkan/nonaktifkan titik antar. Tidak ada titik = pickup di toko saja.
+                                </p>
                             </div>
 
                             <button className="nav-pill active" type="submit" style={{ width: '100%', padding: '18px', border: 'none', marginTop: '10px' }}>
                                 {t('addProductPublish')}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Product Modal */}
+            {editingProduct && (
+                <div className="modal-backdrop" onClick={() => setEditingProduct(null)}>
+                    <div className="modal-card" onClick={e => e.stopPropagation()}>
+                        <div className="close-btn" onClick={() => setEditingProduct(null)}><X size={20} /></div>
+                        <h2 style={{ fontWeight: 800, marginBottom: '6px', textAlign: 'center' }}>Edit Produk</h2>
+                        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '22px' }}>{editingProduct.name}</p>
+                        <form onSubmit={handleSaveEditedProduct} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            <div className="filter-section-modal">
+                                <h4>Nama Produk</h4>
+                                <input
+                                    style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                    value={editingProduct.name}
+                                    onChange={e => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                                    required
+                                />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <div className="filter-section-modal" style={{ flex: 1 }}>
+                                    <h4>Stok</h4>
+                                    <input
+                                        type="number"
+                                        style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                        value={editingProduct.stock}
+                                        onChange={e => setEditingProduct({ ...editingProduct, stock: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <div className="filter-section-modal" style={{ flex: 1 }}>
+                                    <h4>Harga Normal (Rp)</h4>
+                                    <input
+                                        type="number"
+                                        style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                        value={editingProduct.oldPrice}
+                                        onChange={e => setEditingProduct({ ...editingProduct, oldPrice: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <div className="filter-section-modal" style={{ flex: 1 }}>
+                                    <h4>Tanggal Buat</h4>
+                                    <input
+                                        type="date"
+                                        style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                        value={editingProduct.createdDate || ""}
+                                        onChange={e => setEditingProduct({ ...editingProduct, createdDate: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <div className="filter-section-modal" style={{ flex: 1 }}>
+                                    <h4>Tanggal Expire</h4>
+                                    <input
+                                        type="date"
+                                        style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                        value={editingProduct.expiryDate || ""}
+                                        onChange={e => {
+                                            const exp = e.target.value;
+                                            const suggested = suggestedDiscountPercent(exp);
+                                            setEditingProduct(prev => ({
+                                                ...prev,
+                                                expiryDate: exp,
+                                                discountPercent: suggested > 0 ? suggested : prev.discountPercent
+                                            }));
+                                        }}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="filter-section-modal">
+                                <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
+                                    <span>Diskon (%)</span>
+                                    {editingProduct.expiryDate && daysUntilExpiry(editingProduct.expiryDate) <= 1 && daysUntilExpiry(editingProduct.expiryDate) >= 0 && (
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--orange)', fontWeight: 800, background: 'rgba(238,77,45,0.1)', padding: '3px 8px', borderRadius: '20px' }}>
+                                            Expire ≤ 1 hari — saran {suggestedDiscountPercent(editingProduct.expiryDate)}%
+                                        </span>
+                                    )}
+                                </h4>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                    value={editingProduct.discountPercent ?? ""}
+                                    onChange={e => setEditingProduct({ ...editingProduct, discountPercent: e.target.value })}
+                                />
+                                {editingProduct.oldPrice > 0 && editingProduct.discountPercent > 0 && (
+                                    <p style={{ fontSize: '0.78rem', color: 'var(--orange)', fontWeight: 700, marginTop: '8px' }}>
+                                        Harga setelah diskon: {formatIDR(Math.round(parseInt(editingProduct.oldPrice) * (1 - parseInt(editingProduct.discountPercent) / 100)))}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Multi-select titik antar via peta interaktif */}
+                            <div className="filter-section-modal">
+                                <h4 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                                    <span>Antar ke (klik marker pada peta)</span>
+                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>
+                                        {productDeliveryPoints(editingProduct).length === 0 ? 'Pickup-only' : `${productDeliveryPoints(editingProduct).length}/3 titik`}
+                                    </span>
+                                </h4>
+                                <div style={{ borderRadius: '14px', overflow: 'hidden', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                    <LeafletLocationMap
+                                        mode="multi"
+                                        points={LAMPUNG_DELIVERY_POINTS}
+                                        selectedPointIds={productDeliveryPoints(editingProduct)}
+                                        onTogglePoint={(p) => {
+                                            const cur = productDeliveryPoints(editingProduct);
+                                            const sel = cur.includes(p.id);
+                                            setEditingProduct({
+                                                ...editingProduct,
+                                                deliveryPoints: sel ? cur.filter(id => id !== p.id) : [...cur, p.id]
+                                            });
+                                        }}
+                                        height={240}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
+                                    {LAMPUNG_DELIVERY_POINTS.map(p => {
+                                        const sel = productDeliveryPoints(editingProduct).includes(p.id);
+                                        return (
+                                            <span key={p.id} style={{
+                                                fontSize: '0.7rem',
+                                                fontWeight: 800,
+                                                padding: '4px 10px',
+                                                borderRadius: '20px',
+                                                background: sel ? 'var(--orange)' : 'rgba(238,77,45,0.08)',
+                                                color: sel ? 'white' : 'var(--text-muted)'
+                                            }}>
+                                                {p.id === 'itera' ? 'ITERA' : p.id === 'unila' ? 'UNILA' : 'UIN RIL'}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <button className="nav-pill active" type="submit" style={{ width: '100%', padding: '18px', border: 'none', marginTop: '10px' }}>
+                                Simpan Perubahan
                             </button>
                         </form>
                     </div>
@@ -4353,7 +4811,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                 <span style={{ fontWeight: 700 }}>{formatIDR(cartSubtotal)}</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '4px' }}>
-                                <span style={{ color: 'var(--text-muted)' }}>{effectiveDeliveryMethod === 'delivery' ? `Antar ke ${DROPOFF_POINT.name}` : 'Pickup di toko'}</span>
+                                <span style={{ color: 'var(--text-muted)' }}>{effectiveDeliveryMethod === 'delivery' ? `Antar ke ${selectedDeliveryPoint.name}` : 'Pickup di toko'}</span>
                                 <span style={{ fontWeight: 700 }}>{deliveryFee === 0 ? 'Gratis' : formatIDR(deliveryFee)}</span>
                             </div>
                             <div style={{ height: '1px', background: 'var(--text-muted)', opacity: 0.15, margin: '8px 0' }} />

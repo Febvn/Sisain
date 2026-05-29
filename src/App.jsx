@@ -3395,7 +3395,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                                 showToast(language === 'id' ? 'GPS tidak didukung di browser ini.' : 'Geolocation not supported.');
                                                 return;
                                             }
-                                            showToast(language === 'id' ? 'Mengambil lokasi GPS…' : 'Getting GPS location…');
+                                            // No pre-toast — geolocation is fast and the success/error toast is enough.
                                             navigator.geolocation.getCurrentPosition(
                                                 (pos) => {
                                                     setMerchantStoreLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });

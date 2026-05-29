@@ -469,6 +469,56 @@ main { flex: 1; }
   }
 }
 
+/* ===== MOBILE-ONLY FLOATING CART (above bottom navbar) ===== */
+.cart-floating-mobile {
+  display: none;
+}
+@media (max-width: 768px) {
+  .cart-floating-mobile {
+    display: flex;
+    position: fixed;
+    right: 18px;
+    bottom: 108px; /* above nav-bottom-neumorph (height 70px + 20px bottom offset + spacing) */
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #ff6b35 0%, var(--orange) 100%);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(238,77,45,0.45), inset 0 1px 0 rgba(255,255,255,0.25);
+    z-index: 999;
+    transition: var(--transition-smooth);
+  }
+  .cart-floating-mobile:active {
+    transform: scale(0.94);
+    box-shadow: 0 6px 14px rgba(238,77,45,0.4), inset 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .cart-floating-mobile-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 50px;
+    background: white;
+    color: var(--orange);
+    font-size: 0.72rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    border: 2px solid #fff8f5;
+  }
+  /* Hide the cart tab in the bottom navbar on mobile (replaced by floating cart) */
+  .nav-cart-tab-btn {
+    display: none !important;
+  }
+}
+
 /* ===== HAMBURGER BUTTON ===== */
 .hamburger-btn {
   display: none; /* Hidden on desktop */

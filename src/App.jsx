@@ -564,7 +564,7 @@ export default function App() {
         setUserProfile(null);
         setIsMerchantLoggedIn(false);
         setActiveTab('home');
-        showToast('Logout berhasil. Sampai jumpa! 👋');
+        // Toast is fired by the caller so it can pick the correct language.
     };
 
     const handleGoogleLogin = async (type) => {
@@ -849,7 +849,15 @@ Pertanyaan Pengguna: "${queryText}"`
     const cartItemCount = cart.reduce((s, i) => s + i.quantity, 0);
     const effectiveDeliveryMethod = cartHasPickupOnlyItem ? 'pickup' : deliveryMethod;
     const deliveryFee = effectiveDeliveryMethod === 'delivery' ? selectedDeliveryPoint.fee : 0;
-    const cartTotal = cartSubtotal + deliveryFee;
+    // Tax berjenjang berdasarkan subtotal
+    const calcTax = (subtotal) => {
+        if (subtotal <= 0) return 0;
+        if (subtotal < 5000) return 500;
+        if (subtotal <= 10000) return 1000;
+        return 1500;
+    };
+    const cartTax = calcTax(cartSubtotal);
+    const cartTotal = cartSubtotal + deliveryFee + cartTax;
 
     const handleOpenPayment = () => {
         if (cart.length === 0) {
@@ -868,6 +876,7 @@ Pertanyaan Pengguna: "${queryText}"`
             items: [...cart],
             subtotal: cartSubtotal,
             deliveryFee,
+            tax: cartTax,
             total: cartTotal,
             method: effectiveDeliveryMethod,
             paymentMethod,
@@ -1730,15 +1739,6 @@ Pertanyaan Pengguna: "${queryText}"`
                                             {userProfile?.role === 'merchant' ? 'Merchant' : 'Pelanggan'}
                                         </span>
                                     </div>
-                                    <button
-                                        className="location-pill btn-login-pill"
-                                        style={{ background: 'var(--bg-color)', color: 'var(--text-muted)' }}
-                                        onClick={handleLogout}
-                                        title="Logout"
-                                    >
-                                        <LogOut size={14} />
-                                        <span>Keluar</span>
-                                    </button>
                                 </div>
                             </>
                         ) : (
@@ -2202,41 +2202,39 @@ Pertanyaan Pengguna: "${queryText}"`
                                             </span>
                                         </div>
                                     </div>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-light), var(--shadow-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'var(--transition-smooth)' }} className="hover-float">
-                                        <Settings size={20} color="var(--text-muted)" />
+                                    <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-light), var(--shadow-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'var(--transition-smooth)' }} className="hover-float">
+                                        <Settings size={20} color="var(--orange)" />
                                     </div>
                                 </div>
                             </div>
 
-                            {/* === 2. SISAIN PAY & KOIN (Bento Span 6 each) === */}
-                            <div className="card-neumorph bento-item hover-float" style={{ gridColumn: 'span 6', padding: '20px', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '12px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ width: '36px', height: '36px', background: 'var(--orange)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(238,77,45,0.3)' }}>
-                                        <Wallet size={18} color="white" />
+                            {/* === 2. WALLET — SISAINPay + Koin in ONE card, balanced horizontal === */}
+                            <div className="card-neumorph bento-item" style={{ gridColumn: 'span 12', padding: '24px', display: 'flex', flexDirection: 'row', alignItems: 'stretch', gap: '0' }}>
+                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', cursor: 'pointer' }} className="hover-scale">
+                                    <div style={{ width: '62px', height: '62px', background: 'var(--orange)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px rgba(238,77,45,0.35)', flexShrink: 0 }}>
+                                        <Wallet size={30} color="white" />
                                     </div>
-                                    <span style={{ fontSize: '0.85rem', fontWeight: 800 }}>SISAINPay</span>
-                                </div>
-                                <div>
-                                    <p style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--orange)' }}>Rp 85.500</p>
-                                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>{t('profileBalance')}</p>
-                                </div>
-                            </div>
-
-                            <div className="card-neumorph bento-item hover-float" style={{ gridColumn: 'span 6', padding: '20px', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '12px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ width: '36px', height: '36px', background: 'var(--orange)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(238,77,45,0.3)' }}>
-                                        <Star size={18} color="white" fill="white" />
+                                    <div style={{ textAlign: 'left' }}>
+                                        <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>SISAINPay</span>
+                                        <p style={{ fontSize: '1.35rem', fontWeight: 900, color: 'var(--orange)' }}>Rp 85.500</p>
+                                        <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t('profileBalance')}</p>
                                     </div>
-                                    <span style={{ fontSize: '0.85rem', fontWeight: 800 }}>{t('profileCoin')}</span>
                                 </div>
-                                <div>
-                                    <p style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--orange)' }}>420</p>
-                                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>{t('profileCoinUsable')}</p>
+                                <div style={{ width: '1px', background: 'rgba(238,77,45,0.18)', margin: '0 16px', flexShrink: 0 }} />
+                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', cursor: 'pointer' }} className="hover-scale">
+                                    <div style={{ width: '62px', height: '62px', background: 'var(--orange)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px rgba(238,77,45,0.35)', flexShrink: 0 }}>
+                                        <Star size={30} color="white" fill="white" />
+                                    </div>
+                                    <div style={{ textAlign: 'left' }}>
+                                        <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>{t('profileCoin')}</span>
+                                        <p style={{ fontSize: '1.35rem', fontWeight: 900, color: 'var(--orange)' }}>420</p>
+                                        <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t('profileCoinUsable')}</p>
+                                    </div>
                                 </div>
                             </div>
 
                             {/* === 3. RIWAYAT PESANAN (Bento Span 12) === */}
-                            <div className="card-neumorph bento-item" style={{ gridColumn: 'span 12', padding: '20px', textAlign: 'left' }}>
+                            <div className="card-neumorph bento-item" style={{ gridColumn: 'span 12', padding: '22px 28px', textAlign: 'left', display: 'block' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
                                     <h3 style={{ fontWeight: 800, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <Package size={18} color="var(--orange)" /> {t('profileOrders')}
@@ -2245,19 +2243,19 @@ Pertanyaan Pengguna: "${queryText}"`
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     {[
-                                        { icon: <CreditCard size={26} strokeWidth={1.5} />, label: t('profileUnpaid'), count: 1 },
-                                        { icon: <Package size={26} strokeWidth={1.5} />, label: t('profilePacked'), count: 0 },
-                                        { icon: <Truck size={26} strokeWidth={1.5} />, label: t('profileShipped'), count: 2 },
-                                        { icon: <CheckCircle2 size={26} strokeWidth={1.5} />, label: t('profileDone'), count: 8 },
-                                        { icon: <RotateCcw size={26} strokeWidth={1.5} />, label: t('profileReturn'), count: 0 },
+                                        { icon: <CreditCard size={26} strokeWidth={2} color="var(--orange)" />, label: t('profileUnpaid'), count: 1 },
+                                        { icon: <Package size={26} strokeWidth={2} color="var(--orange)" />, label: t('profilePacked'), count: 0 },
+                                        { icon: <Truck size={26} strokeWidth={2} color="var(--orange)" />, label: t('profileShipped'), count: 2 },
+                                        { icon: <CheckCircle2 size={26} strokeWidth={2} color="var(--orange)" />, label: t('profileDone'), count: 8 },
+                                        { icon: <RotateCcw size={26} strokeWidth={2} color="var(--orange)" />, label: t('profileReturn'), count: 0 },
                                     ].map(item => (
-                                        <div key={item.label} className="hover-scale" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', width: '20%', position: 'relative' }}>
-                                            <div style={{ color: 'var(--orange)', transition: 'var(--transition-smooth)' }} className="order-icon-wrapper">
+                                        <div key={item.label} className="hover-scale" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', cursor: 'pointer', width: '20%', position: 'relative' }}>
+                                            <div style={{ width: '52px', height: '52px', borderRadius: '16px', background: 'rgba(238,77,45,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'var(--transition-smooth)' }}>
                                                 {item.icon}
                                             </div>
                                             <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', lineHeight: '1.2', textAlign: 'center' }}>{item.label}</span>
                                             {item.count > 0 && (
-                                                <div style={{ position: 'absolute', top: '-6px', right: '10px', background: 'var(--orange)', color: 'white', fontSize: '0.55rem', fontWeight: 800, minWidth: '16px', height: '16px', borderRadius: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', border: '2px solid var(--bg-color)' }}>
+                                                <div style={{ position: 'absolute', top: '-4px', right: 'calc(50% - 36px)', background: 'var(--orange)', color: 'white', fontSize: '0.6rem', fontWeight: 800, minWidth: '20px', height: '20px', borderRadius: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 6px', border: '2px solid var(--bg-color)' }}>
                                                     {item.count}
                                                 </div>
                                             )}
@@ -2266,49 +2264,46 @@ Pertanyaan Pengguna: "${queryText}"`
                                 </div>
                             </div>
 
-                            {/* === 4. VOUCHER & WISHLIST (Bento Span 6 each) === */}
-                            <div className="card-neumorph bento-item hover-float" style={{ gridColumn: 'span 6', padding: '18px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}>
-                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(238,77,45,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                    <Ticket size={20} color="var(--orange)" />
-                                </div>
-                                <div style={{ textAlign: 'left' }}>
-                                    <p style={{ fontWeight: 800, fontSize: '0.88rem', marginBottom: '2px' }}>{t('profileVoucher')}</p>
-                                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t('profileVoucherCount')}</p>
-                                </div>
-                            </div>
-
-                            <div className="card-neumorph bento-item hover-float" style={{ gridColumn: 'span 6', padding: '18px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}>
-                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(238,77,45,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                    <Heart size={20} color="var(--orange)" />
-                                </div>
-                                <div style={{ textAlign: 'left' }}>
-                                    <p style={{ fontWeight: 800, fontSize: '0.88rem', marginBottom: '2px' }}>{t('profileWishlist')}</p>
-                                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t('profileWishlistCount')}</p>
-                                </div>
-                            </div>
-
-                            <div className="card-neumorph bento-item hover-float" style={{ gridColumn: 'span 6', padding: '18px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}>
-                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(238,77,45,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                    <Store size={20} color="var(--orange)" />
-                                </div>
-                                <div style={{ textAlign: 'left' }}>
-                                    <p style={{ fontWeight: 800, fontSize: '0.88rem', marginBottom: '2px' }}>{t('profileFavStore')}</p>
-                                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t('profileFavStoreCount')}</p>
-                                </div>
-                            </div>
-
-                            <div className="card-neumorph bento-item hover-float" style={{ gridColumn: 'span 6', padding: '18px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}>
-                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(238,77,45,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                    <Star size={20} color="var(--orange)" />
-                                </div>
-                                <div style={{ textAlign: 'left' }}>
-                                    <p style={{ fontWeight: 800, fontSize: '0.88rem', marginBottom: '2px' }}>{t('profileReview')}</p>
-                                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t('profileReviewCount')}</p>
+                            {/* === 4. QUICK LINKS — 4 horizontal tiles (icon left + text right) in ONE row === */}
+                            <div className="card-neumorph bento-item" style={{ gridColumn: 'span 12', padding: '20px', textAlign: 'left', display: 'block' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+                                    {[
+                                        { icon: Ticket, label: t('profileVoucher'), count: t('profileVoucherCount') },
+                                        { icon: Heart, label: t('profileWishlist'), count: t('profileWishlistCount') },
+                                        { icon: Store, label: t('profileFavStore'), count: t('profileFavStoreCount') },
+                                        { icon: Star, label: t('profileReview'), count: t('profileReviewCount') },
+                                    ].map(({ icon: Icon, label, count }) => (
+                                        <div
+                                            key={label}
+                                            className="hover-float"
+                                            style={{
+                                                padding: '14px',
+                                                borderRadius: '16px',
+                                                background: 'var(--bg-color)',
+                                                boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)',
+                                                display: 'flex',
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                gap: '12px',
+                                                cursor: 'pointer',
+                                                textAlign: 'left',
+                                                minHeight: '76px'
+                                            }}
+                                        >
+                                            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(238,77,45,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                <Icon size={24} color="var(--orange)" />
+                                            </div>
+                                            <div style={{ minWidth: 0, flex: 1 }}>
+                                                <p style={{ fontWeight: 800, fontSize: '0.88rem', color: 'var(--text-main)', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</p>
+                                                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{count}</p>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
 
                             {/* === 5. DAMPAK LINGKUNGAN (Bento Span 12) === */}
-                            <div className="card-neumorph bento-item" style={{ gridColumn: 'span 12', padding: '20px', textAlign: 'left', position: 'relative', overflow: 'hidden' }}>
+                            <div className="card-neumorph bento-item" style={{ gridColumn: 'span 12', padding: '22px 28px', textAlign: 'left', position: 'relative', overflow: 'hidden', display: 'block' }}>
                                 {/* Decorative background elements */}
                                 <div style={{ position: 'absolute', top: '-20px', right: '-20px', opacity: 0.05, transform: 'rotate(15deg)', pointerEvents: 'none' }}>
                                     <Leaf size={120} />
@@ -2320,22 +2315,22 @@ Pertanyaan Pengguna: "${queryText}"`
 
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '18px' }}>
                                     {[
-                                        { icon: <Leaf size={20} color="var(--orange)" />, value: '12.5 kg', label: t('profileCO2'), bg: 'rgba(238,77,45,0.1)' },
-                                        { icon: <Droplets size={20} color="var(--orange)" />, value: '340 L', label: t('profileWater'), bg: 'rgba(238,77,45,0.1)' },
-                                        { icon: <Package size={20} color="var(--orange)" />, value: '38', label: t('profileFoodSaved'), bg: 'rgba(238,77,45,0.1)' },
+                                        { icon: <Leaf size={28} color="var(--orange)" />, value: '12.5 kg', label: t('profileCO2'), bg: 'rgba(238,77,45,0.12)' },
+                                        { icon: <Droplets size={28} color="var(--orange)" />, value: '340 L', label: t('profileWater'), bg: 'rgba(238,77,45,0.12)' },
+                                        { icon: <Package size={28} color="var(--orange)" />, value: '38', label: t('profileFoodSaved'), bg: 'rgba(238,77,45,0.12)' },
                                     ].map(stat => (
-                                        <div key={stat.label} className="cat-item hover-scale" style={{ padding: '14px 10px', borderRadius: '16px' }}>
-                                            <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: stat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px' }}>
+                                        <div key={stat.label} className="cat-item hover-scale" style={{ padding: '16px 12px', borderRadius: '16px' }}>
+                                            <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: stat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
                                                 {stat.icon}
                                             </div>
-                                            <p style={{ fontWeight: 900, fontSize: '0.95rem', color: 'var(--text-main)', marginBottom: '2px' }}>{stat.value}</p>
-                                            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.3 }}>{stat.label}</p>
+                                            <p style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--text-main)', marginBottom: '2px' }}>{stat.value}</p>
+                                            <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.3 }}>{stat.label}</p>
                                         </div>
                                     ))}
                                 </div>
 
-                                <div className="chart-container" style={{ padding: '15px 10px', marginTop: 0 }}>
-                                    <svg viewBox="0 0 400 100" width="100%" height="80" style={{ overflow: 'visible' }}>
+                                <div className="chart-container" style={{ padding: '14px 6px', marginTop: 0, width: '100%', boxSizing: 'border-box' }}>
+                                    <svg viewBox="0 0 400 100" preserveAspectRatio="none" width="100%" height="110" style={{ overflow: 'visible', display: 'block' }}>
                                         <defs>
                                             <linearGradient id="profileGradient" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="0%" stopColor="var(--orange)" stopOpacity="0.4" />
@@ -2343,31 +2338,31 @@ Pertanyaan Pengguna: "${queryText}"`
                                             </linearGradient>
                                         </defs>
                                         <path d="M 0 80 C 50 70, 80 90, 120 55 C 160 20, 200 50, 240 15 C 280 -15, 320 25, 400 5 L 400 100 L 0 100 Z" fill="url(#profileGradient)" />
-                                        <path d="M 0 80 C 50 70, 80 90, 120 55 C 160 20, 200 50, 240 15 C 280 -15, 320 25, 400 5" fill="none" stroke="var(--orange)" strokeWidth="3" strokeLinecap="round" />
-                                        <circle cx="240" cy="15" r="5" fill="var(--white)" stroke="var(--orange)" strokeWidth="3" className="pulse-circle" />
+                                        <path d="M 0 80 C 50 70, 80 90, 120 55 C 160 20, 200 50, 240 15 C 280 -15, 320 25, 400 5" fill="none" stroke="var(--orange)" strokeWidth="3" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                                        <circle cx="240" cy="15" r="5" fill="var(--white)" stroke="var(--orange)" strokeWidth="3" className="pulse-circle" vectorEffect="non-scaling-stroke" />
                                     </svg>
                                 </div>
                             </div>
 
                             {/* === 6. BADGE GAMIFIKASI (Bento Span 12) === */}
-                            <div className="card-neumorph bento-item" style={{ gridColumn: 'span 12', padding: '20px', textAlign: 'left' }}>
-                                <h3 style={{ fontWeight: 800, marginBottom: '16px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div className="card-neumorph bento-item" style={{ gridColumn: 'span 12', padding: '22px 28px', textAlign: 'left', display: 'block' }}>
+                                <h3 style={{ fontWeight: 800, marginBottom: '16px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
                                     <Medal size={18} color="var(--orange)" /> {t('profileBadge')}
                                 </h3>
-                                <div className="badge-scroll-container" style={{ display: 'flex', gap: '14px', overflowX: 'auto', paddingBottom: '8px', scrollbarWidth: 'none' }}>
+                                <div className="badge-scroll-container" style={{ display: 'flex', gap: '20px', justifyContent: 'center', overflowX: 'auto', paddingBottom: '8px', scrollbarWidth: 'none' }}>
                                     {[
-                                        { icon: <Award size={26} color="var(--orange)" />, label: 'Perunggu', unlocked: true },
-                                        { icon: <Leaf size={26} color="var(--orange)" />, label: 'Eco Hero', unlocked: true },
-                                        { icon: <Zap size={26} color="var(--orange)" />, label: 'Cepat Beli', unlocked: true },
-                                        { icon: <Medal size={26} color="var(--orange)" />, label: 'Perak', unlocked: false },
-                                        { icon: <Crown size={26} color="var(--orange)" />, label: 'Emas', unlocked: false },
-                                        { icon: <Heart size={26} color="var(--orange)" />, label: 'Setia', unlocked: false },
+                                        { icon: <Award size={30} color="var(--orange)" />, label: 'Perunggu', unlocked: true },
+                                        { icon: <Leaf size={30} color="var(--orange)" />, label: 'Eco Hero', unlocked: true },
+                                        { icon: <Zap size={30} color="var(--orange)" />, label: 'Cepat Beli', unlocked: true },
+                                        { icon: <Medal size={30} color="var(--orange)" />, label: 'Perak', unlocked: false },
+                                        { icon: <Crown size={30} color="var(--orange)" />, label: 'Emas', unlocked: false },
+                                        { icon: <Heart size={30} color="var(--orange)" />, label: 'Setia', unlocked: false },
                                     ].map(badge => (
-                                        <div key={badge.label} className="hover-scale" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', opacity: badge.unlocked ? 1 : 0.4, minWidth: '72px' }}>
-                                            <div style={{ width: '54px', height: '54px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: badge.unlocked ? 'var(--shadow-light), var(--shadow-dark)' : 'var(--shadow-inset-light), var(--shadow-inset-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <div key={badge.label} className="hover-scale" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', opacity: badge.unlocked ? 1 : 0.4, minWidth: '80px' }}>
+                                            <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'var(--bg-color)', boxShadow: badge.unlocked ? 'var(--shadow-light), var(--shadow-dark)' : 'var(--shadow-inset-light), var(--shadow-inset-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                 {badge.icon}
                                             </div>
-                                            <p style={{ fontSize: '0.7rem', fontWeight: 800, textAlign: 'center', color: badge.unlocked ? 'var(--text-main)' : 'var(--text-muted)' }}>{badge.label}</p>
+                                            <p style={{ fontSize: '0.72rem', fontWeight: 800, textAlign: 'center', color: badge.unlocked ? 'var(--text-main)' : 'var(--text-muted)' }}>{badge.label}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -2377,8 +2372,8 @@ Pertanyaan Pengguna: "${queryText}"`
                             <div style={{ gridColumn: 'span 12', marginTop: '10px' }}>
                                 <button
                                     className="card-neumorph hover-float"
-                                    style={{ width: '100%', padding: '18px', color: '#ef4444', fontWeight: 800, border: 'none', cursor: 'pointer', fontSize: '0.95rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                                    onClick={() => showToast(t('profileLogoutToast'))}
+                                    style={{ width: '100%', padding: '18px', color: 'var(--orange)', fontWeight: 800, border: 'none', cursor: 'pointer', fontSize: '0.95rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                                    onClick={() => { handleLogout(); showToast(t('profileLogoutToast')); }}
                                 >
                                     <LogOut size={18} /> {t('profileLogout')}
                                 </button>
@@ -2512,9 +2507,13 @@ Pertanyaan Pengguna: "${queryText}"`
                                         <span style={{ color: 'var(--text-muted)' }}>Subtotal ({cartItemCount} item)</span>
                                         <span style={{ fontWeight: 700 }}>{formatIDR(cartSubtotal)}</span>
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.88rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.88rem' }}>
                                         <span style={{ color: 'var(--text-muted)' }}>Biaya {effectiveDeliveryMethod === 'delivery' ? 'antar' : 'pickup'}</span>
                                         <span style={{ fontWeight: 700 }}>{deliveryFee === 0 ? 'Gratis' : formatIDR(deliveryFee)}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '0.88rem' }}>
+                                        <span style={{ color: 'var(--text-muted)' }}>Pajak</span>
+                                        <span style={{ fontWeight: 700 }}>{formatIDR(cartTax)}</span>
                                     </div>
                                     <div style={{ height: '1px', background: 'var(--text-muted)', opacity: 0.15, margin: '10px 0' }} />
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -2809,85 +2808,86 @@ Pertanyaan Pengguna: "${queryText}"`
 
                         {isMerchantLoggedIn && (
                             <div id="merchant-dashboard-section" style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto' }}>
-                                {/* --- Merchant Header & Status --- */}
-                            <div className="card-neumorph" style={{ padding: '20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: '1 1 auto', minWidth: 0 }}>
-                                    <div className="logo-icon" style={{ width: '50px', height: '50px', borderRadius: '15px', background: 'linear-gradient(135deg, #ee4d2d, #ff6b35)', flexShrink: 0 }}>
-                                        <Store size={26} color="white" />
+                                {/* === DASHBOARD OVERVIEW — single wrapper card combining header + stats + performa === */}
+                                <div className="card-neumorph" style={{ padding: '22px', marginBottom: '22px', textAlign: 'left', display: 'block' }}>
+
+                                    {/* Header & Status */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap', paddingBottom: '18px', borderBottom: '1px solid rgba(238,77,45,0.12)', marginBottom: '18px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: '1 1 auto', minWidth: 0 }}>
+                                            <div className="logo-icon" style={{ width: '50px', height: '50px', borderRadius: '15px', background: 'linear-gradient(135deg, #ee4d2d, #ff6b35)', flexShrink: 0 }}>
+                                                <Store size={26} color="white" />
+                                            </div>
+                                            <div style={{ textAlign: 'left', minWidth: 0 }}>
+                                                <h2 style={{ fontWeight: 900, fontSize: '1.25rem', color: 'var(--text-main)', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Warung Bu Siti</h2>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isStoreOpen ? 'var(--orange)' : 'rgba(0,0,0,0.25)' }}></div>
+                                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: isStoreOpen ? 'var(--orange)' : 'var(--text-muted)' }}>
+                                                        {isStoreOpen ? 'Toko Buka' : 'Toko Tutup'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => setIsStoreOpen(!isStoreOpen)}
+                                            style={{
+                                                padding: '10px 20px',
+                                                border: 'none',
+                                                borderRadius: '30px',
+                                                fontSize: '0.85rem',
+                                                fontWeight: 800,
+                                                cursor: 'pointer',
+                                                background: 'rgba(238,77,45,0.12)',
+                                                color: 'var(--orange)',
+                                                whiteSpace: 'nowrap'
+                                            }}
+                                        >
+                                            {isStoreOpen ? 'Tutup Toko' : 'Buka Toko'}
+                                        </button>
                                     </div>
-                                    <div style={{ textAlign: 'left', minWidth: 0 }}>
-                                        <h2 style={{ fontWeight: 900, fontSize: '1.25rem', color: 'var(--text-main)', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Warung Bu Siti</h2>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isStoreOpen ? '#4cd964' : '#ff3b30' }}></div>
-                                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: isStoreOpen ? '#4cd964' : '#ff3b30' }}>
-                                                {isStoreOpen ? 'Toko Buka' : 'Toko Tutup'}
-                                            </span>
+
+                                    {/* Order Summary — 4 inline tiles, no separate card-neumorph */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '18px' }}>
+                                        {[
+                                            { label: 'Pesanan Baru', count: 3 },
+                                            { label: 'Disiapkan', count: 5 },
+                                            { label: 'Siap', count: 2 },
+                                            { label: 'Selesai', count: 12 }
+                                        ].map(box => (
+                                            <div key={box.label} style={{ padding: '14px 10px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                <span style={{ fontSize: '1.4rem', fontWeight: 950, color: 'var(--orange)' }}>{box.count}</span>
+                                                <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)' }}>{box.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Performa Hari Ini — inline section, divider line above */}
+                                    <div style={{ paddingTop: '18px', borderTop: '1px solid rgba(238,77,45,0.12)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', gap: '16px', flexWrap: 'wrap' }}>
+                                            <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: 0 }}>Performa Hari Ini</h3>
+                                            <span style={{ fontSize: '0.78rem', color: 'var(--orange)', fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', padding: '4px 10px', borderRadius: '20px', background: 'rgba(238,77,45,0.08)' }} onClick={() => showToast('Statistik lengkap segera hadir!')}>Lihat Detail</span>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                                            <div style={{ padding: '14px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                                <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Pendapatan</p>
+                                                <p style={{ fontSize: '1.1rem', fontWeight: 900 }}>Rp 450rb</p>
+                                                <p style={{ fontSize: '0.6rem', color: 'var(--orange)', marginTop: '5px' }}>↑ 12% vs Kemarin</p>
+                                            </div>
+                                            <div style={{ padding: '14px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                                <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Total Pesanan</p>
+                                                <p style={{ fontSize: '1.1rem', fontWeight: 900 }}>24</p>
+                                                <p style={{ fontSize: '0.6rem', color: 'var(--orange)', marginTop: '5px' }}>↑ 5 pesanan</p>
+                                            </div>
+                                            <div style={{ padding: '14px', borderRadius: '14px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
+                                                <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Rating Toko</p>
+                                                <p style={{ fontSize: '1.1rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                    4.9 <Star size={14} fill="var(--orange)" color="var(--orange)" />
+                                                </p>
+                                                <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '5px' }}>98% Puas</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div style={{ display: 'flex', gap: '10px', flexShrink: 0, marginLeft: 'auto' }}>
-                                    <button
-                                        onClick={() => setIsStoreOpen(!isStoreOpen)}
-                                        className="card-neumorph"
-                                        style={{
-                                            padding: '10px 20px',
-                                            border: 'none',
-                                            borderRadius: '30px',
-                                            fontSize: '0.85rem',
-                                            fontWeight: 800,
-                                            cursor: 'pointer',
-                                            background: isStoreOpen ? 'rgba(76, 217, 100, 0.1)' : 'rgba(255, 59, 48, 0.1)',
-                                            color: isStoreOpen ? '#28a745' : '#dc3545',
-                                            boxShadow: isStoreOpen ? 'var(--shadow-inset-light), var(--shadow-inset-dark)' : 'var(--shadow-light), var(--shadow-dark)',
-                                            whiteSpace: 'nowrap'
-                                        }}
-                                    >
-                                        {isStoreOpen ? 'Tutup Toko' : 'Buka Toko'}
-                                    </button>
-                                </div>
-                            </div>
 
-                            {/* --- Order Summary --- */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
-                                {[
-                                    { label: 'Pesanan Baru', count: 3, icon: <Ticket size={18} />, color: '#ee4d2d' },
-                                    { label: 'Disiapkan', count: 5, icon: <Clock size={18} />, color: '#ff9500' },
-                                    { label: 'Siap', count: 2, icon: <CheckCircle2 size={18} />, color: '#007aff' },
-                                    { label: 'Selesai', count: 12, icon: <Award size={18} />, color: '#4cd964' }
-                                ].map(box => (
-                                    <div key={box.label} className="card-neumorph" style={{ padding: '15px 10px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <span style={{ fontSize: '1.4rem', fontWeight: 950, color: box.color }}>{box.count}</span>
-                                        <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)' }}>{box.label}</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* --- Statistics Overview --- */}
-                            <div className="card-neumorph" style={{ padding: '20px', marginBottom: '25px', textAlign: 'left' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '16px', flexWrap: 'wrap' }}>
-                                    <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: 0 }}>Performa Hari Ini</h3>
-                                    <span style={{ fontSize: '0.78rem', color: 'var(--orange)', fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', padding: '4px 10px', borderRadius: '20px', background: 'rgba(238,77,45,0.08)' }} onClick={() => showToast('Statistik lengkap segera hadir!')}>Lihat Detail</span>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
-                                    <div style={{ padding: '15px', borderRadius: '18px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                        <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Pendapatan</p>
-                                        <p style={{ fontSize: '1.1rem', fontWeight: 900 }}>Rp 450rb</p>
-                                        <p style={{ fontSize: '0.6rem', color: '#4cd964', marginTop: '5px' }}>â†‘ 12% vs Kemarin</p>
-                                    </div>
-                                    <div style={{ padding: '15px', borderRadius: '18px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                        <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Total Pesanan</p>
-                                        <p style={{ fontSize: '1.1rem', fontWeight: 900 }}>24</p>
-                                        <p style={{ fontSize: '0.6rem', color: '#4cd964', marginTop: '5px' }}>â†‘ 5 pesanan</p>
-                                    </div>
-                                    <div style={{ padding: '15px', borderRadius: '18px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                        <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Rating Toko</p>
-                                        <p style={{ fontSize: '1.1rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                            4.9 <Star size={14} fill="#ffc107" color="#ffc107" />
-                                        </p>
-                                        <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '5px' }}>98% Puas</p>
-                                    </div>
-                                </div>
-                            </div>
 
                             {/* --- Product Management --- */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -2911,76 +2911,52 @@ Pertanyaan Pengguna: "${queryText}"`
                                     </div>
                                 ) : (
                                     products.filter(p => p.merchant === "Warung Bu Siti").map(p => (
-                                        <div key={p.id} className="card-neumorph hover-float" style={{ padding: '15px', display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-                                                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                                                    <div style={{ width: '65px', height: '65px', borderRadius: '15px', overflow: 'hidden', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)' }}>
-                                                        <img src={p.img} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                    </div>
-                                                    <div>
-                                                        <h4 style={{ fontWeight: 800, fontSize: '1rem', marginBottom: '4px' }}>{p.name}</h4>
-                                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                                            <span style={{ fontSize: '0.85rem', color: 'var(--orange)', fontWeight: 800 }}>{formatIDR(p.currentPrice)}</span>
-                                                            <div style={{ width: '1px', height: '10px', background: 'var(--text-muted)', opacity: 0.3 }}></div>
-                                                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Stok: {p.stock}</span>
-                                                        </div>
-                                                    </div>
+                                        <div key={p.id} className="card-neumorph hover-float" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', gap: '14px', textAlign: 'left' }}>
+                                            {/* Image + info */}
+                                            <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flex: '1 1 0', minWidth: 0 }}>
+                                                <div style={{ width: '60px', height: '60px', borderRadius: '14px', overflow: 'hidden', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', flexShrink: 0 }}>
+                                                    <img src={p.img} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                 </div>
-                                                <div style={{ display: 'flex', gap: '10px' }}>
-                                                    <div
-                                                        className="filter-icon-btn"
-                                                        style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(238, 77, 45, 0.1)', border: 'none' }}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setEditingProduct({
-                                                                ...p,
-                                                                createdDate: p.createdDate || new Date().toISOString().slice(0, 10),
-                                                                expiryDate: p.expiryDate || "",
-                                                                discountPercent: p.discountPercent ?? (p.oldPrice ? Math.round((1 - p.currentPrice / p.oldPrice) * 100) : 0)
-                                                            });
-                                                        }}
-                                                    >
-                                                        <Settings size={18} color="var(--orange)" />
-                                                    </div>
-                                                    <div
-                                                        className="filter-icon-btn"
-                                                        style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255, 77, 79, 0.1)', border: 'none' }}
-                                                        onClick={(e) => { e.stopPropagation(); handleDeleteProduct(p.id); }}
-                                                    >
-                                                        <Trash2 size={18} color="#ff4d4f" />
+                                                <div style={{ minWidth: 0 }}>
+                                                    <h4 style={{ fontWeight: 800, fontSize: '0.95rem', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</h4>
+                                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '0.85rem', color: 'var(--orange)', fontWeight: 800 }}>{formatIDR(p.currentPrice)}</span>
+                                                        <span style={{ width: '1px', height: '10px', background: 'var(--text-muted)', opacity: 0.3 }} />
+                                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Stok: {p.stock}</span>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Toggle Pengantaran */}
+                                            {/* Antar aktif toggle — inline pill */}
                                             <div
                                                 onClick={() => handleToggleProductDelivery(p.id)}
                                                 style={{
                                                     display: 'flex',
                                                     alignItems: 'center',
-                                                    justifyContent: 'space-between',
+                                                    gap: '10px',
                                                     padding: '10px 14px',
-                                                    borderRadius: '12px',
+                                                    borderRadius: '14px',
                                                     background: 'var(--bg-color)',
                                                     boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)',
-                                                    cursor: 'pointer'
+                                                    cursor: 'pointer',
+                                                    flex: '1 1 0',
+                                                    minWidth: 0,
+                                                    height: '60px'
                                                 }}
                                             >
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                    <Truck size={16} color={productDeliveryPoints(p).length > 0 ? 'var(--orange)' : 'var(--text-muted)'} />
-                                                    <div>
-                                                        <p style={{ fontWeight: 700, fontSize: '0.78rem', color: 'var(--text-main)' }}>
-                                                            {productDeliveryPoints(p).length > 0 ? `Antar aktif (${productDeliveryPoints(p).length} titik)` : 'Pickup-only'}
-                                                        </p>
-                                                        <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-                                                            {productDeliveryPoints(p).length > 0
-                                                                ? productDeliveryPoints(p).map(id => id === 'itera' ? 'ITERA' : id === 'unila' ? 'UNILA' : 'UIN RIL').join(', ')
-                                                                : 'Pelanggan ambil sendiri di toko'}
-                                                        </p>
-                                                    </div>
+                                                <Truck size={18} color={productDeliveryPoints(p).length > 0 ? 'var(--orange)' : 'var(--text-muted)'} style={{ flexShrink: 0 }} />
+                                                <div style={{ minWidth: 0, flex: 1 }}>
+                                                    <p style={{ fontWeight: 700, fontSize: '0.78rem', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                        {productDeliveryPoints(p).length > 0 ? `Antar aktif (${productDeliveryPoints(p).length} titik)` : 'Pickup-only'}
+                                                    </p>
+                                                    <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                        {productDeliveryPoints(p).length > 0
+                                                            ? productDeliveryPoints(p).map(id => id === 'itera' ? 'ITERA' : id === 'unila' ? 'UNILA' : 'UIN RIL').join(', ')
+                                                            : 'Pelanggan ambil sendiri di toko'}
+                                                    </p>
                                                 </div>
                                                 <div style={{
-                                                    width: '38px',
+                                                    width: '40px',
                                                     height: '22px',
                                                     borderRadius: '11px',
                                                     background: p.deliveryEnabled ? 'var(--orange)' : 'rgba(0,0,0,0.15)',
@@ -2991,7 +2967,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                                     <div style={{
                                                         position: 'absolute',
                                                         top: '2px',
-                                                        left: p.deliveryEnabled ? '18px' : '2px',
+                                                        left: p.deliveryEnabled ? '20px' : '2px',
                                                         width: '18px',
                                                         height: '18px',
                                                         borderRadius: '50%',
@@ -3000,6 +2976,32 @@ Pertanyaan Pengguna: "${queryText}"`
                                                         boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                                                     }} />
                                                 </div>
+                                            </div>
+
+                                            {/* Edit + Delete — symmetric square buttons */}
+                                            <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
+                                                <button
+                                                    type="button"
+                                                    style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(238, 77, 45, 0.12)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setEditingProduct({
+                                                            ...p,
+                                                            createdDate: p.createdDate || new Date().toISOString().slice(0, 10),
+                                                            expiryDate: p.expiryDate || "",
+                                                            discountPercent: p.discountPercent ?? (p.oldPrice ? Math.round((1 - p.currentPrice / p.oldPrice) * 100) : 0)
+                                                        });
+                                                    }}
+                                                >
+                                                    <Settings size={18} color="var(--orange)" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(238, 77, 45, 0.12)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                    onClick={(e) => { e.stopPropagation(); handleDeleteProduct(p.id); }}
+                                                >
+                                                    <Trash2 size={18} color="var(--orange)" />
+                                                </button>
                                             </div>
                                         </div>
                                     ))
@@ -3339,24 +3341,55 @@ Pertanyaan Pengguna: "${queryText}"`
                         {/* Customer: 3-card grid removed by request — selection happens directly on the map.
                             Selected point detail is shown in the bottom save panel. */}
 
-                        {/* MERCHANT: GPS button + selected location display */}
-                        {isMerchantView && (
-                            <div className="card-neumorph" style={{ padding: '20px', borderRadius: '20px', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                                    <div>
-                                        <p style={{ fontWeight: 800, fontSize: '0.95rem', marginBottom: '4px' }}>
-                                            {language === 'id' ? 'Lokasi toko terpilih' : 'Selected store location'}
-                                        </p>
-                                        <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                                            {merchantStoreLocation
-                                                ? `Lat ${merchantStoreLocation.lat.toFixed(5)}, Lng ${merchantStoreLocation.lng.toFixed(5)}`
-                                                : (language === 'id' ? 'Belum dipilih — klik pada peta atau pakai GPS.' : 'Not set yet — click the map or use GPS.')}
-                                        </p>
-                                    </div>
+                        {/* BOTTOM SAVE / DETAIL PANEL — compact, centered, max 640px (also hosts merchant GPS button) */}
+                        <div className="card-neumorph" style={{
+                            padding: '16px 20px',
+                            borderRadius: '18px',
+                            display: 'flex',
+                            flexDirection: 'row',
+                            flexWrap: 'nowrap',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            gap: '16px',
+                            maxWidth: '640px',
+                            margin: '0 auto'
+                        }}>
+                            <div style={{ minWidth: 0, display: 'flex', gap: '14px', alignItems: 'center', flex: '1 1 0' }}>
+                                <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 6px 16px rgba(238,77,45,0.35)' }}>
+                                    <MapPin size={22} color="white" />
+                                </div>
+                                <div style={{ minWidth: 0 }}>
+                                    {isMerchantView ? (
+                                        <>
+                                            <p style={{ fontWeight: 800, fontSize: '0.98rem', color: 'var(--text-main)', margin: '0 0 3px 0' }}>
+                                                {merchantStoreLocation
+                                                    ? (language === 'id' ? 'Lokasi toko terpilih' : 'Selected store location')
+                                                    : (language === 'id' ? 'Belum dipilih' : 'Not selected')}
+                                            </p>
+                                            <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {merchantStoreLocation
+                                                    ? `Lat ${merchantStoreLocation.lat.toFixed(5)}, Lng ${merchantStoreLocation.lng.toFixed(5)}`
+                                                    : (language === 'id' ? 'Klik peta atau pakai GPS.' : 'Click the map or use GPS.')}
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p style={{ fontWeight: 800, fontSize: '0.98rem', color: 'var(--text-main)', margin: '0 0 3px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {selectedPoint.name}
+                                            </p>
+                                            <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {selectedPoint.address}
+                                            </p>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px', flexShrink: 0, alignItems: 'center' }}>
+                                {isMerchantView && user && (
                                     <button
                                         type="button"
-                                        className="nav-pill active"
-                                        style={{ padding: '12px 20px', border: 'none', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                                        title={language === 'id' ? 'Pakai lokasi GPS saya' : 'Use my GPS location'}
+                                        style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(238,77,45,0.12)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                                         onClick={() => {
                                             if (!navigator.geolocation) {
                                                 showToast(language === 'id' ? 'GPS tidak didukung di browser ini.' : 'Geolocation not supported.');
@@ -3375,81 +3408,38 @@ Pertanyaan Pengguna: "${queryText}"`
                                             );
                                         }}
                                     >
-                                        <MapPin size={16} /> {language === 'id' ? 'Pakai lokasi GPS saya' : 'Use my GPS location'}
+                                        <MapPin size={20} color="var(--orange)" />
                                     </button>
-                                </div>
+                                )}
+                                {user ? (
+                                    <button
+                                        className="nav-pill active"
+                                        style={{ padding: '12px 22px', border: 'none', fontSize: '0.9rem', flexShrink: 0, whiteSpace: 'nowrap' }}
+                                        disabled={isMerchantView && !merchantStoreLocation}
+                                        onClick={() => {
+                                            if (isMerchantView) {
+                                                if (!merchantStoreLocation) return;
+                                                showToast(language === 'id' ? 'Lokasi toko disimpan!' : 'Store location saved!');
+                                            } else {
+                                                setUserLocation(selectedPoint.name);
+                                                showToast(language === 'id' ? `Antar ke ${selectedPoint.name}` : `Delivery to ${selectedPoint.name}`);
+                                                setActiveTab('home');
+                                            }
+                                        }}
+                                        type="button"
+                                    >
+                                        {t('modalApply')}
+                                    </button>
+                                ) : (
+                                    <button
+                                        style={{ padding: '12px 18px', border: 'none', fontSize: '0.85rem', background: 'rgba(238,77,45,0.12)', color: 'var(--orange)', fontWeight: 800, borderRadius: '30px', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
+                                        onClick={() => setIsLoginModalOpen(true)}
+                                        type="button"
+                                    >
+                                        {language === 'id' ? 'Login untuk simpan' : 'Login to save'}
+                                    </button>
+                                )}
                             </div>
-                        )}
-
-                        {/* BOTTOM SAVE / DETAIL PANEL — compact */}
-                        <div className="card-neumorph" style={{
-                            padding: '12px 16px',
-                            borderRadius: '16px',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            gap: '12px',
-                            flexWrap: 'wrap'
-                        }}>
-                            <div style={{ minWidth: 0, display: 'flex', gap: '10px', alignItems: 'center', flex: '1 1 240px' }}>
-                                <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                    <MapPin size={16} color="white" />
-                                </div>
-                                <div style={{ minWidth: 0 }}>
-                                    {isMerchantView ? (
-                                        <>
-                                            <p style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)', margin: '0 0 2px 0' }}>
-                                                {merchantStoreLocation
-                                                    ? (language === 'id' ? 'Lokasi toko terpilih' : 'Selected store location')
-                                                    : (language === 'id' ? 'Belum dipilih' : 'Not selected')}
-                                            </p>
-                                            <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.3 }}>
-                                                {merchantStoreLocation
-                                                    ? `Lat ${merchantStoreLocation.lat.toFixed(5)}, Lng ${merchantStoreLocation.lng.toFixed(5)}`
-                                                    : (language === 'id' ? 'Klik peta atau pakai GPS.' : 'Click the map or use GPS.')}
-                                            </p>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <p style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-main)', margin: '0 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                {selectedPoint.name}
-                                            </p>
-                                            <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' }}>
-                                                {selectedPoint.address}
-                                            </p>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                            {user ? (
-                                <button
-                                    className="nav-pill active"
-                                    style={{ padding: '10px 20px', border: 'none', fontSize: '0.88rem', flexShrink: 0 }}
-                                    disabled={isMerchantView && !merchantStoreLocation}
-                                    onClick={() => {
-                                        if (isMerchantView) {
-                                            if (!merchantStoreLocation) return;
-                                            showToast(language === 'id' ? 'Lokasi toko disimpan!' : 'Store location saved!');
-                                        } else {
-                                            setUserLocation(selectedPoint.name);
-                                            showToast(language === 'id' ? `Antar ke ${selectedPoint.name}` : `Delivery to ${selectedPoint.name}`);
-                                            setActiveTab('home');
-                                        }
-                                    }}
-                                    type="button"
-                                >
-                                    {t('modalApply')}
-                                </button>
-                            ) : (
-                                <button
-                                    className="nav-pill"
-                                    style={{ padding: '10px 16px', border: 'none', fontSize: '0.82rem', opacity: 0.85, background: 'var(--bg-color)', flexShrink: 0 }}
-                                    onClick={() => setIsLoginModalOpen(true)}
-                                    type="button"
-                                >
-                                    {language === 'id' ? 'Login untuk simpan' : 'Login to save'}
-                                </button>
-                            )}
                         </div>
 
                         {/* ADVANCED LOCATION FILTERS MODAL POP-UP */}
@@ -4813,6 +4803,10 @@ Pertanyaan Pengguna: "${queryText}"`
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '4px' }}>
                                 <span style={{ color: 'var(--text-muted)' }}>{effectiveDeliveryMethod === 'delivery' ? `Antar ke ${selectedDeliveryPoint.name}` : 'Pickup di toko'}</span>
                                 <span style={{ fontWeight: 700 }}>{deliveryFee === 0 ? 'Gratis' : formatIDR(deliveryFee)}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '4px' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>Pajak</span>
+                                <span style={{ fontWeight: 700 }}>{formatIDR(cartTax)}</span>
                             </div>
                             <div style={{ height: '1px', background: 'var(--text-muted)', opacity: 0.15, margin: '8px 0' }} />
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

@@ -4627,7 +4627,7 @@ Pertanyaan Pengguna: "${queryText}"`
                             {/* Jam Expire & jadwal aktif diskon */}
                             <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
                                 <div className="filter-section-modal" style={{ flex: 1 }}>
-                                    <h4>Jam Expire</h4>
+                                    <h4 style={{ minHeight: '2.6em', display: 'flex', alignItems: 'flex-start' }}>Jam Expire</h4>
                                     <input
                                         type="time"
                                         style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
@@ -4639,7 +4639,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                     </p>
                                 </div>
                                 <div className="filter-section-modal" style={{ flex: 1 }}>
-                                    <h4>Diskon aktif (jam sebelum expire)</h4>
+                                    <h4 style={{ minHeight: '2.6em', display: 'flex', alignItems: 'flex-start' }}>Diskon aktif (jam sebelum expire)</h4>
                                     <input
                                         type="number"
                                         min="0"
@@ -4802,7 +4802,7 @@ Pertanyaan Pengguna: "${queryText}"`
                             {/* Jam Expire & jadwal aktif diskon */}
                             <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
                                 <div className="filter-section-modal" style={{ flex: 1 }}>
-                                    <h4>Jam Expire</h4>
+                                    <h4 style={{ minHeight: '2.6em', display: 'flex', alignItems: 'flex-start' }}>Jam Expire</h4>
                                     <input
                                         type="time"
                                         style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
@@ -4814,7 +4814,7 @@ Pertanyaan Pengguna: "${queryText}"`
                                     </p>
                                 </div>
                                 <div className="filter-section-modal" style={{ flex: 1 }}>
-                                    <h4>Diskon aktif (jam sebelum expire)</h4>
+                                    <h4 style={{ minHeight: '2.6em', display: 'flex', alignItems: 'flex-start' }}>Diskon aktif (jam sebelum expire)</h4>
                                     <input
                                         type="number"
                                         min="0"

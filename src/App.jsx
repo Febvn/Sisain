@@ -419,6 +419,8 @@ export default function App() {
         deliveryPoints: LAMPUNG_DELIVERY_POINTS.map(p => p.id)
     });
     const [editingProduct, setEditingProduct] = useState(null);
+    // Format tampilan input jam expire: true = 24 jam, false = AM/PM. Nilai tersimpan tetap "HH:MM" 24 jam.
+    const [use24hTime, setUse24hTime] = useState(true);
     // Titik antar yang dipilih pelanggan (default = ITERA)
     const [selectedDeliveryPointId, setSelectedDeliveryPointId] = useState('itera');
     // Lokasi toko yang dipilih merchant pada peta {lat, lng, address?}
@@ -4627,9 +4629,19 @@ Pertanyaan Pengguna: "${queryText}"`
                             {/* Jam Expire & jadwal aktif diskon */}
                             <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
                                 <div className="filter-section-modal" style={{ flex: 1 }}>
-                                    <h4 style={{ minHeight: '2.6em', display: 'flex', alignItems: 'flex-start' }}>Jam Expire</h4>
+                                    <h4 style={{ minHeight: '2.6em', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '6px' }}>
+                                        <span>Jam Expire</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setUse24hTime(v => !v)}
+                                            style={{ fontSize: '0.6rem', fontWeight: 800, color: 'var(--orange)', background: 'rgba(238,77,45,0.1)', border: 'none', borderRadius: '20px', padding: '3px 9px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                        >
+                                            {use24hTime ? '24 Jam' : 'AM/PM'}
+                                        </button>
+                                    </h4>
                                     <input
                                         type="time"
+                                        lang={use24hTime ? 'id-ID' : 'en-US'}
                                         style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
                                         value={newProduct.expiryTime}
                                         onChange={e => setNewProduct({ ...newProduct, expiryTime: e.target.value })}
@@ -4640,15 +4652,18 @@ Pertanyaan Pengguna: "${queryText}"`
                                 </div>
                                 <div className="filter-section-modal" style={{ flex: 1 }}>
                                     <h4 style={{ minHeight: '2.6em', display: 'flex', alignItems: 'flex-start' }}>Diskon aktif (jam sebelum expire)</h4>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="0.5"
-                                        style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
-                                        placeholder="cth. 3"
-                                        value={newProduct.discountStartHoursBefore}
-                                        onChange={e => setNewProduct({ ...newProduct, discountStartHoursBefore: e.target.value })}
-                                    />
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="0.5"
+                                            style={{ width: '100%', padding: '15px', paddingRight: '52px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                            placeholder="cth. 3"
+                                            value={newProduct.discountStartHoursBefore}
+                                            onChange={e => setNewProduct({ ...newProduct, discountStartHoursBefore: e.target.value })}
+                                        />
+                                        <span style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', pointerEvents: 'none' }}>Jam</span>
+                                    </div>
                                     {(() => {
                                         const start = discountStartTime({ expiryDate: newProduct.expiryDate, expiryTime: newProduct.expiryTime, discountStartHoursBefore: newProduct.discountStartHoursBefore });
                                         return (
@@ -4802,9 +4817,19 @@ Pertanyaan Pengguna: "${queryText}"`
                             {/* Jam Expire & jadwal aktif diskon */}
                             <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
                                 <div className="filter-section-modal" style={{ flex: 1 }}>
-                                    <h4 style={{ minHeight: '2.6em', display: 'flex', alignItems: 'flex-start' }}>Jam Expire</h4>
+                                    <h4 style={{ minHeight: '2.6em', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '6px' }}>
+                                        <span>Jam Expire</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setUse24hTime(v => !v)}
+                                            style={{ fontSize: '0.6rem', fontWeight: 800, color: 'var(--orange)', background: 'rgba(238,77,45,0.1)', border: 'none', borderRadius: '20px', padding: '3px 9px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                        >
+                                            {use24hTime ? '24 Jam' : 'AM/PM'}
+                                        </button>
+                                    </h4>
                                     <input
                                         type="time"
+                                        lang={use24hTime ? 'id-ID' : 'en-US'}
                                         style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
                                         value={editingProduct.expiryTime || ""}
                                         onChange={e => setEditingProduct({ ...editingProduct, expiryTime: e.target.value })}
@@ -4815,15 +4840,18 @@ Pertanyaan Pengguna: "${queryText}"`
                                 </div>
                                 <div className="filter-section-modal" style={{ flex: 1 }}>
                                     <h4 style={{ minHeight: '2.6em', display: 'flex', alignItems: 'flex-start' }}>Diskon aktif (jam sebelum expire)</h4>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="0.5"
-                                        style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
-                                        placeholder="cth. 3"
-                                        value={editingProduct.discountStartHoursBefore ?? ""}
-                                        onChange={e => setEditingProduct({ ...editingProduct, discountStartHoursBefore: e.target.value })}
-                                    />
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="0.5"
+                                            style={{ width: '100%', padding: '15px', paddingRight: '52px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                            placeholder="cth. 3"
+                                            value={editingProduct.discountStartHoursBefore ?? ""}
+                                            onChange={e => setEditingProduct({ ...editingProduct, discountStartHoursBefore: e.target.value })}
+                                        />
+                                        <span style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', pointerEvents: 'none' }}>Jam</span>
+                                    </div>
                                     {(() => {
                                         const start = discountStartTime(editingProduct);
                                         return (

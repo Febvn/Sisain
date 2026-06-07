@@ -288,6 +288,87 @@ const NESTED_REGIONS = {
  *   - "multi": same markers but multiple can be toggled on/off (merchant picking which destinations they serve).
  *   - "merchant": user clicks anywhere on the map to drop a store-location pin.
  */
+// Custom time picker: dropdown jam & menit yang konsisten lintas browser,
+// dengan tombol toggle 24 Jam / AM-PM di dalam kolom. Nilai keluar selalu "HH:MM" 24 jam.
+function TimePicker({ value, onChange }) {
+    const [is24h, setIs24h] = useState(true);
+    const pad2 = (n) => String(n).padStart(2, '0');
+
+    // Pecah "HH:MM" 24 jam jadi komponen.
+    const has = /^\d{1,2}:\d{2}$/.test(value || "");
+    const h24 = has ? parseInt(value.split(':')[0], 10) : null;
+    const min = has ? parseInt(value.split(':')[1], 10) : null;
+    const period = h24 === null ? 'AM' : (h24 >= 12 ? 'PM' : 'AM');
+    const h12 = h24 === null ? null : (h24 % 12 === 0 ? 12 : h24 % 12);
+
+    // Susun nilai baru lalu kirim ke parent dalam format 24 jam.
+    const emit = (nh24, nmin) => {
+        if (nh24 === null || nmin === null) { onChange(""); return; }
+        onChange(`${pad2(nh24)}:${pad2(nmin)}`);
+    };
+
+    const selStyle = { flex: 1, padding: '14px 6px', background: 'transparent', border: 'none', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)', textAlign: 'center', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none' };
+    const hourOptions = is24h
+        ? Array.from({ length: 24 }, (_, i) => i)
+        : Array.from({ length: 12 }, (_, i) => i + 1);
+
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', padding: '2px 6px 2px 4px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px' }}>
+            {/* Jam */}
+            <select
+                style={selStyle}
+                value={h24 === null ? '' : (is24h ? h24 : h12)}
+                onChange={e => {
+                    if (e.target.value === '') { emit(null, min); return; }
+                    const picked = parseInt(e.target.value, 10);
+                    const newH24 = is24h ? picked : ((period === 'PM' ? (picked % 12) + 12 : picked % 12));
+                    emit(newH24, min === null ? 0 : min);
+                }}
+            >
+                <option value="">--</option>
+                {hourOptions.map(h => <option key={h} value={h}>{pad2(h)}</option>)}
+            </select>
+            <span style={{ fontWeight: 800, color: 'var(--text-muted)' }}>:</span>
+            {/* Menit */}
+            <select
+                style={selStyle}
+                value={min === null ? '' : min}
+                onChange={e => {
+                    if (e.target.value === '') { emit(h24, null); return; }
+                    emit(h24 === null ? 0 : h24, parseInt(e.target.value, 10));
+                }}
+            >
+                <option value="">--</option>
+                {Array.from({ length: 60 }, (_, i) => i).map(m => <option key={m} value={m}>{pad2(m)}</option>)}
+            </select>
+            {/* AM/PM hanya di mode 12 jam */}
+            {!is24h && (
+                <select
+                    style={{ ...selStyle, flex: '0 0 auto', minWidth: '48px' }}
+                    value={period}
+                    onChange={e => {
+                        const newPeriod = e.target.value;
+                        const base = h12 === null ? 12 : h12;
+                        const newH24 = newPeriod === 'PM' ? (base % 12) + 12 : base % 12;
+                        emit(newH24, min === null ? 0 : min);
+                    }}
+                >
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                </select>
+            )}
+            {/* Toggle 24 jam / AM-PM di dalam kolom */}
+            <button
+                type="button"
+                onClick={() => setIs24h(v => !v)}
+                style={{ flex: '0 0 auto', fontSize: '0.6rem', fontWeight: 800, color: 'var(--orange)', background: 'rgba(238,77,45,0.12)', border: 'none', borderRadius: '20px', padding: '6px 9px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+            >
+                {is24h ? '24 Jam' : 'AM/PM'}
+            </button>
+        </div>
+    );
+}
+
 function LeafletLocationMap({
     mode = 'customer',
     points = [],
@@ -419,8 +500,6 @@ export default function App() {
         deliveryPoints: LAMPUNG_DELIVERY_POINTS.map(p => p.id)
     });
     const [editingProduct, setEditingProduct] = useState(null);
-    // Format tampilan input jam expire: true = 24 jam, false = AM/PM. Nilai tersimpan tetap "HH:MM" 24 jam.
-    const [use24hTime, setUse24hTime] = useState(true);
     // Titik antar yang dipilih pelanggan (default = ITERA)
     const [selectedDeliveryPointId, setSelectedDeliveryPointId] = useState('itera');
     // Lokasi toko yang dipilih merchant pada peta {lat, lng, address?}
@@ -4629,22 +4708,10 @@ Pertanyaan Pengguna: "${queryText}"`
                             {/* Jam Expire & jadwal aktif diskon */}
                             <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
                                 <div className="filter-section-modal" style={{ flex: 1 }}>
-                                    <h4 style={{ minHeight: '2.6em', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '6px' }}>
-                                        <span>Jam Expire</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => setUse24hTime(v => !v)}
-                                            style={{ fontSize: '0.6rem', fontWeight: 800, color: 'var(--orange)', background: 'rgba(238,77,45,0.1)', border: 'none', borderRadius: '20px', padding: '3px 9px', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                                        >
-                                            {use24hTime ? '24 Jam' : 'AM/PM'}
-                                        </button>
-                                    </h4>
-                                    <input
-                                        type="time"
-                                        lang={use24hTime ? 'id-ID' : 'en-US'}
-                                        style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                    <h4 style={{ minHeight: '2.6em', display: 'flex', alignItems: 'flex-start' }}>Jam Expire</h4>
+                                    <TimePicker
                                         value={newProduct.expiryTime}
-                                        onChange={e => setNewProduct({ ...newProduct, expiryTime: e.target.value })}
+                                        onChange={val => setNewProduct({ ...newProduct, expiryTime: val })}
                                     />
                                     <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '6px' }}>
                                         Kosongkan = berlaku sampai akhir hari (23:59).
@@ -4817,22 +4884,10 @@ Pertanyaan Pengguna: "${queryText}"`
                             {/* Jam Expire & jadwal aktif diskon */}
                             <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
                                 <div className="filter-section-modal" style={{ flex: 1 }}>
-                                    <h4 style={{ minHeight: '2.6em', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '6px' }}>
-                                        <span>Jam Expire</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => setUse24hTime(v => !v)}
-                                            style={{ fontSize: '0.6rem', fontWeight: 800, color: 'var(--orange)', background: 'rgba(238,77,45,0.1)', border: 'none', borderRadius: '20px', padding: '3px 9px', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                                        >
-                                            {use24hTime ? '24 Jam' : 'AM/PM'}
-                                        </button>
-                                    </h4>
-                                    <input
-                                        type="time"
-                                        lang={use24hTime ? 'id-ID' : 'en-US'}
-                                        style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                    <h4 style={{ minHeight: '2.6em', display: 'flex', alignItems: 'flex-start' }}>Jam Expire</h4>
+                                    <TimePicker
                                         value={editingProduct.expiryTime || ""}
-                                        onChange={e => setEditingProduct({ ...editingProduct, expiryTime: e.target.value })}
+                                        onChange={val => setEditingProduct({ ...editingProduct, expiryTime: val })}
                                     />
                                     <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '6px' }}>
                                         Kosongkan = berlaku sampai akhir hari (23:59).

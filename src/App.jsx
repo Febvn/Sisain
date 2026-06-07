@@ -173,6 +173,41 @@ const suggestedDiscountPercent = (expiryDate) => {
     return 0;
 };
 
+// Gabungkan tanggal (YYYY-MM-DD) + jam (HH:MM) jadi objek Date.
+// Bila jam kosong, anggap berakhir di penghujung hari (23:59).
+const expiryDateTime = (expiryDate, expiryTime) => {
+    if (!expiryDate) return null;
+    const time = /^\d{2}:\d{2}/.test(expiryTime || "") ? expiryTime : "23:59";
+    const dt = new Date(`${expiryDate}T${time}`);
+    return isNaN(dt.getTime()) ? null : dt;
+};
+
+// Kapan diskon mulai aktif = jam expire dikurangi `discountStartHoursBefore` jam.
+const discountStartTime = (product) => {
+    const hrs = parseFloat(product?.discountStartHoursBefore);
+    if (!hrs || hrs <= 0) return null;            // tidak dijadwalkan
+    const exp = expiryDateTime(product?.expiryDate, product?.expiryTime);
+    if (!exp) return null;
+    return new Date(exp.getTime() - hrs * 3600 * 1000);
+};
+
+// Apakah diskon sudah boleh berlaku sekarang?
+// - Tanpa jadwal (discountStartHoursBefore kosong/0) → diskon langsung aktif (perilaku lama).
+// - Dengan jadwal → diskon baru aktif setelah memasuki window sebelum jam expire.
+const isDiscountActive = (product) => {
+    const start = discountStartTime(product);
+    if (!start) return true;
+    return new Date() >= start;
+};
+
+// Harga yang ditampilkan ke pembeli: pakai harga diskon hanya bila window-nya sudah aktif,
+// selain itu tampilkan harga normal (oldPrice).
+const effectivePrice = (product) => {
+    if (!product) return 0;
+    if (isDiscountActive(product)) return product.currentPrice;
+    return product.oldPrice || product.currentPrice;
+};
+
 const NESTED_REGIONS = {
     "Jawa": {
         "DKI Jakarta": {
@@ -380,7 +415,7 @@ export default function App() {
     const [merchantSubTab, setMerchantSubTab] = useState("pendaftaran");
     const [newProduct, setNewProduct] = useState({
         name: "", category: "Sayur", currentPrice: "", oldPrice: "", stock: "", description: "", img: "", deliveryEnabled: true,
-        createdDate: "", expiryDate: "", discountPercent: "",
+        createdDate: "", expiryDate: "", expiryTime: "", discountStartHoursBefore: "", discountPercent: "",
         deliveryPoints: LAMPUNG_DELIVERY_POINTS.map(p => p.id)
     });
     const [editingProduct, setEditingProduct] = useState(null);
@@ -820,12 +855,14 @@ Pertanyaan Pengguna: "${queryText}"`
     };
 
     const handleAddToCart = (product) => {
+        // Diskon hanya dipakai bila window-nya sudah aktif; selain itu harga normal.
+        const priced = { ...product, currentPrice: effectivePrice(product) };
         setCart(prev => {
             const existing = prev.find(i => i.id === product.id);
             if (existing) {
                 return prev.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
             }
-            return [...prev, { ...product, quantity: 1 }];
+            return [...prev, { ...priced, quantity: 1 }];
         });
         setSelectedProduct(null);
         showToast(`Saved ${product.name}!`);
@@ -954,13 +991,15 @@ Pertanyaan Pengguna: "${queryText}"`
             createdAt: Date.now(),
             createdDate: newProduct.createdDate || new Date().toISOString().slice(0, 10),
             expiryDate: newProduct.expiryDate || null,
+            expiryTime: newProduct.expiryTime || "",
+            discountStartHoursBefore: newProduct.discountStartHoursBefore === "" ? null : parseFloat(newProduct.discountStartHoursBefore),
             shelfLife: daysUntilExpiry(newProduct.expiryDate) <= 1 ? "today" : "tomorrow",
             deliveryPoints: newProduct.deliveryPoints || [],
             deliveryEnabled: (newProduct.deliveryPoints || []).length > 0
         };
         setProducts(prev => [product, ...prev]);
         setIsAddProductOpen(false);
-        setNewProduct({ name: "", category: "Sayur", currentPrice: "", oldPrice: "", stock: "", description: "", img: "", deliveryEnabled: true, createdDate: "", expiryDate: "", discountPercent: "", deliveryPoints: LAMPUNG_DELIVERY_POINTS.map(p => p.id) });
+        setNewProduct({ name: "", category: "Sayur", currentPrice: "", oldPrice: "", stock: "", description: "", img: "", deliveryEnabled: true, createdDate: "", expiryDate: "", expiryTime: "", discountStartHoursBefore: "", discountPercent: "", deliveryPoints: LAMPUNG_DELIVERY_POINTS.map(p => p.id) });
         showToast("Produk Berhasil Diunggah!");
     };
 
@@ -979,6 +1018,8 @@ Pertanyaan Pengguna: "${queryText}"`
             currentPrice,
             stock: parseInt(editingProduct.stock) || 0,
             discountPercent,
+            expiryTime: editingProduct.expiryTime || "",
+            discountStartHoursBefore: editingProduct.discountStartHoursBefore === "" || editingProduct.discountStartHoursBefore === undefined ? null : parseFloat(editingProduct.discountStartHoursBefore),
             shelfLife: daysUntilExpiry(editingProduct.expiryDate) <= 1 ? "today" : "tomorrow",
             deliveryPoints: dp,
             deliveryEnabled: dp.length > 0
@@ -2038,8 +2079,17 @@ Pertanyaan Pengguna: "${queryText}"`
                                             <span>{p.merchant}</span>
                                         </div>
                                         <div className="card-price-stack">
-                                            <span className="price-current">{formatIDR(p.currentPrice)}</span>
-                                            <span className="price-old">{formatIDR(p.oldPrice)}</span>
+                                            {isDiscountActive(p) ? (
+                                                <>
+                                                    <span className="price-current">{formatIDR(p.currentPrice)}</span>
+                                                    <span className="price-old">{formatIDR(p.oldPrice)}</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className="price-current">{formatIDR(p.oldPrice)}</span>
+                                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>Diskon belum aktif</span>
+                                                </>
+                                            )}
                                         </div>
                                         <div style={{ marginTop: '15px', display: 'flex', gap: '15px', fontSize: '0.8rem', fontWeight: 700 }}>
                                             <span style={{ color: '#ffc107', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -4277,8 +4327,14 @@ Pertanyaan Pengguna: "${queryText}"`
                                     </p>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    <div style={{ color: 'var(--orange)', fontWeight: 800, fontSize: '1.6rem' }}>{formatIDR(selectedProduct.currentPrice)}</div>
-                                    <div style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{formatIDR(selectedProduct.oldPrice)}</div>
+                                    <div style={{ color: 'var(--orange)', fontWeight: 800, fontSize: '1.6rem' }}>{formatIDR(effectivePrice(selectedProduct))}</div>
+                                    {isDiscountActive(selectedProduct)
+                                        ? <div style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{formatIDR(selectedProduct.oldPrice)}</div>
+                                        : (discountStartTime(selectedProduct) && (
+                                            <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', fontWeight: 700, maxWidth: '160px' }}>
+                                                Diskon aktif {discountStartTime(selectedProduct).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                            </div>
+                                        ))}
                                 </div>
                             </div>
 
@@ -4568,6 +4624,44 @@ Pertanyaan Pengguna: "${queryText}"`
                                 </div>
                             </div>
 
+                            {/* Jam Expire & jadwal aktif diskon */}
+                            <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                                <div className="filter-section-modal" style={{ flex: 1 }}>
+                                    <h4>Jam Expire</h4>
+                                    <input
+                                        type="time"
+                                        style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                        value={newProduct.expiryTime}
+                                        onChange={e => setNewProduct({ ...newProduct, expiryTime: e.target.value })}
+                                    />
+                                    <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+                                        Kosongkan = berlaku sampai akhir hari (23:59).
+                                    </p>
+                                </div>
+                                <div className="filter-section-modal" style={{ flex: 1 }}>
+                                    <h4>Diskon aktif (jam sebelum expire)</h4>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.5"
+                                        style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                        placeholder="cth. 3"
+                                        value={newProduct.discountStartHoursBefore}
+                                        onChange={e => setNewProduct({ ...newProduct, discountStartHoursBefore: e.target.value })}
+                                    />
+                                    {(() => {
+                                        const start = discountStartTime({ expiryDate: newProduct.expiryDate, expiryTime: newProduct.expiryTime, discountStartHoursBefore: newProduct.discountStartHoursBefore });
+                                        return (
+                                            <p style={{ fontSize: '0.68rem', color: start ? 'var(--orange)' : 'var(--text-muted)', fontWeight: start ? 700 : 400, marginTop: '6px' }}>
+                                                {start
+                                                    ? `Diskon mulai aktif ${start.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}`
+                                                    : 'Kosongkan = diskon langsung aktif begitu produk tayang.'}
+                                            </p>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
+
                             <div className="filter-section-modal">
                                 <h4>{t('addProductDesc')}</h4>
                                 <textarea
@@ -4702,6 +4796,44 @@ Pertanyaan Pengguna: "${queryText}"`
                                         }}
                                         required
                                     />
+                                </div>
+                            </div>
+
+                            {/* Jam Expire & jadwal aktif diskon */}
+                            <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
+                                <div className="filter-section-modal" style={{ flex: 1 }}>
+                                    <h4>Jam Expire</h4>
+                                    <input
+                                        type="time"
+                                        style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                        value={editingProduct.expiryTime || ""}
+                                        onChange={e => setEditingProduct({ ...editingProduct, expiryTime: e.target.value })}
+                                    />
+                                    <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+                                        Kosongkan = berlaku sampai akhir hari (23:59).
+                                    </p>
+                                </div>
+                                <div className="filter-section-modal" style={{ flex: 1 }}>
+                                    <h4>Diskon aktif (jam sebelum expire)</h4>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.5"
+                                        style={{ width: '100%', padding: '15px', background: 'var(--bg-color)', boxShadow: 'var(--shadow-inset-light), var(--shadow-inset-dark)', borderRadius: '12px', border: 'none' }}
+                                        placeholder="cth. 3"
+                                        value={editingProduct.discountStartHoursBefore ?? ""}
+                                        onChange={e => setEditingProduct({ ...editingProduct, discountStartHoursBefore: e.target.value })}
+                                    />
+                                    {(() => {
+                                        const start = discountStartTime(editingProduct);
+                                        return (
+                                            <p style={{ fontSize: '0.68rem', color: start ? 'var(--orange)' : 'var(--text-muted)', fontWeight: start ? 700 : 400, marginTop: '6px' }}>
+                                                {start
+                                                    ? `Diskon ${isDiscountActive(editingProduct) ? 'sudah aktif sejak' : 'mulai aktif'} ${start.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}`
+                                                    : 'Kosongkan = diskon langsung aktif.'}
+                                            </p>
+                                        );
+                                    })()}
                                 </div>
                             </div>
 
